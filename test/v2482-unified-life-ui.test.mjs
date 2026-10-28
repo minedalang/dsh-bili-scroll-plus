@@ -11,7 +11,7 @@ const client=readFileSync(new URL('../client.js',import.meta.url),'utf8')
 const pkg=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'))
 
 test('升级后保留人生记忆独立页；记忆内容独立页，原家页只管理记忆设置',()=>{
- assert.equal(pkg.version,'2.4.99')
+ assert.match(pkg.version,/^2\.(?:[5-9]|[1-9]\d+)\.\d+(?:-dev\.\d+)?$/)
  assert.match(h,/data-tab="life"/)
  const house=h.split('<section id="panel-home"')[1].split('<section id="panel-life"')[0]
  const life=h.split('<section id="panel-life"')[1].split('<section id="panel-diagnostics"')[0]

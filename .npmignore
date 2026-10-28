@@ -1,0 +1,11 @@
+# Do not ship generated local Python caches or workstation files
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.pytest_cache/
+**/test/__pycache__/
+.env
+.env.*
+*.sqlite3
+*.db
+*.log

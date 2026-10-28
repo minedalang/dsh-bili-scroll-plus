@@ -84,5 +84,5 @@ test('内置长期记忆随大肥鱼业务备份恢复，外部 fish-memory 不�
 test('源码保留 dsh-fish-memory MIT 署名并在管理中心提供内置记忆入口',()=>{
   const index=readFileSync(new URL('../index.js',import.meta.url),'utf8'),html=readFileSync(new URL('../lib/management-console.html',import.meta.url),'utf8'),notice=readFileSync(new URL('../THIRD_PARTY_NOTICES.md',import.meta.url),'utf8'),license=readFileSync(new URL('../vendor/fish-memory/LICENSE',import.meta.url),'utf8')
   assert.match(index,/createLongTermMemory/);assert.match(index,/systemPrompt/);assert.match(html,/大肥鱼长期记忆/);assert.match(html,/dsh-fish-memory 记忆/);assert.match(notice,/Yuuyuko-uu\/dsh-fish-memory/);assert.match(license,/Copyright \(c\) 2026 Yuuyuko/)
-  assert.match(readFileSync(new URL('../package.json',import.meta.url),'utf8'),/"version": "2\.4\.99"/)
+  assert.match(readFileSync(new URL('../package.json',import.meta.url),'utf8'),/"version": "2\.\d+\.\d+(?:-dev\.\d+)?"/)
 })

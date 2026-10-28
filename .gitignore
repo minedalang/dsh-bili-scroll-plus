@@ -30,3 +30,5 @@ __pycache__/
 *.pyc
 *.zip
 .DS_Store
+# npm 打包产物
+*.tgz

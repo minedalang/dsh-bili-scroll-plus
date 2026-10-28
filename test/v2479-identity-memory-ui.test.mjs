@@ -80,5 +80,5 @@ test('README 与管理中心明确展示三层人生记忆、表情包 AI 更新
   assert.match(html,/导出最新表情包名称 TXT/);assert.match(html,/导出当前规则 JSON/);assert.match(html,/一起交给 AI/)
   assert.match(js,/sticker-workflow-export-names/);assert.match(js,/sticker-workflow-export-rules/);assert.match(js,/renderLifeReflection/);assert.match(js,/main-session\/memory\/import-fish/)
   assert.match(readme,/三层人生记忆/);assert.match(readme,/dafeiyu\.json/);assert.match(readme,/当前全部表情包名称 TXT \+ 当前规则 JSON/);assert.match(readme,/未来路线图/);assert.match(readme,/QQ 是优先讨论的平台方向之一/)
-  assert.match(pkg,/"version": "2\.4\.99"/)
+  assert.match(pkg,/"version": "2\.\d+\.\d+(?:-dev\.\d+)?"/)
 })
