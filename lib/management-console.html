@@ -109,6 +109,46 @@ input[type=checkbox]{accent-color:#16865f}
 #panel-life .emotion-meter span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#5c8ce6,#39ad88)}
 #panel-life .emotion-chip{display:inline-block;border-radius:99px;padding:3px 10px;background:var(--tint);font-size:12px;font-weight:700}
 
+
+/* 2.5.0-dev UI polish: 彩色柔和边框 + 渐变，严格保留页面与字段 ID。 */
+:root{--ui-indigo:#6579df;--ui-teal:#1c9c8c;--ui-rose:#c477ad;--ui-amber:#d09b49}
+.top{border-color:color-mix(in srgb,var(--ui-indigo) 38%,var(--stroke));background:linear-gradient(120deg,var(--panel) 12%,color-mix(in srgb,var(--tint) 72%,var(--panel)) 56%,color-mix(in srgb,var(--ui-teal) 9%,var(--panel)));box-shadow:0 14px 38px rgba(56,78,136,.09)}
+.top h1{background:linear-gradient(105deg,#526cba,#279f81);color:transparent;background-clip:text;-webkit-background-clip:text}
+.tabs{border:1px solid var(--stroke);border-radius:17px;padding:10px;background:color-mix(in srgb,var(--panel) 92%,var(--tint));box-shadow:0 7px 20px rgba(36,66,99,.06)}
+.tabs button[aria-selected=true]{background:linear-gradient(125deg,#486fce,#5582c1);border-color:transparent;color:white;box-shadow:0 4px 13px rgba(58,104,177,.18)}
+section[id^="panel-"]>.card,section[id^="panel-"]>.settings-stack>.settings-section,section[id^="panel-"] .settings-stack>.settings-section {background:linear-gradient(145deg,var(--panel) 75%,color-mix(in srgb,var(--tint) 45%,var(--panel)));}
+section[id^="panel-"] .settings-stack>.settings-section:nth-child(4n+1){border-left:4px solid var(--ui-indigo);border-color:color-mix(in srgb,var(--ui-indigo) 43%,var(--stroke));border-left-color:var(--ui-indigo)}
+section[id^="panel-"] .settings-stack>.settings-section:nth-child(4n+2){border-left:4px solid var(--ui-teal);border-color:color-mix(in srgb,var(--ui-teal) 43%,var(--stroke));border-left-color:var(--ui-teal)}
+section[id^="panel-"] .settings-stack>.settings-section:nth-child(4n+3){border-left:4px solid var(--ui-rose);border-color:color-mix(in srgb,var(--ui-rose) 43%,var(--stroke));border-left-color:var(--ui-rose)}
+section[id^="panel-"] .settings-stack>.settings-section:nth-child(4n){border-left:4px solid var(--ui-amber);border-color:color-mix(in srgb,var(--ui-amber) 43%,var(--stroke));border-left-color:var(--ui-amber)}
+section[id^="panel-"]>.card{border-top:3px solid color-mix(in srgb,var(--ui-indigo) 70%,var(--stroke))}
+#panel-dynamic .record{border:1px solid color-mix(in srgb,var(--ui-teal) 40%,var(--stroke));border-left:4px solid var(--ui-teal);background:linear-gradient(120deg,var(--panel),color-mix(in srgb,var(--ui-teal) 6%,var(--panel)))}
+button.primary{background:linear-gradient(110deg,#315ac5,#387db5);color:#fff}
+button.is-busy{position:relative;padding-right:35px;cursor:progress;opacity:.8}
+button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px);height:13px;width:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:ui-spin .75s linear infinite}
+.spinner{width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:ui-spin .75s linear infinite;flex-shrink:0}
+@keyframes ui-spin{to{transform:rotate(360deg)}}
+.request-indicator[hidden],.action-toast[hidden]{display:none!important}
+.request-indicator{position:fixed;right:18px;bottom:18px;z-index:40;display:flex;align-items:center;gap:9px;padding:11px 16px;border:1px solid color-mix(in srgb,var(--ui-indigo) 40%,var(--stroke));border-radius:14px;background:var(--panel);box-shadow:0 12px 35px rgba(35,62,98,.16);font-size:13px;color:var(--action);pointer-events:none}
+.action-toast{position:fixed;left:50%;bottom:68px;transform:translateX(-50%);z-index:45;max-width:min(90vw,620px);padding:12px 16px;border:1px solid color-mix(in srgb,var(--ui-indigo) 30%,var(--stroke));border-left:4px solid var(--ui-indigo);background:var(--panel);border-radius:13px;box-shadow:0 16px 45px rgba(34,55,90,.23);overflow-wrap:anywhere;font-size:13px}
+.action-toast[data-tone=error]{border-left-color:var(--bad)}
+.action-feedback{border:1px solid color-mix(in srgb,var(--ui-indigo) 30%,var(--stroke));border-left:4px solid var(--ui-indigo);border-radius:12px;padding:12px 14px;background:linear-gradient(110deg,color-mix(in srgb,var(--tint) 48%,var(--panel)),var(--panel));font-size:13px;margin:0 0 15px;white-space:pre-wrap}
+.action-feedback[data-tone=pending]{border-left-color:var(--ui-amber)}
+.action-feedback[data-tone=success]{border-left-color:var(--ui-teal)}
+.action-feedback[data-tone=warning]{border-left-color:var(--ui-amber)}
+.action-feedback[data-tone=error]{border-left-color:var(--bad)}
+.action-confirm-dialog{color:var(--ink);background:linear-gradient(145deg,var(--panel),var(--tint));border:1px solid color-mix(in srgb,var(--ui-indigo) 38%,var(--stroke));box-shadow:0 24px 80px rgba(16,29,54,.28);border-radius:20px;max-width:min(92vw,480px);width:100%;padding:24px;line-height:1.65}
+.action-confirm-dialog::backdrop{background:rgba(17,29,48,.58);backdrop-filter:blur(3px)}
+.confirm-head{display:flex;align-items:center;gap:14px}.confirm-head h3{margin:0;font-size:19px}.confirm-head p{margin:0;color:var(--muted);font-size:12px}
+.confirm-sparkle{display:grid;place-items:center;width:48px;height:48px;flex-shrink:0;border-radius:15px;background:linear-gradient(125deg,#6079d4,#39a392);color:white;font-size:24px}
+.action-confirm-dialog.danger .confirm-sparkle{background:linear-gradient(125deg,#c26d8c,#df9559)}
+#action-confirm-description{font-size:14px;color:var(--ink);white-space:pre-wrap;margin:18px 0 24px}
+.confirm-footer{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.action-confirm-dialog.danger #action-confirm-accept{background:linear-gradient(115deg,#b64b68,#cc7855);border-color:transparent;color:white}
+.legacy-archive{margin-top:19px;border:1px dashed color-mix(in srgb,var(--ui-indigo) 42%,var(--stroke));border-radius:13px;padding:12px 16px;background:color-mix(in srgb,var(--panel) 90%,var(--tint))}
+.legacy-archive summary{cursor:pointer;font-weight:650;color:var(--muted)}.legacy-archive[open] summary{margin-bottom:9px;color:var(--action)}
+@media(prefers-color-scheme:dark){.top h1{background:linear-gradient(110deg,#afc6ff,#8bdbc1);color:transparent;background-clip:text;-webkit-background-clip:text}.tabs button[aria-selected=true]{background:linear-gradient(110deg,#355c9a,#376f83)}}
+@media(prefers-reduced-motion:reduce){.spinner,button.is-busy:after{animation:none}}
 </style>
 <script defer src="/api/bili-duty/manage.js"></script>
 </head>
@@ -182,7 +222,9 @@ input[type=checkbox]{accent-color:#16865f}
 <section id="panel-dynamic" hidden>
 <div class="feature-intro"><div><h2>📝 大肥鱼的日常动态</h2><p>大肥鱼从真实经历中自主选择值得分享的事情。先预览草稿，再决定是否公开；自动发布默认关闭。</p></div></div>
 <div class="toolbar"><button id="daily-dynamic-refresh">刷新动态草稿</button><button id="daily-dynamic-generate" class="primary">让大肥鱼构思一条动态</button></div>
-<p id="daily-dynamic-status" class="muted"></p><div id="daily-dynamic-list" class="records"></div>
+<p id="daily-dynamic-status" class="muted" role="status" aria-live="polite"></p>
+<p id="daily-dynamic-action-status" class="action-feedback" role="status" aria-live="polite">点击“构思一条动态”后，页面会显示模型处理状态；没有真实视频、模型选择沉默或生成失败，也会解释原因。</p>
+<div id="daily-dynamic-list" class="records"></div>
 
 </section>
 <section id="panel-backup" hidden>
@@ -305,7 +347,7 @@ input[type=checkbox]{accent-color:#16865f}
 <div id="life-relationship-section" class="settings-section life-section"><h4>人物关系 · 真实互动慢慢熟悉</h4>
 <p class="muted">只对已登记白名单 UID 记录最少量互动元数据：渠道、时间和方向，不保存聊天正文。阶段是互动熟悉度估计，不等于真实亲密程度；主人填写的原始关系不会被自动覆盖。关系观察仅本地保存，不随普通业务备份导出。</p>
 <div class="toolbar"><button id="friend-relationships-refresh" class="life-action life-sky">刷新关系成长</button><span id="friend-relationships-status" class="muted">尚未读取</span></div><div id="friend-relationships-list" class="records"></div>
-<h4 style="margin-top:18px">旧版人物关系与成长资料</h4><p class="muted">来自旧「成长经验」的已批准兴趣、视频经历和角色关系原样保留，作为历史事实参与统一检索；已批准关系设定优先于矛盾的自动事实。旧记录不会自动复制为新记忆。</p><div id="main-legacy-growth-list" class="records"></div></div>
+<details id="legacy-growth-details" class="legacy-archive"><summary>历史兼容资料（旧版人物关系与成长记录）</summary><p class="muted">此处是旧版存档，仅为已有用户提供核对和人物索引修正。已批准记录仍用于统一记忆检索；隐藏或不打开本区不会删除历史数据。</p><div id="main-legacy-growth-list" class="records"></div></details></div>
 <div id="life-sync-section" class="settings-section life-section"><h4>告诉主 Session：大肥鱼最近做了什么</h4><div class="toolbar"><button id="main-session-sync" class="life-action life-green">现在把新经历告诉主 Session</button><button id="main-session-backfill" class="life-action life-sky">把过去 7 天遗漏的经历加入待汇报</button></div>
 <p class="muted">“过去 7 天”是<strong>从现在往回数 7 天</strong>，不是再等待 7 天。点击补充后只将尚未汇报的已选视频和已发评论放进本地待汇报队列，操作本身不会发送消息。启用主 Session 桥接和自动同步后，下一次符合间隔与每日额度的定时检查会尝试发送；否则可点击“现在把新经历告诉主 Session”手动发送。目标会话不在线时仍留在本地。此操作只汇报上下文，不直接写入人生记忆；人生反思会独立读取待反思经历。</p>
 <p id="main-session-queue-status" class="muted" role="status">正在读取…</p>
@@ -568,4 +610,12 @@ input[type=checkbox]{accent-color:#16865f}
 <div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3>最近私信会话</h3><button id="dm-recent-reload">刷新会话</button></div><p class="muted">只显示本插件已经保存的对话片段；不从 B站 额外拉取完整历史。获批用户可以点击“从本地历史补录视频心愿”，补录会对新心愿进行 AI 审核，不发送私信。记录仅在本机展示。</p><div id="dm-recent-list" class="records"></div></div>
 </section>
 <footer class="muted" style="margin-top:30px">数据只保存在本机 DSH 插件目录；此页面不从第三方加载脚本。若页面打不开，请先从 DSH 的「大肥鱼」设置点击管理中心入口。</footer>
-</main></body></html>
+</main>
+<div id="request-indicator" class="request-indicator" role="status" aria-live="polite" hidden><span class="spinner"></span><span>正在与大肥鱼通信…</span></div>
+<div id="action-toast" class="action-toast" role="status" aria-live="polite" hidden></div>
+<dialog id="action-confirm-dialog" class="action-confirm-dialog" aria-labelledby="action-confirm-title" aria-describedby="action-confirm-description">
+  <div class="confirm-head"><span class="confirm-sparkle">✦</span><div><h3 id="action-confirm-title">确认操作</h3><p id="action-confirm-kicker">请确认后继续</p></div></div>
+  <p id="action-confirm-description"></p>
+  <div class="confirm-footer"><button type="button" id="action-confirm-cancel">取消</button><button type="button" class="primary" id="action-confirm-accept">确认继续</button></div>
+</dialog>
+</body></html>

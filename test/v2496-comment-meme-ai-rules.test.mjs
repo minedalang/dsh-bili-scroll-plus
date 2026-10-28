@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {mkdtempSync,rmSync,existsSync,readFileSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
+import {fileURLToPath} from 'node:url'
 import {buildMemeRuleAIUpdatePrompt,computeMemeInventoryDelta,parseMemeRuleAIOutput,readMemeRuleAIIndex,readPreviousMemeRules,saveMemeRuleAIIndex,savePreviousMemeRules,validateAIMemeRules} from '../lib/comment-meme-ai-rules.mjs'
 import {readCommentMemeRules} from '../lib/comment-meme-rules.mjs'
 import {recordInterestEvents,listLifeInterests} from '../lib/life-interests.mjs'
@@ -15,7 +16,7 @@ test('AI 规则增量更新只在图库有变化时产生差异，并可保存�
     assert.deepEqual(computeMemeInventoryDelta(previous,current),{added:['猫咪/震惊'],removed:[],unchanged:['开心/笑哭','白饭/冰箱饭']})
     saveMemeRuleAIIndex(dir,previous)
     assert.deepEqual(readMemeRuleAIIndex(dir).names,previous)
-    const pluginDir=new URL('..',import.meta.url).pathname
+    const pluginDir=fileURLToPath(new URL('..',import.meta.url))
     const rules=readCommentMemeRules(dir,pluginDir).data
     savePreviousMemeRules(dir,rules)
     assert.deepEqual(readPreviousMemeRules(dir),rules)

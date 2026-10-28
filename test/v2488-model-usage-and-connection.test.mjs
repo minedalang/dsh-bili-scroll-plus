@@ -43,7 +43,7 @@ test('拒绝将统计写入符号链接，业务备份包含统计账本但不�
   try {
     const target=mkdtempSync(join(tmpdir(),'dafeiyu-v2488-target-'))
     try {
-      symlinkSync(target,join(dir,'model-usage'),'dir')
+      symlinkSync(target,join(dir,'model-usage'),process.platform==='win32'?'junction':'dir')
       assert.equal(recordModelTask(dir,'video'),false)
       assert.equal(existsSync(join(target,'2026-10.jsonl')),false)
     } finally {rmSync(target,{recursive:true,force:true})}

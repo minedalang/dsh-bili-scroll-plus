@@ -4023,6 +4023,12 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       try {const r=await dailyDynamic.createDraft();return sendJson(res,r.ok?200:409,r)}
       catch(e){return sendJson(res,400,{ok:false,error:String(e?.message||e).slice(0,220)})}
     }
+    if (req.method === 'POST' && path === '/api/bili-duty/daily-dynamic/delete') {
+      const body=await readBody(req)
+      if(body?.confirm!==true)return sendJson(res,400,{ok:false,error:'需要明确确认删除草稿'})
+      const r=dailyDynamic.deleteDraft(String(body?.id||''))
+      return sendJson(res,r.ok?200:409,r)
+    }
     if (req.method === 'POST' && path === '/api/bili-duty/daily-dynamic/publish') {
       const body=await readBody(req)
       if(body?.confirm!==true)return sendJson(res,400,{ok:false,error:'需要主人明确确认发布此草稿'})

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdtempSync,readFileSync,writeFileSync,mkdirSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
 import {Readable} from 'node:stream';
 import {apply} from '../index.js';
@@ -57,7 +58,7 @@ test('公开评论、附图、独立识图计数只读 SQLite，不把读不到�
  const dir=home();try{
   const setup=`import sqlite3,datetime,sys,pathlib\np=pathlib.Path(sys.argv[1]);day=datetime.datetime.now().strftime('%Y-%m-%d')\nfor name,table in [('public-comment-quota.sqlite3','public_comment_attempt'),('comment-meme-quota.sqlite3','attempts'),('vision-usage.sqlite3','usage')]:\n c=sqlite3.connect(p/name)\n if table=='public_comment_attempt':\n  c.execute('CREATE TABLE public_comment_attempt(day TEXT)');c.executemany('INSERT INTO public_comment_attempt(day) VALUES (?)',[(day,)]*3)\n else:\n  c.execute(f'CREATE TABLE {table}(day TEXT,used INTEGER)');c.execute(f'INSERT INTO {table} VALUES (?,?)',(day,2 if table=='attempts' else 4))\n c.commit();c.close()`;
   let pr=spawnSync('python',['-c',setup,dir],{encoding:'utf8'});assert.equal(pr.status,0,pr.stderr);
-  pr=spawnSync('python',['lib/comment-quota-count.py',dir],{cwd:new URL('..',import.meta.url).pathname,encoding:'utf8'});
+  pr=spawnSync('python',['lib/comment-quota-count.py',dir],{cwd:fileURLToPath(new URL('..',import.meta.url)),encoding:'utf8'});
   assert.equal(pr.status,0,pr.stderr);const stats=JSON.parse(pr.stdout.trim());
   assert.equal(stats.used,3);assert.equal(stats.memeUsed,2);assert.equal(stats.visionUsed,4);
  }finally{rmSync(dir,{recursive:true,force:true})}

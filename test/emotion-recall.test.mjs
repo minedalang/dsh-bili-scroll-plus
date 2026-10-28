@@ -47,7 +47,7 @@ test('model may skip; fabricated memory IDs and unauthorized channels cannot sen
 })
 test('dry run never sends or consumes quota, quiet-hours and offline are respected',async()=>{
  const q=setup();try{const r=await q.x.tick({dryRun:true});assert.equal(r.dryRun,true);assert.equal(q.calls.length,0);assert.equal(q.x.status().checks,0);assert.equal(q.x.status().sent,0)}finally{q.cleanup()}
- const a=setup({emotionRecallStartHour:13});try{assert.equal((await a.x.tick()).skipped,'quiet-hours')}finally{a.cleanup()}
+ const hour=new Date(T).getHours();const a=setup({emotionRecallStartHour:(hour+1)%24,emotionRecallEndHour:((hour+2)%24)||24});try{assert.equal((await a.x.tick()).skipped,'quiet-hours')}finally{a.cleanup()}
  const b=setup({emotionRecallDmEnabled:false},{online:false});try{assert.equal((await b.x.tick()).skipped,'offline-or-no-owner')}finally{b.cleanup()}
 })
 test('emotion alone, private memory or unrelated events do not initiate outbound messages',async()=>{
