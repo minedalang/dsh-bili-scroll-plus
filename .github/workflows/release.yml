@@ -1,4 +1,4 @@
-name: GitHub Release (Plus)
+name: GitHub Release (Dafeiyu Life)
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
             echo 'Git tag must equal v<package.json version>' >&2
             exit 1
           }
-          test "$(node -p "require('./package.json').name")" = 'dsh-bili-scroll-plus'
+          test "$(node -p "require('./package.json').name")" = 'dsh-dafeiyu-life'
       - name: Syntax checks
         run: |
           node --check index.js
@@ -32,9 +32,9 @@ jobs:
           node --check selfcheck.mjs
       - name: Pack installable npm archive
         run: npm pack --ignore-scripts
-      - name: Publish independent Plus GitHub Release
+      - name: Publish Dafeiyu Life GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dsh-bili-scroll-plus-*.tgz
+          files: dsh-dafeiyu-life-*.tgz
           generate_release_notes: true
           fail_on_unmatched_files: true
