@@ -62,5 +62,5 @@ test('actual source auto-generates main and DM overlays and fixes automated prof
   assert.match(code,/const args = \[\.\.\.dsh\.args, '--profile', 'headless'\]/)
   assert.match(code,/const args = \[\.\.\.dsh\.args, '--profile', 'headless', '--patch', overlay, promptText\]/)
   assert.match(code,/assertSafeHeadlessLaunch\(args,overlay,\{kind:'main',stateDir\}\)/)
-  assert.match(code,/assertSafeHeadlessLaunch\(args,overlay,\{kind:reflectionRoute\?'reflection':dynamicRoute\?'dailyDynamic':'dm',stateDir\}\)/)
+  assert.match(code,/assertSafeHeadlessLaunch\(args,overlay,\{kind:reflectionRoute\?'reflection':dynamicRoute\?'dailyDynamic':ownerAgentRoute\?'ownerDmAgent':'dm',stateDir\}\)/)
 })

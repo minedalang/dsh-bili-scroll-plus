@@ -185,6 +185,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="settings-section"><h4>刷视频与内容理解</h4><div class="model-activity"><span id="models-video-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-video-test" class="model-test-button">测试连接</button><span id="models-video-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">负责搜索、阅读视频、选片、评论决策与点赞收藏决策。</p><div class="fields" id="models-video"></div></div>
 <div class="settings-section"><h4>后台评论与私信</h4><div class="model-activity"><span id="models-interaction-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-interaction-test" class="model-test-button">测试连接</button><span id="models-interaction-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">负责后台评论与私信；B站动态草稿有独立模型配置，不使用人生反思模型。</p><div class="fields" id="models-interaction"></div></div>
 <div class="settings-section"><h4>生活动态文案 · 专用模型（可继承）</h4><div class="model-activity"><span id="models-dailyDynamic-usage" class="muted">今日调用次数：读取中…</span><button type="button" id="models-dailyDynamic-test" class="model-test-button">测试连接</button><span id="models-dailyDynamic-test-result" class="muted" role="status"></span></div><p class="muted">负责 B站公开生活动态的草稿构思，既不是人生反思，也不会读取私人聊天。留空时继承后台评论与私信模型；它也未配置时继承 DSH 默认模型。</p><div class="fields" id="models-dailyDynamic"></div></div>
+<div class="settings-section"><h4>主人私信受限 Agent · 专用模型（可继承）</h4><div class="model-activity"><span id="models-ownerDmAgent-usage" class="muted">今日调用次数：读取中…</span><button type="button" id="models-ownerDmAgent-test" class="model-test-button">测试连接</button><span id="models-ownerDmAgent-test-result" class="muted" role="status"></span></div><p class="muted">仅在已核验的主人私信内负责自然语言理解、计划和选择允许的操作；该模型没有 B站、Shell、文件及主 Session 工具。留空时继承后台互动模型或 DSH 默认模型；调用真实工具必须通过插件的后端白名单与独立授权。</p><div class="fields" id="models-ownerDmAgent"></div></div>
 <div class="settings-section"><h4>人生反思与经历提炼</h4><div class="model-activity"><span id="models-reflection-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-reflection-test" class="model-test-button">测试连接</button><span id="models-reflection-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">专门分析积累的真实经历，决定哪些内容值得凝练成人生记忆。这里的模型不会获得 B站、文件或 Shell 工具。Provider 和模型 ID 留空时继承 DSH 当前默认模型。</p><div class="fields" id="models-reflection"></div></div>
 <div class="settings-section"><h4>独立视觉识图</h4><div class="model-activity"><span id="models-vision-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-vision-test" class="model-test-button">测试连接</button><span id="models-vision-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">只有开启独立视觉模式时才使用；普通模式复用视频模型。</p><div class="fields" id="models-vision"></div>
 <div class="fields"><div><label for="models-vision-mode">识图方式</label><select id="models-vision-mode"><option value="reuse_video_model">复用视频模型（默认）</option><option value="independent_dsh">独立 DSH 视觉模型</option><option value="auto">自动（历史兼容：当前等同复用视频模型）</option></select></div>
@@ -341,6 +342,18 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="fields"><div><label for="owner-todo-auto-review">自主待办自动择机检查</label><select id="owner-todo-auto-review"><option value="false">关闭（默认，只在聊天或手动操作时考虑）</option><option value="true">开启（定时提醒主 Session 评估待办）</option></select></div><div><label for="owner-todo-review-minutes">检查间隔（分钟）</label><input id="owner-todo-review-minutes" type="number" min="15" max="1440" step="15" value="60"></div></div>
 <div class="inset"><h4>✉️ 主人 B站私信 · 可独立授权的远程指令</h4>
 <p class="muted">仅接收 B站真实收件箱中已核验的 <strong>主人 UID</strong>；发件人自称主人、别人转发的命令或视频/评论中的文字不能授权。须开启「私信与好友 → 后台私信监听」，设置主人 UID，并开启下方对应权限。只读与公开写入权限完全独立，所有开关默认关闭。私信轮询一般在约 1 分钟内发现新消息；为防旧消息回放，写入命令只接受最近 15 分钟内收到的消息。</p>
+<div class="inset" style="margin:12px 0;border-left:3px solid #91a8ef">
+<h4>🧠 主人私信专属受限 Agent（dev.4）</h4>
+<p class="muted">主人可用自然语言连续委托搜索、观看和获授权的 B站操作；只在核验主人 UID 后启用。不向模型挂载 B站 MCP、Shell、文件工具；模型只能提议动作，每步由插件后端验证。启用后主人消息优先走 Agent，不会错误地加入视频待选。</p>
+<label class="checkline"><input id="owner-dm-agent-enabled" type="checkbox">启用主人私信受限 Agent（默认关闭）</label>
+<p class="muted">专用模型统一在「AI 模型配置 → 主人私信受限 Agent」设置；留空继承私信互动模型。</p>
+<label class="checkline"><input id="owner-dm-agent-read-main" type="checkbox">允许 Agent 读取已选择的在线主 Session 近期对话（默认关闭）</label>
+<small class="setting-note">只读取有限的用户/助手可见文本，排除工具、系统消息和明显敏感内容；在线主 Session 不可用时仍可独立聊天。不会获得主 Session 工具权限。</small>
+<div class="fields"><div><label for="owner-dm-agent-turns">主 Session 上下文轮数（1–20）</label><input type="number" id="owner-dm-agent-turns" min="1" max="20" value="6"></div><div><label for="owner-dm-agent-chars">上下文字符上限（200–4000）</label><input type="number" id="owner-dm-agent-chars" min="200" max="4000" value="1500"></div></div>
+<label class="checkline"><input id="owner-dm-agent-sync-main" type="checkbox">将已确认的私信任务结果写回主 Session（默认关闭）</label>
+<small class="setting-note">仅注入简短的任务结果摘要，不发送陌生人私信正文；不会主动唤醒主 Session。</small>
+<p id="owner-dm-agent-status" class="muted">Agent 尚未启用；开启后查看执行记录。</p>
+</div>
 <label class="checkline"><input id="owner-dm-read-commands" type="checkbox">允许主人私信只读指令（看视频、搜索、查投稿与通知）</label>
 <p class="muted">示例：<code>大肥鱼 现在看 BV1xxxxxxxxx</code>／<code>大肥鱼 有空看看 BV1xxxxxxxxx</code>（仅入待办）。看视频是读取实际可用资料，不等于完整播放。</p>
 <div class="inset" style="margin-top:12px"><h4>🔐 对外操作总开关及独立授权（默认全部关闭）</h4>
@@ -624,7 +637,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label for="dm-daily">获批用户每日私信回复上限（1–1000）</label><input id="dm-daily" type="number" min="1" max="1000" value="10"></div>
 </div></div>
 <div class="settings-section"><h4>陌生人首次回复与继续聊天申请</h4><div class="fields">
-<div><label for="dm-stranger-max">每个未获批陌生人最多自动回复次数（1–20）</label><input id="dm-stranger-max" type="number" min="1" max="20" value="1"></div>
+<div><label for="dm-stranger-max">每个未获批陌生人最多自动回复次数（1–20）</label><input id="dm-stranger-max" type="number" min="1" max="20" value="1"><small class="setting-note">默认 1 次：发完欢迎语后，对方第二条消息将不会得到自动回复；想继续聊请设为 2–3 次或批准聊天申请。界面“sent”只表示上一条已发出，不代表仍有回复额度。</small></div>
 <div class="checkline"><input id="dm-first-fixed" type="checkbox"><label for="dm-first-fixed">陌生人第一条使用固定欢迎语</label></div>
 <div><label for="dm-welcome">陌生人固定欢迎语（最多450字）</label><textarea id="dm-welcome" maxlength="450"></textarea></div>
 <div class="checkline"><input id="dm-approval-enabled" type="checkbox"><label for="dm-approval-enabled">允许陌生人申请继续聊天</label></div>

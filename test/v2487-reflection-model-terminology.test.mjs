@@ -19,7 +19,7 @@ test('人生反思拥有独立模型配置并通过专用无工具 headless over
     assert.match(index, new RegExp(key))
   }
   assert.match(index, /invokeInteractionPrompt\(prompt,maxChars,\{\.\.\.opt,modelRoute:'reflection'\}\)/)
-  assert.match(index, /ensureOverlay\(true, reflectionRoute \? 'reflection' : dynamicRoute \? 'dailyDynamic' : 'interaction'\)/)
+  assert.match(index, /ensureOverlay\(true, reflectionRoute \? 'reflection' : dynamicRoute \? 'dailyDynamic' : ownerAgentRoute \? 'ownerDmAgent' : 'interaction'\)/)
 
   const dir = mkdtempSync(join(tmpdir(), 'dafeiyu-v2487-reflection-overlay-'))
   try {

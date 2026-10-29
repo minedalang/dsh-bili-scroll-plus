@@ -32,3 +32,5 @@ __pycache__/
 .DS_Store
 # npm 打包产物
 *.tgz
+
+*.patch
