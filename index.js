@@ -41,13 +41,13 @@ import { resolveUid } from './lib/uid.mjs'
 import { loadCred as dmCred, listSessions as dmList, fetchMsgs as dmFetch } from './lib/dm.mjs'
 import { ensureUv } from './lib/uvfetch.mjs'
 import { createDmAutoReply } from './lib/dm-autoreply.mjs'
-import { listActiveVideoWishes, rotatingWishKeywords } from './lib/video-wishes.mjs'
 import { receiveRecommendations, listRecommendationCandidates } from './lib/video-recommendations.mjs'
 import { createOwnerTodoEngine, WRITE_TODO_TYPES, READ_TODO_TYPES } from './lib/owner-todos.mjs'
 import { createAutonomousPlanner } from './lib/autonomous-planner.mjs'
 import { queueOwnerDmReadTodo, parseOwnerDmTodo } from './lib/owner-dm-commands.mjs'
 import { parseOwnerDmAction, createOwnerDmActionLedger, OWNER_DM_ACTION_FLAGS } from './lib/owner-dm-actions.mjs'
 import { createOwnerDmAgent } from './lib/owner-dm-agent.mjs'
+import { validateOwnerRosterUpdate } from './lib/owner-identity.mjs'
 import { formatLocalLogTimestamp } from './lib/log-time.mjs'
 import { collectLocalLifeEvents } from './lib/local-life-source.mjs'
 import { observeFriendInterest, learnedFriendContext, listFriendLearning, clearFriendLearning, isFriendRecommendationFeedback, friendRecommendationGuard } from './lib/friend-learning.mjs'
@@ -231,7 +231,6 @@ export const Config = !z ? undefined : z.object({
   dmApprovalPhrase: z.string().default('白饭🍚').extra('volatile',true),
   dmApprovedTotalLimit: z.natural().default(50).extra('volatile',true),
   dmApprovedDailyLimit: z.natural().default(10).extra('volatile',true),
-  dmWishMentionLimit: z.natural().default(3).extra('volatile',true),
   commentWatchReplies: z.boolean().default(false).extra('volatile', true),
   commentWatchTop: z.boolean().default(false).extra('volatile', true),
   commentAtEnabled: z.boolean().default(false).extra('volatile',true),
@@ -488,7 +487,7 @@ function reportMeta() {
     masterEnabled: true,
     dmWatch: true, dmWatchMinutes: 1, commentReplyWatchMinutes: 3, commentAtWatchMinutes: 3, commentTopWatchMinutes: 5, dmReplyPerDay: 0, dmContextMessages: 40, dmOwnerUid: 0,
     dmWhitelist: '', dmStrangerOnce: false, dmStrangerMaxReplies: 1, dmStrangerFirstFixed: true,
-    dmApprovalEnabled: false, dmApprovalPhrase: '白饭🍚', dmApprovedTotalLimit: 50, dmApprovedDailyLimit: 10, dmWishMentionLimit: 3,
+    dmApprovalEnabled: false, dmApprovalPhrase: '白饭🍚', dmApprovedTotalLimit: 50, dmApprovedDailyLimit: 10,
     videoModelProvider: '', videoModelId: '', videoReasoningEffort: '', interactionModelProvider: '', interactionModelId: '', interactionReasoningEffort: '', memeRulesModelProvider:'', memeRulesModelId:'', memeRulesReasoningEffort:'', memeRulesPrompt:'',
     commentWatchReplies: false, commentWatchTop: false, commentAtEnabled: false, friendAtFeedbackEnabled:false, strangerInspirationEnabled:false, socialInvitationEnabled:false, socialInvitationAutoInspectEnabled:false, ownerCommentAgentEnabled:false, ownerCommentLikeEnabled:false, ownerCommentDraftEnabled:false, ownerCommentPublishEnabled:false, ownerCommentNaturalAckEnabled:false, commentAtMode:'whitelist', commentAtWhitelist:'', commentTopCount: 5, commentTopVideoCount: 3, commentReplyHotCount: 12, backupDirectory: '',
     commentAllowGeneralTop: false, commentReplyPerPoll: 1, commentReplyPerDay: 5, commentOwnTopPerUser: 5, commentOwnNestedPerUser: 3,
@@ -629,7 +628,6 @@ function reportMeta() {
     if ('dmApprovalPhrase' in p) p.dmApprovalPhrase = String(p.dmApprovalPhrase||'白饭🍚').trim().slice(0,60)
     if ('dmApprovedTotalLimit' in p) p.dmApprovedTotalLimit = Math.max(1,Math.min(10000,Math.floor(Number(p.dmApprovedTotalLimit)||50)))
     if ('dmApprovedDailyLimit' in p) p.dmApprovedDailyLimit = Math.max(1,Math.min(1000,Math.floor(Number(p.dmApprovedDailyLimit)||10)))
-    if ('dmWishMentionLimit' in p) p.dmWishMentionLimit = Math.max(1,Math.min(10,Math.floor(Number(p.dmWishMentionLimit)||3)))
     for (const k of ['commentWatchReplies', 'commentWatchTop', 'commentAtEnabled', 'friendAtFeedbackEnabled', 'commentAllowGeneralTop']) if(k in p) p[k] = p[k] === true
     if ('commentAtMode' in p) p.commentAtMode = p.commentAtMode==='all'?'all':'whitelist'
     if ('commentAtWhitelist' in p) p.commentAtWhitelist = String(p.commentAtWhitelist||'').slice(0,2500)
@@ -1423,7 +1421,10 @@ function reportMeta() {
         if ('masterEnabled' in args.patch) return {ok:false, blocked:true, error:'总开关只能在「刷B站」设置页由用户手动修改'}
         if ('commentMemePrompt' in args.patch) return {ok:false, blocked:true, error:'AI 选图提示词只能由用户在设置页编辑'}
         if ('visionPrompt' in args.patch) return {ok:false, blocked:true, error:'视觉识图提示词只能由用户在设置页编辑'}
-        if ('mentionProfiles' in args.patch || 'characterLore' in args.patch) return {ok:false,blocked:true,error:'好友画像与角色关系设定只能由用户在设置页编辑'}
+        // Agent-facing configuration tool must not grant or revoke owner identity.
+        if (['dmOwnerUid','friendDirectory','mentionTargets','mentionProfiles','dmWhitelist','commentAtWhitelist'].some(key=>Object.prototype.hasOwnProperty.call(args.patch,key)))
+          return {ok:false,blocked:true,error:'授权主人与好友 UID 名册只能在本地管理中心修改'}
+        if ('characterLore' in args.patch) return {ok:false,blocked:true,error:'角色背景只能由用户在设置页编辑'}
         // ⭐ 设置页显式设过的键以宿主为准 ⇒ 必须跟着写一份，否则"改了没反应"（钳范围也在这里）
         try { host = (await persistCfg(args.patch)).host } catch (e) { return {ok:false,error:String(e?.message||e)} }
       }
@@ -1717,16 +1718,6 @@ function reportMeta() {
       }
     })()
     /* dsh-persona-growth: end */
-    const wishDoc = (() => {
-      if (!cfg.autoComment || cfg.dmMode === 'only' || cfg.mentionMode === 'off') return ''
-      try {
-        const db=readJson(join(stateDir,'dm-autoreply-state.json'),{})
-        const wishes=listActiveVideoWishes(db,stateDir,Date.now(),{limit:20}).filter(x=>x.remaining>0)
-        if(!wishes.length)return ''
-        return '\n【临时搜索补充词：每轮最多两个，只在心愿审核通过且有效时使用，不写回用户关注设置】\n'+rotatingWishKeywords(wishes).join('、')+'\n请根据视频质量决定是否搜索这些短期主题，不要忽略用户手动关注词，也不要永久记住它们。\n【已获批私信用户的临时视频心愿】\n' + wishes.map(w=>`心愿 ID=${w.id}，主题=${w.topic}，剩余可尝试${w.remaining}次`).join('\n')
-          + '\n遇见真正匹配的视频时，可以在 bili_reply 调用中设置 should_mention=true 和 temporary_wish_id=对应 ID 来顺手叫他看；视频内容不匹配绝不勉强，不要凭空捏造 ID。发送工具会自己校验 B站真实视频标题和 UID，并限制每个心愿的次数。不要向评论透露聊天权限或后台审核。\n'
-      }catch{return ''}
-    })()
     const inspirationDoc=(()=>{
       if(cfg.strangerInspirationEnabled!==true)return ''
       try{const topics=socialCognition.inspirationKeywords();return topics.length?'\n【来自陌生人私信的短期探索灵感（非任务，禁止因此主动私信、公开@或点赞）】\n'+topics.join('、')+'。只作为低权重选片线索，不能绕过正常选片、质量与安全约束，也不建立陌生人画像。\n':''}catch{return ''}
@@ -1767,7 +1758,6 @@ function reportMeta() {
       + ownerDoc
       + (memoryRetriever&&cfg.mainSessionMemoryEnabled?('\n'+memoryRetriever.localContext([...baseQueries,...kws].join(' '),'video').slice(0,1200)+'\n'):'')
       + growthDoc
-      + wishDoc
       + inspirationDoc
       + recommendationDoc
       + loreDoc
@@ -1828,7 +1818,7 @@ function reportMeta() {
         ? `开启的（每轮最多 ${cfg.commentPerRound} 条，150 字内）。评论像普通 B站用户自然吐槽，绝不能做摘要或推广。`
           + `@ 策略为 ${cfg.mentionMode || 'ai'}（off=不@；ai=判断后@全部好友；ai_select=只@觉得值得邀请的部分好友；always=每条@全部好友）。`
           + `名单：${parseMentionTargets(cfg.mentionTargets,cfg.mentionName).map(t=>t.name).join('、') || '空'}。`
-          + buildMentionProfilePrompt({targetsText:cfg.mentionTargets, legacyName:cfg.mentionName, profiles:cfg.mentionProfiles, friendDirectory:cfg.friendDirectory})
+          + buildMentionProfilePrompt({targetsText:cfg.mentionTargets, legacyName:cfg.mentionName, profiles:cfg.mentionProfiles, friendDirectory:cfg.friendDirectory, ownerUid:cfg.dmOwnerUid})
           + `在 ai 或 ai_select 模式，每次调用 bili_reply 时显式填写 should_mention: true/false；在 ai_select 模式还要填写 mention_names（只填真正想邀请的名单内昵称，可为空/一个/几个），`
           + `普通无关联的视频可以选 false；如果内容明确符合好友兴趣，不要因怕打扰而惯性拒绝邀请。若你主动决定不 @（should_mention=false），在同一次调用的 no_mention_reason 写一句具体、简短的解释（8–40字，如「这条只是在吐槽音效，没联想到要邀请谁」）；不能写空泛的「没必要」，也不能编造好友喜好。它只保存到用户本地诊断，不属于公开评论，别把解释放进 text。不要展示推理过程或私密内容。`
           + `ai 模式触发时@名单全部好友；ai_select 仅@选中的好友；mention_position 可选 start/middle/end。`
@@ -2347,7 +2337,6 @@ function reportMeta() {
       strangerMaxReplies: cfg.dmStrangerMaxReplies, strangerFirstFixed: cfg.dmStrangerFirstFixed,
       approvalEnabled:cfg.dmApprovalEnabled, approvalPhrase:cfg.dmApprovalPhrase,
       approvedTotalLimit:cfg.dmApprovedTotalLimit, approvedDailyLimit:cfg.dmApprovedDailyLimit,
-      wishMentionLimit:cfg.dmWishMentionLimit,
       whitelist: [...allow], strangerText: cfg.dmStrangerText,
       intervalMinutes: cfg.dmWatchMinutes,
       maxPerPoll: 3, maxPerHour: 40,
@@ -2358,7 +2347,8 @@ function reportMeta() {
   }
   const ownerDmActions=createOwnerDmActionLedger({dataDir:stateDir})
   const ownerInfo = () => {
-    const owner = Number(cfg.dmOwnerUid) || Number(cfg.dmUid) || dmUidCache
+    // Recipient UID / DM cache must never impersonate the privileged owner.
+    const owner = Number(cfg.dmOwnerUid) || 0
     if (!owner) return null
     const self = Number(dmCred(stateDir)?.dedeuserid) || 0
     return { uid: owner, name: '', self: owner === self }
@@ -2369,6 +2359,8 @@ function reportMeta() {
   async function runOwnerDmAction(action){
     refreshCfg()
     if(cfg.masterEnabled!==true||cfg.dmWatch!==true||cfg.ownerDmActionsEnabled!==true)return {ok:false,error:'主人私信操作总开关未打开'}
+    // Revalidate the real sender immediately before every write, including in-flight work.
+    if(!String(action.actorUid||'')||String(action.actorUid)!==String(cfg.dmOwnerUid||''))return {ok:false,error:'授权主人 UID 已撤销或切换，操作未执行'}
     const flag=OWNER_DM_ACTION_FLAGS[action.type]
     if(!flag||cfg[flag]!==true)return {ok:false,error:'此类主人私信操作未单独授权：'+action.type}
     if(!hasCredential())return {ok:false,error:'B站尚未登录'}
@@ -2457,7 +2449,7 @@ function reportMeta() {
       const r=await executeOwnerTodo(task)
       return r
     },
-    executeWrite:async(step)=>runOwnerDmAction({type:step.action,bvid:step.bvid,uid:step.uid,text:step.text,folderTitle:step.folderTitle,draftId:step.draftId}),
+    executeWrite:async(step)=>runOwnerDmAction({type:step.action,bvid:step.bvid,uid:step.uid,text:step.text,folderTitle:step.folderTitle,draftId:step.draftId,actorUid:step.actorUid}),
     send:async({uid,text})=>{
       refreshCfg();if(cfg.masterEnabled!==true||cfg.dmWatch!==true||cfg.ownerDmAgentEnabled!==true||String(cfg.dmOwnerUid||'')!==String(uid))return {ok:false,error:'主人私信 Agent 未授权'}
       const r=await call('bili_send_message',{receiver_uid:Number(uid),text:String(text).slice(0,450)})
@@ -2520,7 +2512,7 @@ function reportMeta() {
         if(checked.reason==='duplicate')claimedCommands.add(row.messageId)
         if(!checked.ok)continue
         claimedCommands.add(row.messageId)
-        const r=await runOwnerDmAction(action)
+        const r=await runOwnerDmAction({...action,actorUid:row.senderUid})
         ownerDmActions.finish(checked.key,r)
         const summary=String(r?.summary||(r?.uncertain?'结果不确定，暂不重试：':'未完成：')+String(r?.error||'未知原因')).slice(0,370)
         log('主人私信 B站动作：'+action.type+' '+(r?.ok?'完成':r?.uncertain?'结果不确定':'未完成'))
@@ -2717,7 +2709,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
   }
 
   const replyIdentityContext = (uid) => buildSenderRelationshipContext({
-    uid, friendDirectory:cfg.friendDirectory, profiles:cfg.mentionProfiles, targetsText:cfg.mentionTargets
+    uid, friendDirectory:cfg.friendDirectory, profiles:cfg.mentionProfiles, targetsText:cfg.mentionTargets, ownerUid:cfg.dmOwnerUid
   }) + '\n' + learnedFriendContext(stateDir,uid,cfg.friendDirectory) + '\n' + friendRelationshipContext(stateDir,uid,cfg.friendDirectory)
   const interactionMemeLookup = createInteractionMemeLookup({
     dataDir: stateDir,
@@ -2777,12 +2769,6 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
         }catch{} }
       return ''
     },
-    reviewWish:async({text,topic})=>{
-      const ask=`你只负责审核B站视频心愿是否适合自动搜索并公开@推荐。不要执行工具。对同一条私信提出的多个主题作一次整体审核，结论同时适用于其各个主题。\n严格拒绝原话明确包含涉政、色情成人性内容、性暗示/擦边、违法暴力、诈骗、骚扰仇恨、隐私侵害、未成年人性化或其他明确有害的请求。\n必须区分真实风险和臆测：普通的美食视频、游戏视频、穿搭视频以及没有露骨描写的“美女/颜值视频”本身是正常视频偏好，不能仅因“美女”二字推测擦边或色情，也不能拿一个正常主题猜测另一个主题不健康。仅按对方实际说过的词判断；风险不清且确有可疑描述时拒绝。\n只输出严格JSON：{"decision":"approve或reject","reason":"简短说明具体依据，不作没有证据的推测"}。\n请求包含的主题=${JSON.stringify(topic)}\n对方原话=${JSON.stringify(String(text).slice(0,180))}`;
-      const raw=await invokeInteractionPrompt(ask,700,{requireMasterEnabled:false});
-      const match=String(raw).match(/\{[\s\S]*?\}/);if(!match)return null;
-      try{const value=JSON.parse(match[0]);return ['approve','reject'].includes(value?.decision)?value:null;}catch{return null;}
-    },
     onIncoming: ({uid,text,messageId,time})=>{try{socialCognition.observe({uid,text,source:'dm',eventId:messageId,timestampMs:time})}catch(e){log('社会意愿私信观察失败：'+String(e?.message||e).slice(0,90))}observeFriendInterest(stateDir,{uid,text,source:'dm',eventId:messageId,now:time,friendDirectory:cfg.friendDirectory});recordFriendInteraction(stateDir,{uid,source:'dm',direction:'incoming',eventId:messageId,now:time,friendDirectory:cfg.friendDirectory})},
     generateReply: async (req) => interactionBatcher.generate({kind:'dm', ...req,
       recommendationContext:await dmVideoRecommendationContext.forReply(req),
@@ -2812,6 +2798,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     dataDir:stateDir,getConfig:()=>{refreshCfg();return cfg},
     perform:async(action)=>{
       refreshCfg();if(cfg.masterEnabled!==true||!hasCredential())return {ok:false,error:'总开关已暂停或B站未登录'}
+      if(String(action.actorUid||'')!==String(cfg.dmOwnerUid||'')||!cfg.dmOwnerUid)return {ok:false,error:'主人 UID 已撤销或切换，公开评论操作未执行'}
       if(!/^BV[0-9A-Za-z]{10}$/.test(String(action.bvid||'')))return {ok:false,error:'当前评论视频未核实'}
       if(action.type==='like'){
         if(cfg.ownerCommentLikeEnabled!==true||Number(cfg.autoVideoLikeDailyLimit)<=0)return {ok:false,error:'点赞权限或每日额度关闭'}
@@ -2835,8 +2822,9 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       }
       return {ok:false,error:'不支持的评论动作'}
     },
-    sendReply:async({bvid,rpid,root,text})=>{
-      refreshCfg();if(cfg.masterEnabled!==true||cfg.ownerCommentAgentEnabled!==true||cfg.ownerCommentNaturalAckEnabled!==true||cfg.commentDailyLimit<=0)return {ok:false}
+    sendReply:async({bvid,rpid,root,text,actorUid})=>{
+      refreshCfg();if(!cfg.dmOwnerUid||String(actorUid||'')!==String(cfg.dmOwnerUid||''))return {ok:false}
+      if(cfg.masterEnabled!==true||cfg.ownerCommentAgentEnabled!==true||cfg.ownerCommentNaturalAckEnabled!==true||cfg.commentDailyLimit<=0)return {ok:false}
       const r=parseMaybeJson(await call('bili_reply_manual',{bvid,rpid:Number(rpid),root:Number(root)||0,text,confirm:true}))
       return {ok:r?.ok===true&&r?.sent===true}
     },logger:{warn:m=>log('主人评论 Agent：'+m)}
@@ -4527,7 +4515,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       for (const k of ['masterEnabled', 'perDay', 'pickPerRound', 'peakValley', 'peakWindows', 'peakIntervalMinutes', 'autoComment', 'transcribe', 'asrModel',
         'diagMentionEnabled','diagDynamicEnabled','diagVisionEnabled','diagMemeEnabled','diagAtInviteEnabled','diagReplyInboxEnabled','commentMemesEnabled','commentMemesDebug','commentMemesPerDay','commentMemesPerRound','commentMemePrompt','visionPrompt','memeMemoryEnabled', 'memeMemoryMaxEntries', 'visionEnabled', 'visionDebug', 'visionMode', 'visionModelProvider', 'visionModelId', 'visionReasoningEffort', 'visionEndpoint', 'visionFrames', 'visionDailyLimit', 'commentPerRound', 'mentionName', 'mentionTargets', 'mentionProfiles', 'friendDirectory', 'mentionMode', 'dmMode', 'dmUid', 'commentSyncDynamic', 'dynamicDailyLimit', 'commentDailyLimit',
         'videoModelProvider','videoModelId','videoReasoningEffort','interactionModelProvider','interactionModelId','interactionReasoningEffort','memeRulesModelProvider','memeRulesModelId','memeRulesReasoningEffort','memeRulesPrompt',
-        'keywords', 'coreInterestTopics', 'pythonPath', 'dshBin', 'headlessProfile', 'workspace', 'reportLevel', 'personaPrompt', 'characterLore', 'dmWatch', 'dmWatchMinutes', 'commentReplyWatchMinutes', 'commentAtWatchMinutes', 'commentTopWatchMinutes', 'dmReplyPerDay', 'dmContextMessages', 'dmOwnerUid', 'dmWhitelist', 'dmStrangerOnce', 'dmStrangerText', 'dmStrangerMaxReplies', 'dmStrangerFirstFixed', 'dmApprovalEnabled','dmApprovalPhrase','dmApprovedTotalLimit','dmApprovedDailyLimit','dmWishMentionLimit',
+        'keywords', 'coreInterestTopics', 'pythonPath', 'dshBin', 'headlessProfile', 'workspace', 'reportLevel', 'personaPrompt', 'characterLore', 'dmWatch', 'dmWatchMinutes', 'commentReplyWatchMinutes', 'commentAtWatchMinutes', 'commentTopWatchMinutes', 'dmReplyPerDay', 'dmContextMessages', 'dmOwnerUid', 'dmWhitelist', 'dmStrangerOnce', 'dmStrangerText', 'dmStrangerMaxReplies', 'dmStrangerFirstFixed', 'dmApprovalEnabled','dmApprovalPhrase','dmApprovedTotalLimit','dmApprovedDailyLimit',
         'commentWatchReplies', 'commentWatchTop', 'commentAtEnabled', 'friendAtFeedbackEnabled', 'strangerInspirationEnabled','socialInvitationEnabled','socialInvitationAutoInspectEnabled','ownerCommentAgentEnabled','ownerCommentLikeEnabled','ownerCommentDraftEnabled','ownerCommentPublishEnabled','ownerCommentNaturalAckEnabled', 'commentAtMode', 'commentAtWhitelist', 'commentTopCount', 'commentTopVideoCount', 'commentReplyHotCount', 'commentAllowGeneralTop', 'commentReplyPerPoll', 'commentReplyPerDay', 'commentOwnTopPerUser', 'commentOwnNestedPerUser', 'mainSessionBridgeEnabled', 'mainSessionId', 'mainSessionAutoSync', 'mainSessionSyncMinutes', 'mainSessionDailyBatches', 'mainSessionBatchSize', 'mainSessionIncludeComments', 'mainSessionMemoryEnabled', 'mainSessionMemoryAutoBili', 'mainSessionMemorySemanticEnabled', 'mainSessionMemoryModelProvider', 'mainSessionMemoryModelId', 'mainSessionMemoryReasoningEffort', 'mainSessionMemoryCandidates', 'mainSessionMemorySearchDailyLimit', 'socialOutreachEnabled', 'socialLifeIntentEnabled', 'emotionSystemEnabled', 'socialAutoSend', 'socialOutreachDailyLimit', 'ownerTodoAutoReviewEnabled', 'ownerTodoReviewMinutes', 'autonomousPlannerEnabled','emotionRecallEnabled','emotionRecallMainEnabled','emotionRecallDmEnabled','emotionRecallUnlimited','emotionRecallDailyLimit','emotionRecallCooldownHours','emotionRecallStartHour','emotionRecallEndHour','emotionRecallCandidateLimit','emotionRecallHistoryLimit','emotionRecallRecentDays','emotionRecallMinAgeDays','emotionRecallEmotionMinIntensity','emotionRecallEmotionMaxAgeHours','ownerDmAgentEnabled','ownerDmAgentReadMainContext','ownerDmAgentSyncMain','ownerDmAgentContextTurns','ownerDmAgentContextChars','ownerDmAgentModelProvider','ownerDmAgentModelId','ownerDmAgentReasoningEffort','ownerDmReadCommandsEnabled','ownerDmActionsEnabled','ownerDmLikeEnabled','ownerDmCollectEnabled','ownerDmFollowEnabled','ownerDmCommentDraftEnabled','ownerDmCommentPublishEnabled','ownerDmDynamicDraftEnabled','ownerDmDynamicPublishEnabled','ownerDmFriendMessageEnabled','dailyDynamicModelProvider','dailyDynamicModelId','dailyDynamicReasoningEffort','autonomousPlannerMinutes','autonomousPlannerDailyLimit','autonomousPlannerStartHour','autonomousPlannerEndHour', 'mainSessionReflectionAuto', 'mainSessionReflectionModelProvider', 'mainSessionReflectionModelId', 'mainSessionReflectionReasoningEffort', 'mainSessionReflectionMinCandidates', 'mainSessionReflectionBatchSize', 'mainSessionReflectionIntervalHours', 'mainSessionReflectionDailyBatches', 'mainSessionMemoryHalfLifeDays', 'mainSessionMemoryThreshold', 'mainSessionMemoryMaxItems', 'mainSessionMemoryMaxChars', 'mainSessionMemoryDailyQuota', 'mainSessionMemoryFactsMax', 'favFolderId','autoVideoLike','autoVideoLikeDailyLimit','autoVideoCollect','agentFollowEnabled','dailyDynamicEnabled','dailyDynamicDailyLimit','dailyDynamicDraftOnly']) {
         if (k in body) patch[k] = body[k]
       }
@@ -4554,7 +4542,11 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       if ('peakWindows' in patch) {
         try { parsePeakWindows(patch.peakWindows) } catch (e) { return sendJson(res, 400, {ok:false,error:String(e?.message||e)}) }
       }
-      const { clean, host } = await persistCfg(patch)
+      // 权限变更只能来自完整好友名册提交；防止角色标签与实际授权 UID 脱节。
+      let validatedPatch
+      try { validatedPatch=validateOwnerRosterUpdate(patch,cfg) }
+      catch(e){return sendJson(res,400,{ok:false,error:String(e?.message||e)})}
+      const { clean, host } = await persistCfg(validatedPatch)
       // 启用主 Session 桥的这一刻就建立基线，避免“保存后到下一次定时检查之间”的旧经历被误当成新经历。
       if (clean.mainSessionBridgeEnabled === true) { try { mainSessionBridge.collect() } catch (e) { log('主 Session 基线建立失败：'+String(e?.message||e)) } }
       log(`设置已更新：${JSON.stringify({...clean, ...('mentionProfiles' in clean ? {mentionProfiles:'[好友画像已更新]'} : {}), ...('personaPrompt' in clean ? {personaPrompt:'[人设提示词已更新]'} : {}), ...('characterLore' in clean ? {characterLore:'[角色关系设定已更新]'} : {}), ...('commentMemePrompt' in clean ? {commentMemePrompt: '[选图提示词已更新]'} : {}), ...('visionPrompt' in clean ? {visionPrompt: '[识图提示词已更新]'} : {}), ...('memeRulesPrompt' in clean ? {memeRulesPrompt: '[表情包规则维护提示词已更新]'} : {})})}（DSH 那边${host.ok ? '已同步' : '没写成：' + host.error}）`)
@@ -4598,18 +4590,6 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
 
     if (req.method === 'GET' && path === '/api/bili-duty/dm-approvals') {
       return sendJson(res,200,{ok:true, approvals:await dmAutoreply.listApprovals()})
-    }
-    if (req.method === 'GET' && path === '/api/bili-duty/video-wishes') {
-      await dmAutoreply.fillNicknames(2).catch(()=>{});
-      return sendJson(res,200,{ok:true,wishes:await dmAutoreply.listVideoWishes()})
-    }
-    if (req.method === 'POST' && path === '/api/bili-duty/video-wishes') {
-      const body=await readBody(req)
-      const result=body.action==='cancel' ? await dmAutoreply.cancelVideoWish(String(body.uid||''),String(body.id||''))
-        : body.action==='backfill' ? await dmAutoreply.backfillVideoWishes(String(body.uid||''))
-        : body.action==='review' ? await dmAutoreply.reviewVideoWish(String(body.uid||''),String(body.id||''))
-        : {ok:false,error:'不支持的心愿操作'}
-      return sendJson(res,result.ok?200:400,result)
     }
     if (req.method === 'POST' && path === '/api/bili-duty/dm-approvals') {
       const body=await readBody(req)

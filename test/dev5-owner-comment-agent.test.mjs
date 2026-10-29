@@ -28,7 +28,7 @@ test('owner UID must be platform verified, nickname and comment text cannot impe
 test('one verified owner @ executes once and stays deduplicated across engine restarts',async()=>{
  const t=make();try{
   assert.equal((await t.agent.accept(t.row())).status,'done')
-  assert.deepEqual(t.performed,[{type:'like',bvid:BV}])
+  assert.deepEqual(t.performed,[{type:'like',bvid:BV,actorUid:'999'}])
   assert.equal(t.replies.length,0)
   assert.equal((await t.agent.accept(t.row())).skipped,'duplicate')
   assert.equal(t.performed.length,1)

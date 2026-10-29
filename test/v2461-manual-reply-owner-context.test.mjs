@@ -14,13 +14,13 @@ const reply=(rpid,uid=123)=>({user:{mid:uid,uname:'测试用户'},item:{business
 const raw=items=>({code:0,data:{items}});
 const dirEntries=[{uid:'1001',name:'长条动物',dm:true,mention:true,atInvite:true},{uid:'1002',name:'小叶',dm:true,mention:false,atInvite:true},{uid:'1003',name:'无画像好友',dm:false,mention:true,atInvite:false}];
 const profile={1001:{role:'owner',relationship:'大肥鱼的主人',personalityInterests:'喜欢骑车',peerRelationships:[{uid:'1002',relationship:'好朋友'}]},1002:{role:'friend',relationship:'大肥鱼的朋友'}};
-const identity=uid=>buildSenderRelationshipContext({uid,friendDirectory:JSON.stringify(dirEntries),profiles:JSON.stringify(profile)});
+const identity=uid=>buildSenderRelationshipContext({uid,friendDirectory:JSON.stringify(dirEntries),profiles:JSON.stringify(profile),ownerUid:'1001'});
 
 test('主人关系按准确 UID 查找，非主人不能冒认，未知 UID 不补造画像',()=>{
  const owner=identity('1001'),friend=identity('1002');
- assert.match(owner,/主人之一/);assert.match(owner,/骑车/);assert.match(owner,/小叶/);
- assert.doesNotMatch(friend,/是大肥鱼的主人之一/);
- assert.match(friend,/没有配置为主人/);
+ assert.match(owner,/唯一授权的主人/);assert.match(owner,/骑车/);assert.match(owner,/小叶/);
+ assert.doesNotMatch(friend,/唯一授权的主人/);
+ assert.match(friend,/不是当前授权主人/);
  assert.equal(identity('99999'),'');
  assert.equal(identity('长条动物'),'');
 });
@@ -37,8 +37,8 @@ test('多人批量私信与评论的身份上下文隔离，手动回复标志�
   assert.equal(prompts.length,2);
   const first=JSON.parse(prompts[0].split('消息：').at(-1));
   const second=JSON.parse(prompts[1].split('消息：').at(-1));
-  assert.match(first[0].identityContext,/主人之一/);
-  assert.doesNotMatch(second[0].identityContext,/主人之一/);
+  assert.match(first[0].identityContext,/唯一授权的主人/);
+  assert.doesNotMatch(second[0].identityContext,/唯一授权的主人/);
   assert.equal(second[0].manualReply,true);
   assert.equal(first[0].manualReply,false);
  }finally{batch.stop()}
