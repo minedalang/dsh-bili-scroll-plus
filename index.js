@@ -1981,6 +1981,8 @@ function reportMeta() {
         ? {provider:cfg.dailyDynamicModelProvider||cfg.interactionModelProvider,model:cfg.dailyDynamicModelId||cfg.interactionModelId,reasoningEffort:cfg.dailyDynamicReasoningEffort||cfg.interactionReasoningEffort}
         : prefix === 'reflection'
         ? { provider:cfg.mainSessionReflectionModelProvider, model:cfg.mainSessionReflectionModelId, reasoningEffort:cfg.mainSessionReflectionReasoningEffort }
+        : prefix === 'ownerDmAgent'
+        ? { provider:cfg.ownerDmAgentModelProvider||cfg.interactionModelProvider, model:cfg.ownerDmAgentModelId||cfg.interactionModelId, reasoningEffort:cfg.ownerDmAgentReasoningEffort||cfg.interactionReasoningEffort }
         : { provider:cfg[prefix+'ModelProvider'], model:cfg[prefix+'ModelId'], reasoningEffort:cfg[prefix+'ReasoningEffort'] }
       yml.push(...effectiveModelSelection(sel,custom,yq))
     } catch (e) {
