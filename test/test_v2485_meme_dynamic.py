@@ -1,4 +1,5 @@
 import importlib.util,json,sqlite3,tempfile,unittest
+from contextlib import closing
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -14,7 +15,7 @@ class V2485Test(unittest.TestCase):
         self.meme=load(ROOT/'lib'/'meme-learning-admin.py','meme_learning_admin')
         self.daily=load(ROOT/'lib'/'daily-dynamic-publish.py','daily_dynamic_publish')
         db=self.home/'meme-memory.sqlite3'
-        with sqlite3.connect(db) as c:
+        with closing(sqlite3.connect(db)) as c, c:
             c.execute('CREATE TABLE memes(id INTEGER PRIMARY KEY AUTOINCREMENT,key TEXT UNIQUE,name TEXT,aliases TEXT,kind TEXT,meaning TEXT,confidence TEXT,created_at TEXT,updated_at TEXT,review_status TEXT)')
             c.execute('CREATE TABLE meme_sources(meme_id INTEGER,bvid TEXT,evidence_type TEXT,evidence TEXT,noted_at TEXT,PRIMARY KEY(meme_id,bvid))')
             c.execute('CREATE TABLE meme_observations(id INTEGER PRIMARY KEY,name TEXT,bvid TEXT,evidence TEXT,evidence_type TEXT,created_at TEXT,status TEXT DEFAULT "pending",UNIQUE(name,bvid))')
@@ -24,7 +25,7 @@ class V2485Test(unittest.TestCase):
     def test_two_sources_commit(self):
         r=self.meme.operate(self.home,'commit',{'entries':[{'name':'奶蛙','kind':'角色','meaning':'不同视频中出现的网络二创形象，具体背景待核实。','observation_ids':[1,2]}]})
         self.assertEqual(r['created'],1)
-        with sqlite3.connect(self.home/'meme-memory.sqlite3') as c:
+        with closing(sqlite3.connect(self.home/'meme-memory.sqlite3')) as c:
             self.assertEqual(c.execute('SELECT COUNT(*) FROM meme_sources').fetchone()[0],2)
             self.assertEqual(c.execute('SELECT confidence FROM memes').fetchone()[0],'待核实')
     def test_one_source_rejected(self):

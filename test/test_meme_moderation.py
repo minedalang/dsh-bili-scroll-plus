@@ -1,6 +1,7 @@
 """Meme approval/migration/edit cycles without Bilibili access."""
 import importlib.util, json, sqlite3, subprocess, sys, tempfile, unittest
 from datetime import datetime
+from contextlib import closing
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -40,5 +41,5 @@ class MemeAdminTests(unittest.TestCase):
     def test_delete_source_and_meme(self):
         self.assertTrue(self.call('delete',1)['deleted'])
         self.assertEqual(self.call('list','')['total'],0)
-        with sqlite3.connect(self.db) as conn:
+        with closing(sqlite3.connect(self.db)) as conn:
             self.assertEqual(conn.execute('SELECT COUNT(*) FROM meme_sources').fetchone()[0],0)

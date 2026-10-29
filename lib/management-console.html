@@ -110,6 +110,9 @@ input[type=checkbox]{accent-color:#16865f}
 #panel-life .emotion-chip{display:inline-block;border-radius:99px;padding:3px 10px;background:var(--tint);font-size:12px;font-weight:700}
 
 
+/* 2.5.0-dev.2：浅色提示与键盘可读布局，跟随亮色/暗色主题。 */
+.setting-note{display:block;margin:7px 0 0;padding:7px 9px;background:color-mix(in srgb,var(--tint) 48%,var(--panel));border-left:2px solid color-mix(in srgb,var(--ui-indigo, #6579df) 45%,var(--stroke));border-radius:0 7px 7px 0;color:var(--muted);font-size:12px;font-weight:400;line-height:1.55;overflow-wrap:anywhere}
+#panel-home .settings-section .fields>div{align-self:start}
 /* 2.5.0-dev UI polish: 彩色柔和边框 + 渐变，严格保留页面与字段 ID。 */
 :root{--ui-indigo:#6579df;--ui-teal:#1c9c8c;--ui-rose:#c477ad;--ui-amber:#d09b49}
 .top{border-color:color-mix(in srgb,var(--ui-indigo) 38%,var(--stroke));background:linear-gradient(120deg,var(--panel) 12%,color-mix(in srgb,var(--tint) 72%,var(--panel)) 56%,color-mix(in srgb,var(--ui-teal) 9%,var(--panel)));box-shadow:0 14px 38px rgba(56,78,136,.09)}
@@ -270,25 +273,25 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 
 <div class="settings-section"><h4>3. 人生记忆与检索设置</h4>
 <p class="muted">这里只放记忆开关和用量设置；所有模型统一在「AI 模型配置」页设置。兴趣变化、真实回忆、人物关系、待反思经历和检索测试，请切换到独立的「人生记忆」页。</p>
-<div class="fields"><div><label for="main-memory-enabled">启用大肥鱼跨 Session 长期记忆（身份级）</label><input id="main-memory-enabled" type="checkbox"></div>
-<div><label for="main-memory-auto-bili">把新经历加入「待反思经历」列表</label><input id="main-memory-auto-bili" type="checkbox" checked></div>
-<div><label for="main-reflection-auto">自动进行人生反思</label><input id="main-reflection-auto" type="checkbox" checked></div>
-<div><label for="main-reflection-min">至少积累多少候选再自动反思（2–30）</label><input id="main-reflection-min" type="number" min="2" max="30" value="6"></div>
-<div><label for="main-reflection-batch">每批最多反思候选（4–30）</label><input id="main-reflection-batch" type="number" min="4" max="30" value="16"></div>
-<div><label for="main-reflection-hours">两次自动反思至少间隔（1–48 小时）</label><input id="main-reflection-hours" type="number" min="1" max="48" step="0.5" value="6"></div>
-<div><label for="main-reflection-daily">每天最多自动反思（1–8 批）</label><input id="main-reflection-daily" type="number" min="1" max="8" value="2"></div>
-<div><label for="main-memory-semantic">启用独立低成本模型进行语义检索（默认关闭）</label><input id="main-memory-semantic" type="checkbox"></div>
-<div><label for="main-memory-model-provider">检索模型 Provider（必填，例如 DSH 已配置的提供方 ID）</label><input id="main-memory-model-provider" type="text" maxlength="160" placeholder="对应 DSH Provider ID"></div>
-<div><label for="main-memory-model-id">检索模型 ID（必填）</label><input id="main-memory-model-id" type="text" maxlength="160" placeholder="模型 ID"></div>
-   <div><label for="main-memory-model-effort">检索模型思考深度（可留空）</label><input id="main-memory-model-effort" type="text" maxlength="160" placeholder="如 low / medium / high，或该模型支持的 JSON"><small class="field-help">留空由模型默认决定；使用 DSH 支持的原始 reasoningEffort 值。</small></div>
-<div><label for="main-memory-candidates">低成本模型最多看到的候选记忆（12–80）</label><input id="main-memory-candidates" type="number" min="12" max="80" value="48"></div>
-<div><label for="main-memory-search-daily">每日每个检索通道调用上限（0–500，0=禁止）</label><input id="main-memory-search-daily" type="number" min="0" max="500" value="80"></div>
-<div><label for="main-memory-half-life">普通记忆半衰期（15–120 天）</label><input id="main-memory-half-life" type="number" min="15" max="120" value="30"></div>
-<div><label for="main-memory-threshold">召回证据门槛（0.10–0.80）</label><input id="main-memory-threshold" type="number" min="0.1" max="0.8" step="0.05" value="0.35"></div>
-<div><label for="main-memory-max-items">每轮最多召回（1–12 条）</label><input id="main-memory-max-items" type="number" min="1" max="12" value="6"></div>
-<div><label for="main-memory-max-chars">每轮记忆字数上限（200–3000）</label><input id="main-memory-max-chars" type="number" min="200" max="3000" value="800"></div>
-<div><label for="main-memory-daily">主人聊天语义记忆每日最多（1–30 条）</label><input id="main-memory-daily" type="number" min="1" max="30" value="8"></div>
-<div><label for="main-memory-facts">长期事实最多占召回（0–6 条）</label><input id="main-memory-facts" type="number" min="0" max="6" value="2"></div></div>
+<div class="fields"><div><label for="main-memory-enabled">启用大肥鱼跨 Session 长期记忆（身份级）</label><input id="main-memory-enabled" type="checkbox"><small class="setting-note">开启后跨聊天会话记住重要经历；关闭后不注入长期记忆，已保存的内容不会删除。</small></div>
+<div><label for="main-memory-auto-bili">把新经历加入「待反思经历」列表</label><input id="main-memory-auto-bili" type="checkbox" checked><small class="setting-note">开启后把真实入选视频等经历放进待反思池；关闭不会删除已有经历。</small></div>
+<div><label for="main-reflection-auto">自动进行人生反思</label><input id="main-reflection-auto" type="checkbox" checked><small class="setting-note">开启后满足条件时自动使用反思模型筛选记忆；关闭后仍可手动反思。</small></div>
+<div><label for="main-reflection-min">至少积累多少候选再自动反思（2–30）</label><input id="main-reflection-min" type="number" min="2" max="30" value="6"><small class="setting-note">数字越小，积累较少经历就会启动反思；越大则更耐心地等待足够素材。</small></div>
+<div><label for="main-reflection-batch">每批最多反思候选（4–30）</label><input id="main-reflection-batch" type="number" min="4" max="30" value="16"><small class="setting-note">每轮交给反思模型的候选上限；越大一次看得越多，通常消耗更多 Token。</small></div>
+<div><label for="main-reflection-hours">两次自动反思至少间隔（1–48 小时）</label><input id="main-reflection-hours" type="number" min="1" max="48" step="0.5" value="6"><small class="setting-note">两轮自动反思间的最短时间；调小可能增加模型调用和记忆更新频率。</small></div>
+<div><label for="main-reflection-daily">每天最多自动反思（1–8 批）</label><input id="main-reflection-daily" type="number" min="1" max="8" value="2"><small class="setting-note">限制每天自动反思批数；调大可能更勤快，也可能增加模型费用。</small></div>
+<div><label for="main-memory-semantic">启用独立低成本模型进行语义检索（默认关闭）</label><input id="main-memory-semantic" type="checkbox"><small class="setting-note">打开后模型从真实候选中挑选更相关的记忆；可能额外产生模型调用。</small></div>
+<div><label for="main-memory-model-provider">检索模型 Provider（必填，例如 DSH 已配置的提供方 ID）</label><input id="main-memory-model-provider" type="text" maxlength="160" placeholder="对应 DSH Provider ID"><small class="setting-note">指定用于记忆检索的 DSH 模型服务提供方；填错会导致模型检索失败并回退本地。</small></div>
+<div><label for="main-memory-model-id">检索模型 ID（必填）</label><input id="main-memory-model-id" type="text" maxlength="160" placeholder="模型 ID"><small class="setting-note">指定检索使用的模型；建议选便宜、稳定的模型，填错会回退本地检索。</small></div>
+   <div><label for="main-memory-model-effort">检索模型思考深度（可留空）</label><input id="main-memory-model-effort" type="text" maxlength="160" placeholder="如 low / medium / high，或该模型支持的 JSON"><small class="setting-note">控制检索模型的推理预算；留空用默认，值越高通常更慢也可能更贵。</small></div>
+<div><label for="main-memory-candidates">低成本模型最多看到的候选记忆（12–80）</label><input id="main-memory-candidates" type="number" min="12" max="80" value="48"><small class="setting-note">让检索模型最多从多少段真实记忆中挑选；越大覆盖越广、提示词越长。</small></div>
+<div><label for="main-memory-search-daily">每日每个检索通道调用上限（0–500，0=禁止）</label><input id="main-memory-search-daily" type="number" min="0" max="500" value="80"><small class="setting-note">每个检索通道的模型调用上限；设为 0 就不请求语义检索模型。</small></div>
+<div><label for="main-memory-half-life">普通记忆半衰期（15–120 天）</label><input id="main-memory-half-life" type="number" min="15" max="120" value="30"><small class="setting-note">影响普通旧记忆的排序衰减速度；天数越大，旧经历越不容易被新内容挤下去。</small></div>
+<div><label for="main-memory-threshold">召回证据门槛（0.10–0.80）</label><input id="main-memory-threshold" type="number" min="0.1" max="0.8" step="0.05" value="0.35"><small class="setting-note">控制记忆与当前话题必须有多相关才会被召回；越高越严格、误召回更少。</small></div>
+<div><label for="main-memory-max-items">每轮最多召回（1–12 条）</label><input id="main-memory-max-items" type="number" min="1" max="12" value="6"><small class="setting-note">一次聊天最多注入几条检索记忆；调大覆盖更广，但可能占用上下文。</small></div>
+<div><label for="main-memory-max-chars">每轮记忆字数上限（200–3000）</label><input id="main-memory-max-chars" type="number" min="200" max="3000" value="800"><small class="setting-note">每轮检索记忆可占的总字数；越大保留更多细节，也占更多上下文。</small></div>
+<div><label for="main-memory-daily">主人聊天语义记忆每日最多（1–30 条）</label><input id="main-memory-daily" type="number" min="1" max="30" value="8"><small class="setting-note">限制从主人聊天中每天新增的语义记忆数量，避免把普通聊天全记下。</small></div>
+<div><label for="main-memory-facts">长期事实最多占召回（0–6 条）</label><input id="main-memory-facts" type="number" min="0" max="6" value="2"><small class="setting-note">限制每轮召回中长期稳定事实占多少条，为具体经历留出位置。</small></div></div>
 <p class="muted">主 Session 始终携带少量真实的身份记忆；其他记忆先本地搜索，必要时由专用低成本模型挑选真实 ID，再读取正文。检索模型使用不带文件、Shell、B站 MCP 或浏览器工具的独立安全 headless 会话，必须已在 DSH 配好 Provider/模型。未配置或请求失败会回退本地记忆；不会用模型生成的文字充当过去的事实。</p>
 <div class="toolbar"><button id="main-memory-save" class="primary">保存记忆与反思设置</button></div><p id="main-memory-status" class="muted" role="status">正在读取…</p></div></div></section>
 <section id="panel-life" hidden>
@@ -316,8 +319,9 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <label class="checkline"><input type="checkbox" id="emotion-recall-enabled">允许情绪触发自主回忆（需同时开启长期记忆）</label>
 <div class="fields"><div><label class="checkline"><input id="emotion-recall-main" type="checkbox">允许在指定 DSH 主 Session 主动开口</label><p class="muted">需要先在「告诉主 Session」选好会话，并保持目标会话在线。</p></div>
 <div><label class="checkline"><input id="emotion-recall-dm" type="checkbox">允许给主人发送 B站回忆私信</label><p class="muted">只会发送到「私信与好友」中明确设置的主人 UID（dmOwnerUid）；不会发送给其他人。</p></div>
-<div><label for="emotion-recall-daily">每天最多发送（0–3）</label><input id="emotion-recall-daily" type="number" min="0" max="3" value="1"></div>
-<div><label for="emotion-recall-cooldown">两次评估间隔（小时，2–168）</label><input id="emotion-recall-cooldown" type="number" min="2" max="168" value="24"></div>
+<div><label for="emotion-recall-daily">每天最多发送（0=禁止，可填任意正整数）</label><input id="emotion-recall-daily" type="number" min="0" step="1" value="1"><small class="setting-note">只限制实际主动发出的消息；设为 0 表示禁止。可填任意非负安全整数，两个渠道合计。</small></div>
+<div><label class="checkline"><input id="emotion-recall-unlimited" type="checkbox">不限制每天的发送次数</label><small class="setting-note">仅在每日上限大于 0 时忽略次数上限；0 始终禁止发送。仍必须符合时间窗口、独立授权、评估间隔、记忆证据和去重条件；可能增加模型开销和打扰。</small></div>
+<div><label for="emotion-recall-cooldown">两次评估间隔（小时，1–48）</label><input id="emotion-recall-cooldown" type="number" min="1" max="48" value="24"><small class="setting-note">至少隔这么久才重新让模型考虑是否分享；评估不是发送，调小可能增加模型调用。</small></div>
 <div><label for="emotion-recall-start">每日最早开始（0–23 时）</label><input id="emotion-recall-start" type="number" min="0" max="23" value="9"></div>
 <div><label for="emotion-recall-end">每日最晚结束（1–24 时）</label><input id="emotion-recall-end" type="number" min="1" max="24" value="22"></div></div>
 <p class="muted">模型只能从核验的旧记忆 ID 中决定是否分享；正文根据真实新旧经历模板生成，不接受模型编造的事实。默认每天最多一次、24 小时内不重复评估，夜间免打扰。B站消息为真实对外发送行为。</p>

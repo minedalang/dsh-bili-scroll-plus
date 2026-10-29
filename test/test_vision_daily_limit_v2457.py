@@ -2,6 +2,7 @@ import importlib.util
 import json
 import sys
 import unittest
+from contextlib import closing
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -35,7 +36,7 @@ class VisionDailyLimitV2457(unittest.TestCase):
                 self.assertFalse(pv._claim_vision_quota(home))
             import sqlite3
             from datetime import datetime
-            with sqlite3.connect(home/'vision-usage.sqlite3') as db:
+            with closing(sqlite3.connect(home/'vision-usage.sqlite3')) as db:
                 self.assertEqual(db.execute('SELECT used FROM usage WHERE day=?',(datetime.now().strftime('%Y-%m-%d'),)).fetchone()[0],3)
 
     def test_independent_dsh_uses_its_env_daily_limit(self):
@@ -48,7 +49,7 @@ class VisionDailyLimitV2457(unittest.TestCase):
                 rows.extend([f'- id: {ident}','  disabled: false',''])
             rows.extend(['- insert:','    - id: mcp-bili-vision-readonly',"      name: '@deepseek-ai/dsh-mcp-client'",'      config:','        serverName: bilivision','        transport: stdio','        env:',"          BILI_MCP_TOOLS: 'bili_preview_vision'",''])
             (home/'headless-vision-overlay.yml').write_text('\n'.join(rows),encoding='utf8')
-            env={'BILI_VISION_DSH_ARGV':json.dumps(['/absolute/path/dsh','--profile','headless','--patch',str(home/'headless-vision-overlay.yml')]),
+            env={'BILI_VISION_DSH_ARGV':json.dumps([str(home/'fake-dsh'),'--profile','headless','--patch',str(home/'headless-vision-overlay.yml')]),
                  'BILI_VISION_DSH_PROVIDER':'mock','BILI_VISION_DSH_MODEL':'vision',
                  'BILI_VISION_DAILY_LIMIT':'41'}
             with patch('preview_vision._claim_vision_quota',return_value=False) as claim:

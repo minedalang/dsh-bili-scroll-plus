@@ -2,7 +2,7 @@
 
 > **`dsh-dafeiyu-life`** 是一个运行在 DeepSeek Harness（DSH）中的 AI 角色生活插件。大肥鱼可以自主浏览 B 站内容、决定是否互动、积累真实经历、反思并形成长期记忆，也能在受限权限下逐渐了解白名单好友。
 
-**源码开发快照：2.5.0-dev.1（尚未正式发布）** · **最新正式版：v2.4.99** · [更新记录](./CHANGELOG.md) · [v2.4.99 Release](https://github.com/minedalang/dsh-dafeiyu-life/releases/tag/v2.4.99) · [GitHub 仓库](https://github.com/minedalang/dsh-dafeiyu-life)
+**源码开发快照：2.5.0-dev.2（尚未正式发布）** · **最新正式版：v2.4.99** · [更新记录](./CHANGELOG.md) · [v2.4.99 Release](https://github.com/minedalang/dsh-dafeiyu-life/releases/tag/v2.4.99) · [GitHub 仓库](https://github.com/minedalang/dsh-dafeiyu-life)
 
 它不只是定时发评论的机器人，也不只是一个 B 站 MCP 外壳。项目希望把角色、人设、生活经历、长期记忆、兴趣、模拟情绪、关系和有限自主行为连接成一个可持续运行的系统。
 
@@ -315,3 +315,10 @@ node selfcheck.mjs
 ## License
 
 本项目整体遵循仓库中的 MIT 许可；内置第三方代码分别保留各自许可证。使用和再分发前请阅读 `LICENSE`、`NOTICE.md`、`THIRD_PARTY_NOTICES.md` 及 `vendor/` 中对应的许可证文件。
+
+
+### 2.5.0-dev.2 管理中心更新（仅开发版）
+
+「情绪驱动的自主回忆与分享」新增 **每日不限次数** 独立开关；不启用时每天最多发送可设置任意非负整数（0 始终禁用），评估最短间隔可在 **1–48 小时** 内设置，默认仍是 24 小时。不限次数不等于自动发言：权限、免打扰、冷却、真实证据和去重规则继续有效。
+
+如果删除动态草稿时出现 `unknown POST /api/bili-duty/daily-dynamic/delete`，说明运行中的 DSH 插件后端尚未加载包含该路由的新源码；请检查实际安装目录、重启 DSH，再用 Ctrl+F5 刷新管理页。删除仅针对未发布的本地草稿。人生记忆设置中的浅色提示可帮助理解每项参数的影响。

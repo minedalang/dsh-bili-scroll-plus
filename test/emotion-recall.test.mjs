@@ -37,6 +37,18 @@ test('strict owner UID DM permission, persisted send & no repeat from same emoti
   assert.equal(q.x.status().recentKeys.length,1)
  }finally{q.cleanup()}
 })
+test('unlimited bypasses positive daily cap but 0 remains explicitly disabled',async()=>{
+ const q=setup({emotionRecallUnlimited:true,emotionRecallDailyLimit:1})
+ try{
+  writeFileSync(join(q.dir,'emotion-recall.json'),JSON.stringify({version:1,day:__test.localDay(T),sent:99,checks:0,lastCheckAt:0,lastEmotionAt:0,recentKeys:[]}))
+  const r=await q.x.tick()
+  assert.equal(r.sent,true)
+  assert.equal(q.x.status().sent,100)
+  assert.equal(q.calls.length,1)
+ }finally{q.cleanup()}
+ const off=setup({emotionRecallUnlimited:true,emotionRecallDailyLimit:0})
+ try{assert.equal((await off.x.tick()).skipped,'daily-limit');assert.equal(off.calls.length,0)}finally{off.cleanup()}
+})
 test('main Session can speak on its own when that channel is enabled',async()=>{
  const q=setup({emotionRecallDmEnabled:false},{channel:'main'});try{const r=await q.x.tick();assert.equal(r.channel,'main');assert.equal(q.calls.length,0);assert.equal(q.messages.length,1)}finally{q.cleanup()}
 })
