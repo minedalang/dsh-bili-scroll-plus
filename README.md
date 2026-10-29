@@ -2,13 +2,27 @@
 
 > **`dsh-dafeiyu-life`** 是一个运行在 DeepSeek Harness（DSH）中的 AI 角色生活插件。大肥鱼可以自主浏览 B 站内容、决定是否互动、积累真实经历、反思并形成长期记忆，也能在受限权限下逐渐了解白名单好友。
 
-**当前版本：v2.4.99** · [更新记录](./CHANGELOG.md) · [v2.4.99 Release](https://github.com/minedalang/dsh-dafeiyu-life/releases/tag/v2.4.99) · [GitHub 仓库](https://github.com/minedalang/dsh-dafeiyu-life)
+**最新正式版：`v2.4.99`（`main`）** · [GitHub Release](https://github.com/minedalang/dsh-dafeiyu-life/releases/tag/v2.4.99) · [npm](https://www.npmjs.com/package/dsh-dafeiyu-life) · [更新记录](./CHANGELOG.md)
+
+**社区插件市场：已收录** · [Awesome DSH Plugin 中查看大肥鱼 Plus](https://awesome-dsh-plugin.com/zh/?q=dsh-dafeiyu-life) · [投稿合并记录 PR #10122](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/10122)
+
+**开发分支：[`dev`](https://github.com/minedalang/dsh-dafeiyu-life/tree/dev)** · 进行中的 `2.5.0-dev` 系列（尚未发布为正式版）
 
 它不只是定时发评论的机器人，也不只是一个 B 站 MCP 外壳。项目希望把角色、人设、生活经历、长期记忆、兴趣、模拟情绪、关系和有限自主行为连接成一个可持续运行的系统。
 
 **一句话特色：让 AI 角色在真实、可追溯的经历中逐渐形成长期记忆、兴趣、模拟情绪和好友关系，而不是仅仅按定时任务执行 B 站操作。**
 
 > 大肥鱼是 AI 角色模拟系统，不是有真实生理感受或已被证明具有主观意识的真人。具体行为取决于模型、配置、可用数据和权限设置。
+
+## 🎉 已收录 Awesome DSH Plugin 社区插件市场
+
+大肥鱼 Plus 已通过 [Awesome DSH Plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 社区插件市场的投稿审核：**[PR #10122](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/10122) 已合并到该社区仓库 `main` 分支**，市场官网也已可以搜索到本项目。
+
+- **[在市场官网查看大肥鱼 Plus](https://awesome-dsh-plugin.com/zh/?q=dsh-dafeiyu-life)**：搜索 `dsh-dafeiyu-life`、`minedalang` 或「大肥鱼」。
+- **[项目源码仓库](https://github.com/minedalang/dsh-dafeiyu-life)**：查看最新正式说明、源代码、问题反馈与开发分支。
+- **[v2.4.99 正式版发布页](https://github.com/minedalang/dsh-dafeiyu-life/releases/tag/v2.4.99)**：查阅正式发布版本。
+
+> **关于 DSH 内置的 `dshmarket`：** 社区网站已收录不代表本地市场索引立即刷新。不同下载区域、目录快照或缓存可能导致新插件暂时搜不到。请优先搜索完整包名、检查市场刷新或稍后重试。这里的「已收录」指社区目录合并成功，不代表 DSH 官方背书，也不代表 `dev` 测试功能已经上架。
 
 ## ✨ 当前版本能做什么
 
@@ -220,9 +234,7 @@ node selfcheck.mjs
 4. 检查 B 站登录状态、功能开关、时段、每日额度和本地操作账本。
 5. 升级前先备份；遇到异常时提供脱敏日志，不要公开 Cookie、API 密钥或私信正文。
 
-## 🧱 当前限制与未来路线图
-
-### 已知限制（v2.4.99）
+## 🧱 当前限制（v2.4.99）
 
 - B 站 API、字幕可用性、风控、客户端页面和模型 Provider 能力可能变化；低清预览帧不等于完整视频理解。
 - 自主行为受已接入工具和主人配置约束；它不是可任意操作整站或整台电脑的通用 Agent。
@@ -230,18 +242,30 @@ node selfcheck.mjs
 - 自主分享当前依赖白名单、真实入选视频和兴趣匹配；还不是任意时刻自主寻找任何人聊天的完整系统。
 - 独立后台调度仅能执行符合限制的只读待办和已受证据约束的反思；不能擅自执行点赞、评论、私信等写入操作。
 
-### 未来开发方向（计划中，尚未实现）
+## 🚧 正在开发：让大肥鱼的生活更有故事（`dev` 分支）
+
+如果说 **v2.4.99** 让大肥鱼能够积累经历、记住过往，那么正在迭代的 **2.5.0 开发版**，更想解决的是：**这些记忆会怎样自然地影响它此刻的想法，以及它什么时候会主动与你分享？**
+
+| 开发亮点 | 我们想带来的体验 |
+|---|---|
+| **💭 情绪驱动的自主回忆** | 某个当下的心情，可能让它想起曾经看过的视频、聊过的话或留下的生活片段。回忆来自真实、可追溯的经历，而不是凭空编故事。 |
+| **💌 从想起到主动分享** | 不必每次都等主人提问。在获得授权的前提下，大肥鱼可以选择合适的时机，通过 **DSH 主 Session** 或 **B 站主人私信**分享一段值得说的往事；也可以选择安静。 |
+| **🌱 让记忆融入日常生活** | 继续打磨情绪、兴趣、经历和长期记忆之间的联系，让过去的体验不只是档案，而能成为后续表达与自主选择的参考。 |
+| **🎨 更有生活感的管理体验** | 围绕日常动态构思、草稿整理和人生记忆管理持续优化，让主人更直观地了解大肥鱼的生活轨迹，也更容易掌握它的自主行为边界。 |
+
+这些是 [`dev` 分支](https://github.com/minedalang/dsh-dafeiyu-life/tree/dev) 的**近期开发重点**，部分能力已进入开发和测试阶段，但仍在打磨，**不属于当前 `main` / npm `v2.4.99` 的正式功能**。涉及主动发送的能力仍以主人授权、真实经历和隐私保护为前提。
+
+## 🔭 未来计划：更远期的探索
 
 | 方向 | 希望实现的能力 | 当前状态 |
 |---|---|---|
 | **图片与表情包发送** | 在 DSH 主 Session 输出图片表情包；在 B 站私信中按授权发送图片表情包。 | 尚未完整实现 |
 | **视频视觉理解** | 在可用数据、视觉模型与调用预算允许时，增强对视频画面中的人物、角色及视觉梗的理解；区分观察到的内容与模型猜测。 | 尚未实现通用识别 |
-| **主人私信操作能力** | 在严格核验 UID、明确授权和权限限制的前提下，逐步支持更多主人 B 站私信指令。 | 当前仅开放固定格式的只读待办入口 |
-| **情绪驱动的主动回忆** | 在真实经历与记忆来源可追溯的前提下，让模拟情绪成为受限的主动检索线索，而不是凭空制造新事实。 | 尚未启用；现有边界设计见下方文档 |
-| **更自然的长期生活** | 改善自主活动、兴趣成长、好友关系、主动分享与自我反思之间的衔接，同时保留沉默、跳过和人工审核的权利。 | 持续优化方向 |
+| **主人私信操作能力** | 在严格核验 UID、明确授权和权限限制的前提下，逐步支持更多主人 B 站私信指令。 | 正式版当前仅开放固定格式的只读待办入口 |
+| **更自然的长期生活** | 改善自主活动、兴趣成长、好友关系、主动分享与自我反思之间的衔接，同时保留沉默、跳过和人工审核的权利。 | 持续探索 |
 | **跨平台角色生活** | 探索 QQ 等平台互动、统一的跨平台身份，以及更加完整的人生记忆迁移。 | 尚未接入；QQ 是优先讨论方向之一 |
 
-> 以上是**开发方向而不是已发布功能或版本承诺**。实际优先级和范围取决于 DSH、B 站接口、隐私安全、模型成本及测试情况。欢迎通过 GitHub Issues 讨论需求。
+> 本节是**更长远的探索方向**，与上面的 `dev` 近期开发重点分开列出；它不是已发布功能清单或交付时间承诺。优先级与范围以实际代码、隐私和安全约束、测试以及社区反馈为准，欢迎在 [Issues](https://github.com/minedalang/dsh-dafeiyu-life/issues) 中讨论。
 
 ## 🌱 开源来源与致谢
 
@@ -260,6 +284,9 @@ node selfcheck.mjs
 
 - [版本历史（CHANGELOG）](./CHANGELOG.md)
 - [v2.4.99 GitHub Release](https://github.com/minedalang/dsh-dafeiyu-life/releases/tag/v2.4.99)
+- [Awesome DSH Plugin 市场收录（PR #10122，已合并）](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/10122)
+- [市场官网搜索大肥鱼 Plus](https://awesome-dsh-plugin.com/zh/?q=dsh-dafeiyu-life)
+- [正在开发的 dev 分支](https://github.com/minedalang/dsh-dafeiyu-life/tree/dev)
 - [情绪触发主动回忆的保留设计与事实边界](./docs/PROACTIVE_RECALL_BOUNDARY.md)
 - [第三方来源与许可证](./THIRD_PARTY_NOTICES.md)
 - [代码来源说明](./NOTICE.md)
