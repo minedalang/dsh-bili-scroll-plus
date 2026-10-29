@@ -48,6 +48,7 @@ import { createAutonomousPlanner } from './lib/autonomous-planner.mjs'
 import { queueOwnerDmReadTodo, parseOwnerDmTodo } from './lib/owner-dm-commands.mjs'
 import { parseOwnerDmAction, createOwnerDmActionLedger, OWNER_DM_ACTION_FLAGS } from './lib/owner-dm-actions.mjs'
 import { createOwnerDmAgent } from './lib/owner-dm-agent.mjs'
+import { formatLocalLogTimestamp } from './lib/log-time.mjs'
 import { collectLocalLifeEvents } from './lib/local-life-source.mjs'
 import { observeFriendInterest, learnedFriendContext, listFriendLearning, clearFriendLearning } from './lib/friend-learning.mjs'
 import { createSocialIntentEngine } from './lib/social-intentions.mjs'
@@ -454,7 +455,7 @@ function reportMeta() {
   mkdirSync(outDir, { recursive: true })
 
   const log = (msg) => {
-    const line = `${new Date().toISOString()}  ${msg}`
+    const line = `${formatLocalLogTimestamp()}  ${msg}`
     try { appendFileSync(logFile, line + '\n', 'utf8') } catch { /* 日志写不进去也不致命 */ }
     try { ctx.logger?.info?.(`[bili-duty] ${msg}`) } catch { /* 没有 logger 就算了 */ }
   }
@@ -2455,16 +2456,15 @@ function reportMeta() {
     // Establish an inbox baseline before performing any first-run side effects.
     // Newly enabled agent must not execute messages already present before activation.
     if(cfg.ownerDmAgentEnabled===true){try{ownerDmAgent.primeInbox(incoming)}catch(e){log('主人私信 Agent 基线建立失败：'+String(e?.message||e));return []}}
-    // dev.4: Agent gets first claim on NEW authenticated owner messages before recommendation ingestion.
-    // Failed/denied owner commands never become public video recommendations or general model commands.
-    const remaining=[]
-    for(const row of incoming){
-      if(row?.incoming===true&&String(row.senderUid||'')===String(cfg.dmOwnerUid||'')&&cfg.ownerDmAgentEnabled===true){
-        try{const r=await ownerDmAgent.processMessage(row);if(r.handled)continue}
-        catch(e){log('主人私信 Agent 接收失败：'+String(e?.message||e).slice(0,100));continue}
-      }
-      remaining.push(row)
+    // dev.4: Owner's rapid consecutive DM fragments form ONE task and ONE receipt.
+    // Even if the Agent fails, authenticated owner messages NEVER fall back into recommendations.
+    const ownerRows=cfg.ownerDmAgentEnabled===true?incoming.filter(row=>
+      row?.incoming===true&&String(row.senderUid||'')===String(cfg.dmOwnerUid||'')):[]
+    if(ownerRows.length){
+      try{await ownerDmAgent.processMessages(ownerRows)}
+      catch(e){log('主人私信 Agent 批量接收失败：'+String(e?.message||e).slice(0,100))}
     }
+    const remaining=incoming.filter(row=>!ownerRows.includes(row))
     incoming.length=0;incoming.push(...remaining)
     try{const received=receiveRecommendations(stateDir,incoming);const synced=ownerTodos.syncRecommendations(received?.entries||[]);if(synced.added)log(`收到视频推荐并加入自主待办：新增 ${synced.added} 条`)}catch(e){log('B站私信视频候选/待办暂存失败：'+String(e?.message||e).slice(0,100))}
     try{
@@ -3323,7 +3323,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       const bak = logFile + '.1'
       try { rmSync(bak, { force: true }) } catch { /* 删不掉就算了 */ }
       renameSync(logFile, bak)
-      appendFileSync(logFile, `${new Date().toISOString()}  日志超过 2MB，旧的滚到 duty.log.1\n`, 'utf8')
+      appendFileSync(logFile, `${formatLocalLogTimestamp()}  日志超过 2MB，旧的滚到 duty.log.1\n`, 'utf8')
     } catch { /* 轮转失败不该影响跑一轮 */ }
   }
   let installingAsr = false
