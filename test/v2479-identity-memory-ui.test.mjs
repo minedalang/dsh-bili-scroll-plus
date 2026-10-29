@@ -74,11 +74,11 @@ test('v2.4.78 的多个 Session 记忆文件首次升级自动合并，旧文件
   }finally{rmSync(dir,{recursive:true,force:true})}
 })
 
-test('README 与管理中心明确展示三层人生记忆、表情包 AI 更新流程和路线图',()=>{
+test('README 与管理中心展示特色功能和三层人生记忆，不再堆积版本路线图',()=>{
   const html=readFileSync(new URL('../lib/management-console.html',import.meta.url),'utf8'),js=readFileSync(new URL('../lib/management-console.js',import.meta.url),'utf8'),readme=readFileSync(new URL('../README.md',import.meta.url),'utf8'),pkg=readFileSync(new URL('../package.json',import.meta.url),'utf8')
   assert.match(html,/大肥鱼的家 · 配置与连接/);assert.doesNotMatch(html,/把一个长期 DSH 会话当作“大肥鱼本人”/);assert.match(html,/人生记忆 · 长期保留/);assert.match(html,/经历记录 · 原始事实/);assert.match(html,/待反思经历 · 等待 AI 分析/);assert.match(html,/人生记忆 · 长期保留/)
   assert.match(html,/导出最新表情包名称 TXT/);assert.match(html,/导出当前规则 JSON/);assert.match(html,/一起交给 AI/)
   assert.match(js,/sticker-workflow-export-names/);assert.match(js,/sticker-workflow-export-rules/);assert.match(js,/renderLifeReflection/);assert.match(js,/main-session\/memory\/import-fish/)
-  assert.match(readme,/三层人生记忆/);assert.match(readme,/dafeiyu\.json/);assert.match(readme,/当前全部表情包名称 TXT \+ 当前规则 JSON/);assert.match(readme,/未来路线图/);assert.match(readme,/QQ 是优先讨论的平台方向之一/)
+  assert.match(readme,/三层人生记忆/);assert.match(readme,/dafeiyu\.json/);assert.match(readme,/当前全部表情包名称 TXT \+ 当前规则 JSON/);assert.match(readme,/双域意愿/);assert.match(readme,/社交互动/);assert.doesNotMatch(readme,/2\.5\.0-dev\.|版本流水账|未来路线图/)
   assert.match(pkg,/"version": "2\.\d+\.\d+(?:-dev\.\d+)?"/)
 })

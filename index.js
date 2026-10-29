@@ -51,6 +51,7 @@ import { validateOwnerRosterUpdate } from './lib/owner-identity.mjs'
 import { formatLocalLogTimestamp } from './lib/log-time.mjs'
 import { collectLocalLifeEvents } from './lib/local-life-source.mjs'
 import { observeFriendInterest, learnedFriendContext, listFriendLearning, clearFriendLearning, isFriendRecommendationFeedback, friendRecommendationGuard } from './lib/friend-learning.mjs'
+import { observeAuthenticatedOwnerDmPreferences } from './lib/owner-dm-preferences.mjs'
 import { generateOwnerCommentDraftFromVideo } from './lib/owner-comment-draft.mjs'
 import { decideOwnerSocialComment } from './lib/owner-comment-social.mjs'
 import { createSocialIntentEngine } from './lib/social-intentions.mjs'
@@ -2481,6 +2482,15 @@ function reportMeta() {
     // Newly enabled agent must not execute messages already present before activation.
     let ownerAgentFirstBaseline=false
     if(cfg.ownerDmAgentEnabled===true){try{ownerAgentFirstBaseline=ownerDmAgent.primeInbox(incoming)?.initialized===true}catch(e){log('主人私信 Agent 基线建立失败：'+String(e?.message||e));return []}}
+    // BUG-003: the owner DM Agent consumes owner messages before ordinary DM onIncoming.
+    // Capture authenticated, recent recommendation preferences first. This is the
+    // sender's contact choice, never an action command subject to willingness.
+    // First-run owner Agent inbox baselines must not replay historical preferences.
+    if(cfg.ownerDmAgentEnabled===true&&!ownerAgentFirstBaseline&&cfg.masterEnabled===true&&cfg.dmWatch===true){
+      try{observeAuthenticatedOwnerDmPreferences(stateDir,{
+        rows:incoming,ownerUid:cfg.dmOwnerUid,friendDirectory:cfg.friendDirectory,
+      })}catch(e){log('主人私信偏好观察失败：'+String(e?.message||e).slice(0,100))}
+    }
     // dev.9: apply one persistent willingness decision BEFORE every owner DM route
     // (the LLM Agent, legacy read-only TODO commands, and legacy write commands).
     // Ordinary chat, recommendation consent changes, and other users are untouched.
