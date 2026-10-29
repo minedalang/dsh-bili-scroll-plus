@@ -152,6 +152,19 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 .legacy-archive summary{cursor:pointer;font-weight:650;color:var(--muted)}.legacy-archive[open] summary{margin-bottom:9px;color:var(--action)}
 @media(prefers-color-scheme:dark){.top h1{background:linear-gradient(110deg,#afc6ff,#8bdbc1);color:transparent;background-clip:text;-webkit-background-clip:text}.tabs button[aria-selected=true]{background:linear-gradient(110deg,#355c9a,#376f83)}}
 @media(prefers-reduced-motion:reduce){.spinner,button.is-busy:after{animation:none}}
+
+/* 独立社交互动页：集中已有控件，不复制数据或授权开关。 */
+#panel-social .social-hero{padding:20px 22px;border:1px solid var(--stroke);border-radius:16px;background:linear-gradient(110deg,color-mix(in srgb,var(--ui-teal) 11%,var(--panel)),color-mix(in srgb,var(--ui-indigo) 9%,var(--panel)));margin-bottom:14px}
+#panel-social .social-hero h2{margin:0 0 6px;font-size:22px}
+#panel-social .social-hero p{margin:0 0 12px;color:var(--muted);font-size:13px}
+#panel-social .social-jump{display:flex;flex-wrap:wrap;gap:8px}
+#panel-social .social-jump a{display:inline-block;color:var(--action);font-size:13px;font-weight:650;text-decoration:none;background:var(--panel);padding:7px 11px;border:1px solid var(--stroke);border-radius:999px}
+#panel-social .social-jump a:hover{background:var(--tint)}
+#panel-social .card{margin-bottom:0!important}
+#panel-social :is(#unified-friends,#social-outreach-section,#owner-dm-control-section,#social-owner-comment){scroll-margin-top:120px}
+#panel-social .settings-stack{gap:16px}
+#panel-social .settings-stack>.card,#panel-social .settings-stack>.settings-section{border-top:3px solid color-mix(in srgb,var(--ui-teal) 55%,var(--stroke))}
+@media(max-width:580px){#panel-social .social-hero{padding:14px}}
 </style>
 <script defer src="/api/bili-duty/manage.js"></script>
 </head>
@@ -166,7 +179,8 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <button data-tab="quotas" aria-selected="false">次数与额度</button>
 <button data-tab="polling" aria-selected="false">后台轮询</button></div>
 <div class="tab-cluster"><span class="tab-cluster-label">身份与记忆</span>
-<button data-tab="persona" aria-selected="true">人设与好友</button>
+<button data-tab="persona" aria-selected="true">角色人设</button>
+<button data-tab="social" aria-selected="false">社交互动</button>
 <button data-tab="life" aria-selected="false">人生记忆</button>
 <button data-tab="growth" aria-selected="false">行为与表达改进 <span id="growth-count" class="queue-badge" hidden></span></button>
 <button data-tab="meme" aria-selected="false">梗与网络文化 <span id="meme-count" class="queue-badge" hidden></span></button>
@@ -320,7 +334,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p class="muted">例如今天再次刷到一个以前看过的系列，开心或怀念的模拟情绪变化，让大肥鱼想起有真实 BV 证据的旧经历；它可以决定沉默，也可以在已授权的渠道主动找主人聊聊。不是每次情绪波动都会分享。<strong>总开关与两个渠道默认全部关闭。</strong></p>
 <label class="checkline"><input type="checkbox" id="emotion-recall-enabled">允许情绪触发自主回忆（需同时开启长期记忆）</label>
 <div class="fields"><div><label class="checkline"><input id="emotion-recall-main" type="checkbox">允许在指定 DSH 主 Session 主动开口</label><p class="muted">需要先在「告诉主 Session」选好会话，并保持目标会话在线。</p></div>
-<div><label class="checkline"><input id="emotion-recall-dm" type="checkbox">允许给主人发送 B站回忆私信</label><p class="muted">只会发送到「人设与好友 → 好友关系与互动」中勾选并保存的唯一授权主人 UID（dmOwnerUid）；不会发送给其他人。</p></div>
+<div><label class="checkline"><input id="emotion-recall-dm" type="checkbox">允许给主人发送 B站回忆私信</label><p class="muted">只会发送到「社交互动 → 好友关系与互动」中勾选并保存的唯一授权主人 UID（dmOwnerUid）；不会发送给其他人。</p></div>
 <div><label for="emotion-recall-daily">每天最多发送（0=禁止，可填任意正整数）</label><input id="emotion-recall-daily" type="number" min="0" step="1" value="1"><small class="setting-note">只限制实际主动发出的消息；设为 0 表示禁止。可填任意非负安全整数，两个渠道合计。</small></div>
 <div><label class="checkline"><input id="emotion-recall-unlimited" type="checkbox">不限制每天的发送次数</label><small class="setting-note">仅在每日上限大于 0 时忽略次数上限；0 始终禁止发送。仍必须符合时间窗口、独立授权、评估间隔、记忆证据和去重条件；可能增加模型开销和打扰。</small></div>
 <div><label for="emotion-recall-cooldown">两次评估间隔（小时，1–48）</label><input id="emotion-recall-cooldown" type="number" min="1" max="48" value="24"><small class="setting-note">至少隔这么久才重新让模型考虑是否分享；评估不是发送，调小可能增加模型调用。</small></div>
@@ -364,17 +378,6 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p id="main-session-queue-status" class="muted" role="status">正在读取…</p>
 <div class="toolbar"><input id="main-session-history-query" maxlength="120" placeholder="查本地经历，如 Claude / BV号 / 某句话"><button id="main-session-history-search" class="life-action life-sky">搜索经历档案</button></div>
 <div id="main-session-history" class="records records-scroll tall"></div></div>
-
-<div id="life-social-section" class="settings-section life-section"><h4>主动回访 · 真正看过后才考虑联系</h4>
-<p class="muted">大肥鱼主要通过私信向已授权好友推荐真实入选的公开视频；公开 @ 是独立的可选方式，不会替代私信推荐。不会根据私人聊天内容生成公开信息；非白名单用户不建立长期兴趣画像。社交草稿默认不发送；主动私信请务必尊重对方拒绝和冷却期。</p>
-<label class="checkline"><input id="social-enabled" type="checkbox">允许自主判断要不要形成回访草稿（默认关闭）</label>
-<label class="checkline"><input id="social-life-intent-enabled" type="checkbox">允许大肥鱼根据真实经历，主动考虑通过私信向好友分享公开视频（默认关闭）</label><p class="muted">这是独立权限：只会在真实入选视频与好友初始兴趣/重复明确表达的兴趣有合理匹配时，生成“联系或跳过”的草稿；不会因为心情变化就盲目私信。需要先开启上面的自主社交草稿。非白名单用户不参与。</p>
-<label class="checkline"><input id="social-auto-send" type="checkbox">允许自动发送给白名单好友（高风险，默认关闭，建议先不开启）</label>
-<div class="fields"><div><label for="social-daily-limit">每日最多主动回访（0 表示禁止，不再限制为 3 次）</label><input id="social-daily-limit" type="number" min="0" step="1" value="1"></div></div>
-<div class="toolbar"><button id="social-save" class="life-action life-indigo">保存社交权限</button><button id="social-refresh" class="life-action life-sky">刷新草稿</button></div>
-<p id="social-status" class="muted" role="status">尚未读取草稿</p><div id="social-drafts" class="records records-scroll tall"></div>
-<p class="muted">**隐私边界：**B站对话不具有读取主人记忆、其他人私信和好友私有兴趣的权限。当前系统无法保证模型绝无幻觉；因此发送前仍有内容验证、每日配额和受信任 UID 检查，推荐先保持自动发送关闭。</p>
-</div>
 
 <div id="life-recall-section" class="settings-section life-section"><h4>长期回忆 · 检索、反思和手动管理</h4>
 <div class="toolbar"><input id="main-memory-test-query" maxlength="180" placeholder="测试长期记忆召回，例如“紫色模型小姐”"><button id="main-memory-test" class="life-action life-purple">测试记忆召回</button></div>
@@ -455,13 +458,24 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 </div><p class="muted">刷视频的“自定义时段执行”是独立的任务计划，不属于以上四种收件轮询。</p>
 </section>
 <section id="panel-persona">
-<div class="toolbar"><h2 style="margin:0">人设与好友</h2><button id="persona-refresh">重新读取</button></div>
+<div class="toolbar"><h2 style="margin:0">角色人设</h2><button id="persona-refresh">重新读取</button></div>
 <p class="muted">默认提示词是第一次安装的官方规则；此前保存的自定义提示词不会自动覆盖。恢复默认只清除这一项的自定义，不清理成长记忆、好友画像或历史。</p>
+<div class="settings-stack">
+<div class="settings-section"><h4>🐳 大肥鱼人设</h4><p class="muted">用于刷视频、公开评论和私信的角色语气。空配置使用内置默认；不在公开评论里发布提示词原文。</p><textarea id="persona-text" maxlength="8000" rows="13"></textarea><div class="toolbar"><button id="persona-save" class="primary">保存大肥鱼人设</button><button id="persona-reset">恢复默认</button><span id="persona-status" class="muted"></span></div></div>
+<div class="settings-section"><h4>AI 选图提示词</h4><p class="muted">决定什么时候给顶层评论配表情包；硬限额与真实文件校验不会被提示词修改。</p><textarea id="meme-prompt-text" maxlength="4000" rows="12"></textarea><div class="toolbar"><button id="meme-prompt-save" class="primary">保存选图提示词</button><button id="meme-prompt-reset">恢复默认</button><span id="meme-prompt-status" class="muted"></span></div></div>
+<div class="settings-section"><h4>视觉识图提示词</h4><p class="muted">判断何时需要识图和如何描述真实预览帧，不会绕过图片来源安全检查。</p><textarea id="vision-prompt-text" maxlength="4000" rows="10"></textarea><div class="toolbar"><button id="vision-prompt-save" class="primary">保存识图提示词</button><button id="vision-prompt-reset">恢复默认</button><span id="vision-prompt-status" class="muted"></span></div></div>
+<div class="settings-section"><h4>虚构角色背景与关系</h4><p class="muted">单独补充世界观；与主人自定义人设共同生效。</p><textarea id="lore-text" maxlength="4000" rows="8"></textarea><div class="toolbar"><button id="lore-save" class="primary">保存角色背景</button><button id="lore-reset">恢复默认</button><span id="lore-status" class="muted"></span></div></div>
+
+</div>
+</section>
+<section id="panel-social" hidden>
+<div class="social-hero"><h2>🐳 社交互动</h2><p>好友关系、社交意愿、主动回访与主人远程授权在这里统一管理。读取、草稿与公开操作分别授权；关闭某个入口不会改变其他权限。</p>
+<nav class="social-jump" aria-label="社交功能导航"><a href="#unified-friends">好友与意愿</a><a href="#social-outreach-section">主动回访</a><a href="#owner-dm-control-section">主人私信 Agent</a><a href="#social-owner-comment">主人评论 Agent</a></nav></div>
 <div class="settings-stack">
 <div class="settings-section" id="unified-friends">
 <h4>🐳 好友关系与互动 · 统一名册</h4>
 <p class="muted">只维护一份 UID 好友名册，统一管理私信往来、主动推荐方式、被 @ 意愿和人物关系。<strong>默认推荐渠道为私信</strong>，公开 @ 仅在你为该好友选择后才有资格被考虑。原有的三套名单会兼容合并，不会自动替已有好友增加权限。昵称只是备注；勾选唯一授权主人会直接更改主人 UID，具体点赞与公开发布仍需单独开启权限。</p>
-<div class="inset"><h4>🌱 dev.5 社会认知 · 候选灵感和好友邀请</h4>
+<div class="inset"><h4>🌱 社会认知 · 候选灵感与好友邀请</h4>
 <p class="muted">陌生人的私信视频心愿只是短期探索灵感，不回信、不建陌生人画像、不产生任务或公开 @；好友分享 BV / 通过 @ 请求“有空看看”，会形成可到期的只读观看邀请。大肥鱼好奇心充足时可选择审阅，<strong>默认不自动查看，不保证已观看</strong>。</p>
 <label class="checkline"><input id="social-stranger-inspiration" type="checkbox">允许读取陌生人私信里的短期视频灵感（默认关闭）</label>
 <label class="checkline"><input id="social-friend-invitations" type="checkbox">允许记录可信好友的只读视频邀请（默认关闭）</label>
@@ -470,10 +484,10 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div id="social-dev5-records" class="records records-scroll"></div></div>
 <div class="inset"><h4>好友意愿监听</h4>
 <label class="checkline"><input id="friend-at-feedback-enabled" type="checkbox">只读收取白名单好友的 @ 意愿（默认关闭）</label>
-<p class="muted">开启后可记录他们通过 @ 提出的“别推这类”“多推某类”等明确反馈，<strong>不会因为收取意见而公开回复</strong>。公开回复仍需在「后台评论互动」单独开启，且遵守额度；首次读取只建立历史基线，不重放旧通知。</p></div>
+<p class="muted">开启后可记录他们通过 @ 提出的“别推这类”“多推某类”等明确反馈，<strong>不会因为收取意见而公开回复</strong>。公开回复仍需在「最近评论」页面单独开启，且遵守额度；首次读取只建立历史基线，不重放旧通知。</p></div>
 <div class="inset"><h4>公开 @ 的额外策略（仅对选用公开 @ 渠道的好友生效）</h4>
 <label for="friends-mode">何时考虑公开 @</label><select id="friends-mode"><option value="off">关闭公开 @（推荐）</option><option value="ai_select">AI 根据真实内容选择个别好友</option><option value="ai">AI 判断是否 @ 所有允许的好友</option><option value="always">每次 @ 全部允许好友（容易打扰，不推荐）</option></select>
-<p class="muted">私信推荐由「人生记忆 → 主动回访」的独立授权、草稿、额度与冷却控制；此处的公开 @ 策略不会替代私信推荐，也不会直接发送消息。</p></div>
+<p class="muted">私信推荐由「社交互动 → 主动回访」的独立授权、草稿、额度与冷却控制；此处的公开 @ 策略不会替代私信推荐，也不会直接发送消息。</p></div>
 <div class="fields"><div><label for="friend-new-uid">B站 UID（必填）</label><input id="friend-new-uid" inputmode="numeric" placeholder="210228238"></div><div><label for="friend-new-name">昵称备注（可留空）</label><input id="friend-new-name" maxlength="40" placeholder="长条动物"></div></div>
 <div class="toolbar" style="margin-top:12px"><button type="button" id="friend-add">加入名册</button><span class="muted">添加后记得点击底部保存</span></div>
 <p id="friend-owner-status" class="muted">当前授权主人 UID：读取中…</p>
@@ -485,11 +499,60 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div id="friend-learning-list" class="records records-scroll"></div></div>
 <div class="toolbar" style="margin-top:12px"><button id="friend-save-all" class="primary">保存名册、权限及画像</button></div>
 </div>
-<div class="settings-section"><h4>🐳 大肥鱼人设</h4><p class="muted">用于刷视频、公开评论和私信的角色语气。空配置使用内置默认；不在公开评论里发布提示词原文。</p><textarea id="persona-text" maxlength="8000" rows="13"></textarea><div class="toolbar"><button id="persona-save" class="primary">保存大肥鱼人设</button><button id="persona-reset">恢复默认</button><span id="persona-status" class="muted"></span></div></div>
-<div class="settings-section"><h4>AI 选图提示词</h4><p class="muted">决定什么时候给顶层评论配表情包；硬限额与真实文件校验不会被提示词修改。</p><textarea id="meme-prompt-text" maxlength="4000" rows="12"></textarea><div class="toolbar"><button id="meme-prompt-save" class="primary">保存选图提示词</button><button id="meme-prompt-reset">恢复默认</button><span id="meme-prompt-status" class="muted"></span></div></div>
-<div class="settings-section"><h4>视觉识图提示词</h4><p class="muted">判断何时需要识图和如何描述真实预览帧，不会绕过图片来源安全检查。</p><textarea id="vision-prompt-text" maxlength="4000" rows="10"></textarea><div class="toolbar"><button id="vision-prompt-save" class="primary">保存识图提示词</button><button id="vision-prompt-reset">恢复默认</button><span id="vision-prompt-status" class="muted"></span></div></div>
-<div class="settings-section"><h4>虚构角色背景与关系</h4><p class="muted">单独补充世界观；与主人自定义人设共同生效。</p><textarea id="lore-text" maxlength="4000" rows="8"></textarea><div class="toolbar"><button id="lore-save" class="primary">保存角色背景</button><button id="lore-reset">恢复默认</button><span id="lore-status" class="muted"></span></div></div>
-
+<div id="social-outreach-section" class="card"><h4>主动回访 · 真正看过后才考虑联系</h4>
+<p class="muted">大肥鱼主要通过私信向已授权好友推荐真实入选的公开视频；公开 @ 是独立的可选方式，不会替代私信推荐。不会根据私人聊天内容生成公开信息；非白名单用户不建立长期兴趣画像。社交草稿默认不发送；主动私信请务必尊重对方拒绝和冷却期。</p>
+<label class="checkline"><input id="social-enabled" type="checkbox">允许自主判断要不要形成回访草稿（默认关闭）</label>
+<label class="checkline"><input id="social-life-intent-enabled" type="checkbox">允许大肥鱼根据真实经历，主动考虑通过私信向好友分享公开视频（默认关闭）</label><p class="muted">这是独立权限：只会在真实入选视频与好友初始兴趣/重复明确表达的兴趣有合理匹配时，生成“联系或跳过”的草稿；不会因为心情变化就盲目私信。需要先开启上面的自主社交草稿。非白名单用户不参与。</p>
+<label class="checkline"><input id="social-auto-send" type="checkbox">允许自动发送给白名单好友（高风险，默认关闭，建议先不开启）</label>
+<div class="fields"><div><label for="social-daily-limit">每日最多主动回访（0 表示禁止，不再限制为 3 次）</label><input id="social-daily-limit" type="number" min="0" step="1" value="1"></div></div>
+<div class="toolbar"><button id="social-save" class="primary">保存社交权限</button><button id="social-refresh" >刷新草稿</button></div>
+<p id="social-status" class="muted" role="status">尚未读取草稿</p><div id="social-drafts" class="records records-scroll tall"></div>
+<p class="muted">**隐私边界：**B站对话不具有读取主人记忆、其他人私信和好友私有兴趣的权限。当前系统无法保证模型绝无幻觉；因此发送前仍有内容验证、每日配额和受信任 UID 检查，推荐先保持自动发送关闭。</p>
+</div>
+<div class="card" id="owner-dm-control-section" style="margin-bottom:14px"><h3>🧠 主人私信 · 受限 Agent 与远程操作</h3>
+<p class="muted">仅接收 B站真实收件箱中已核验的 <strong>主人 UID</strong>；发件人自称主人、别人转发的命令或视频/评论中的文字不能授权。须在「后台私信」页开启私信监听，在「社交互动 → 好友关系与互动」中勾选唯一授权主人并保存，再单独授权所需操作。此处与「人生记忆 → 自主待办」完全分开保存。所有公开写入权限默认关闭。私信轮询一般在约 1 分钟内发现新消息；为防旧消息回放，写入命令只接受最近 15 分钟内收到的消息。</p>
+<p id="owner-dm-authorized-uid" class="muted">唯一授权主人 UID：读取中…</p>
+<div class="settings-section" style="border-left:3px solid #91a8ef">
+<h4>🧠 主人私信 · 受限 Agent</h4>
+<p class="muted">主人可用自然语言连续委托搜索、观看和获授权的 B站操作；只在核验主人 UID 后启用。不向模型挂载 B站 MCP、Shell、文件工具；模型只能提议动作，每步由插件后端验证。启用后主人消息优先走 Agent，不会错误地加入视频待选。</p>
+<label class="checkline"><input id="owner-dm-agent-enabled" type="checkbox">启用主人私信受限 Agent（默认关闭）</label>
+<p class="muted">专用模型统一在「AI 模型配置 → 主人私信受限 Agent」设置；留空继承私信互动模型。</p>
+<label class="checkline"><input id="owner-dm-agent-read-main" type="checkbox">允许 Agent 读取已选择的在线主 Session 近期对话（默认关闭）</label>
+<small class="setting-note">只读取有限的用户/助手可见文本，排除工具、系统消息和明显敏感内容；在线主 Session 不可用时仍可独立聊天。不会获得主 Session 工具权限。</small>
+<div class="fields"><div><label for="owner-dm-agent-turns">主 Session 上下文轮数（1–20）</label><input type="number" id="owner-dm-agent-turns" min="1" max="20" value="6"></div><div><label for="owner-dm-agent-chars">上下文字符上限（200–4000）</label><input type="number" id="owner-dm-agent-chars" min="200" max="4000" value="1500"></div></div>
+<label class="checkline"><input id="owner-dm-agent-sync-main" type="checkbox">将已确认的私信任务结果写回主 Session（默认关闭）</label>
+<small class="setting-note">仅注入简短的任务结果摘要，不发送陌生人私信正文；不会主动唤醒主 Session。</small>
+<p id="owner-dm-agent-status" class="muted">Agent 尚未启用；开启后查看执行记录。</p>
+</div>
+<label class="checkline"><input id="owner-dm-read-commands" type="checkbox">允许主人私信只读指令（看视频、搜索、查投稿与通知）</label>
+<p class="muted">示例：<code>大肥鱼 现在看 BV1xxxxxxxxx</code>／<code>大肥鱼 有空看看 BV1xxxxxxxxx</code>（仅入待办）。看视频是读取实际可用资料，不等于完整播放。</p>
+<div class="settings-section" style="margin-top:12px"><h4>🔐 允许 Agent 使用的 B站能力</h4>
+<p class="muted">不再需要额外开启「对外操作总开关」：系统根据勾选的独立权限自动更新内部授权。只读和草稿构思可以分别开放；点赞、收藏、关注、公开评论、动态发布和好友私信默认关闭，未勾选的操作后端会拒绝。</p>
+<div class="fields" style="margin-top:10px">
+<div><label class="checkline"><input id="owner-dm-like" type="checkbox">点赞指定 BV 视频</label><small class="setting-note">示例：大肥鱼 点赞 BV1xxxxxxxxx；使用现有每日点赞额度及去重账本。</small></div>
+<div><label class="checkline"><input id="owner-dm-collect" type="checkbox">收藏指定 BV 视频</label><small class="setting-note">示例：大肥鱼 收藏 BV1xxxxxxxxx 到 我的收藏夹；必须指定已存在的收藏夹。</small></div>
+<div><label class="checkline"><input id="owner-dm-follow" type="checkbox">关注／取关 UP 主</label><small class="setting-note">示例：大肥鱼 关注 BV1xxxxxxxxx，或 大肥鱼 取关 UID12345；取关仍限大肥鱼自己关注满 7 天的账号。</small></div>
+<div><label class="checkline"><input id="owner-dm-comment-draft" type="checkbox">构思评论草稿</label><small class="setting-note">示例：大肥鱼 生成评论 BV1xxxxxxxxx；只用专用无 B站工具的模型生成本地草稿，不会公开。</small></div>
+<div><label class="checkline"><input id="owner-dm-comment-publish" type="checkbox">公开发表评论</label><small class="setting-note">示例：大肥鱼 发表评论 BV1xxxxxxxxx：我的评论正文；或先生成草稿，再「大肥鱼 发布评论草稿 草稿ID」。受评论模式与每日额度限制。</small></div>
+<div><label class="checkline"><input id="owner-dm-dynamic-draft" type="checkbox">构思 B站生活动态草稿</label><small class="setting-note">示例：大肥鱼 构思动态；只使用真实公开视频经历，保存本地草稿。</small></div>
+<div><label class="checkline"><input id="owner-dm-dynamic-publish" type="checkbox">公开发布已有动态草稿</label><small class="setting-note">示例：大肥鱼 发布动态草稿 草稿ID；沿用现有动态启用开关、每日额度及不确定结果禁止重试规则。</small></div>
+<div><label class="checkline"><input id="owner-dm-friend-message" type="checkbox">给指定白名单好友发私信</label><small class="setting-note">示例：大肥鱼 给 UID12345 发私信：你好；对方须在好友名册开启允许私信权限。</small></div>
+</div>
+<p class="muted">“生成”与“发布”是两套独立权限；没有通过主人精确命令明确要求公开发送，就不会自动发。只有已有安全接口支持的操作才能使用；不开放上传视频、转账、删稿、任意网页命令或不受控工具执行。</p></div>
+<div class="actions"><button type="button" class="primary" id="owner-dm-agent-save">保存主人私信 Agent 与权限</button><button type="button" id="owner-dm-agent-reload">重新读取</button></div>
+<p id="owner-dm-agent-save-status" class="muted" role="status">尚未保存或验证本次设置。</p>
+</div>
+<div class="card" id="social-owner-comment"><h4>🐳 主人公开评论 · 受限 Agent</h4>
+<p id="owner-comment-authorized-uid" class="muted">唯一授权主人 UID：读取中…</p>
+<p class="muted">从平台通知核验真实主人 UID 和当前 BV，识别“给这条视频点赞”“写评论草稿”“发评论：明确正文”。不读取主人私信或主 Session 私密信息，所有写操作均独立授权、登记后执行，结果不确定不会自动重试。公开确认采用简短自然短句，默认关闭。</p>
+<label class="checkline"><input id="owner-comment-agent-enabled" type="checkbox">启用主人评论 Agent（默认关闭；独立于普通 @ 回复）</label>
+<label class="checkline"><input id="owner-comment-like" type="checkbox">允许主人在当前视频下请求点赞</label>
+<label class="checkline"><input id="owner-comment-draft" type="checkbox">允许生成本地评论草稿（不发布）</label>
+<label class="checkline"><input id="owner-comment-publish" type="checkbox">允许带明确正文的主人评论直接发表（高风险，默认关闭）</label>
+<label class="checkline"><input id="owner-comment-ack" type="checkbox">在确认成功后，自然地公开回复一句（默认静默）</label>
+<p id="owner-comment-agent-status" class="muted">Agent 状态尚未读取。</p>
+<div class="toolbar"><button type="button" class="primary" id="owner-comment-settings-save">保存主人公开评论权限</button><button type="button" id="owner-comment-settings-reload">重新读取</button></div>
+</div>
 </div>
 </section>
 <section id="panel-reports" hidden>
@@ -504,21 +567,11 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 </div><p class="muted">重要区别：接口返回成功、本地评论账本有记录，都不等于评论当前一定对其他用户公开可见。此处不会把未向 B 站核验的记录标成“平台可见”。</p>
 <div class="settings-stack">
 <div class="settings-section"><h4>被 @ 邀请（默认关闭）</h4>
-<p class="muted">这是公开回复权限：监听 @ 后由 AI 决定是否在评论区回话，且受评论额度限制。<strong>仅记录好友 @ 中的偏好反馈不需要开启公开回复</strong>，请在「人设与好友 → 好友关系与互动」启用只读监听。首次开启不会回复旧通知。</p>
+<p class="muted">这是公开回复权限：监听 @ 后由 AI 决定是否在评论区回话，且受评论额度限制。<strong>仅记录好友 @ 中的偏好反馈不需要开启公开回复</strong>，请在「社交互动 → 好友关系与互动」启用只读监听。首次开启不会回复旧通知。</p>
 <div class="checkline"><input type="checkbox" id="comment-at-enabled"><label for="comment-at-enabled">开启被 @ 邀请监听</label></div>
 <div class="fields"><div><label for="comment-at-mode">回应范围</label><select id="comment-at-mode"><option value="whitelist">仅白名单用户（推荐）</option><option value="all">所有人</option></select></div>
 <div hidden><label for="comment-at-whitelist">被 @ 白名单（由可信好友名册同步）</label><textarea id="comment-at-whitelist" rows="4"></textarea></div></div>
-<p class="muted">可在「人设与好友 → 好友关系与互动」统一管理允许邀请的 UID。<strong>通知是否被识别、为什么没有回复</strong>，请到「每日诊断 → @ 邀请处理诊断」查看。</p>
-</div>
-<div class="settings-section"><h4>🐳 dev.5 主人公开评论受限 Agent</h4>
-<p id="owner-comment-authorized-uid" class="muted">唯一授权主人 UID：读取中…</p>
-<p class="muted">从平台通知核验真实主人 UID 和当前 BV，识别“给这条视频点赞”“写评论草稿”“发评论：明确正文”。不读取主人私信或主 Session 私密信息，所有写操作均独立授权、登记后执行，结果不确定不会自动重试。公开确认采用简短自然短句，默认关闭。</p>
-<label class="checkline"><input id="owner-comment-agent-enabled" type="checkbox">启用主人评论 Agent（默认关闭；独立于普通 @ 回复）</label>
-<label class="checkline"><input id="owner-comment-like" type="checkbox">允许主人在当前视频下请求点赞</label>
-<label class="checkline"><input id="owner-comment-draft" type="checkbox">允许生成本地评论草稿（不发布）</label>
-<label class="checkline"><input id="owner-comment-publish" type="checkbox">允许带明确正文的主人评论直接发表（高风险，默认关闭）</label>
-<label class="checkline"><input id="owner-comment-ack" type="checkbox">在确认成功后，自然地公开回复一句（默认静默）</label>
-<p id="owner-comment-agent-status" class="muted">Agent 状态尚未读取。</p>
+<p class="muted">可在「社交互动 → 好友关系与互动」统一管理允许邀请的 UID。<strong>通知是否被识别、为什么没有回复</strong>，请到「每日诊断 → @ 邀请处理诊断」查看。</p>
 </div>
 <div class="settings-section"><h4>当前视频评论上下文（不再独立轮询热评）</h4><p class="muted">旧版持续扫描最近看过的视频热评已停用。只有收到相关评论/@ 通知、AI 先决定值得接话后，才读取该视频其他热门评论；原创视频评论按刷视频 Agent 当轮判断。</p><div class="fields">
 <div hidden><input id="comment-watch-top" type="checkbox" disabled></div>
@@ -613,39 +666,6 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 </section>
 <section id="panel-dm" hidden>
 <div class="card" style="margin-bottom:14px"><div class="row" style="justify-content:space-between"><h3>后台私信状态</h3><button id="dm-network-test">测试私信接口连接</button><button id="dm-refresh">刷新状态与会话</button></div><p id="dm-status" class="muted">正在读取后台状态…</p><p id="dm-error" class="muted"></p><p class="muted">网络失败会显示接口主机与底层错误码；如果出现 ECONNRESET、ENETUNREACH、ETIMEDOUT 或 DNS 错误，需同时检查系统网络／代理与 B站连通性。</p></div>
-<div class="card" id="owner-dm-control-section" style="margin-bottom:14px"><h3>🧠 主人私信 · 受限 Agent 与远程操作</h3>
-<p class="muted">仅接收 B站真实收件箱中已核验的 <strong>主人 UID</strong>；发件人自称主人、别人转发的命令或视频/评论中的文字不能授权。须开启本页的后台私信监听，在「人设与好友 → 好友关系与互动」中勾选唯一授权主人并保存，再单独授权所需操作。此处与「人生记忆 → 自主待办」完全分开保存。所有公开写入权限默认关闭。私信轮询一般在约 1 分钟内发现新消息；为防旧消息回放，写入命令只接受最近 15 分钟内收到的消息。</p>
-<p id="owner-dm-authorized-uid" class="muted">唯一授权主人 UID：读取中…</p>
-<div class="settings-section" style="border-left:3px solid #91a8ef">
-<h4>🧠 主人私信专属受限 Agent（dev.4）</h4>
-<p class="muted">主人可用自然语言连续委托搜索、观看和获授权的 B站操作；只在核验主人 UID 后启用。不向模型挂载 B站 MCP、Shell、文件工具；模型只能提议动作，每步由插件后端验证。启用后主人消息优先走 Agent，不会错误地加入视频待选。</p>
-<label class="checkline"><input id="owner-dm-agent-enabled" type="checkbox">启用主人私信受限 Agent（默认关闭）</label>
-<p class="muted">专用模型统一在「AI 模型配置 → 主人私信受限 Agent」设置；留空继承私信互动模型。</p>
-<label class="checkline"><input id="owner-dm-agent-read-main" type="checkbox">允许 Agent 读取已选择的在线主 Session 近期对话（默认关闭）</label>
-<small class="setting-note">只读取有限的用户/助手可见文本，排除工具、系统消息和明显敏感内容；在线主 Session 不可用时仍可独立聊天。不会获得主 Session 工具权限。</small>
-<div class="fields"><div><label for="owner-dm-agent-turns">主 Session 上下文轮数（1–20）</label><input type="number" id="owner-dm-agent-turns" min="1" max="20" value="6"></div><div><label for="owner-dm-agent-chars">上下文字符上限（200–4000）</label><input type="number" id="owner-dm-agent-chars" min="200" max="4000" value="1500"></div></div>
-<label class="checkline"><input id="owner-dm-agent-sync-main" type="checkbox">将已确认的私信任务结果写回主 Session（默认关闭）</label>
-<small class="setting-note">仅注入简短的任务结果摘要，不发送陌生人私信正文；不会主动唤醒主 Session。</small>
-<p id="owner-dm-agent-status" class="muted">Agent 尚未启用；开启后查看执行记录。</p>
-</div>
-<label class="checkline"><input id="owner-dm-read-commands" type="checkbox">允许主人私信只读指令（看视频、搜索、查投稿与通知）</label>
-<p class="muted">示例：<code>大肥鱼 现在看 BV1xxxxxxxxx</code>／<code>大肥鱼 有空看看 BV1xxxxxxxxx</code>（仅入待办）。看视频是读取实际可用资料，不等于完整播放。</p>
-<div class="settings-section" style="margin-top:12px"><h4>🔐 允许 Agent 使用的 B站能力</h4>
-<p class="muted">不再需要额外开启「对外操作总开关」：系统根据勾选的独立权限自动更新内部授权。只读和草稿构思可以分别开放；点赞、收藏、关注、公开评论、动态发布和好友私信默认关闭，未勾选的操作后端会拒绝。</p>
-<div class="fields" style="margin-top:10px">
-<div><label class="checkline"><input id="owner-dm-like" type="checkbox">点赞指定 BV 视频</label><small class="setting-note">示例：大肥鱼 点赞 BV1xxxxxxxxx；使用现有每日点赞额度及去重账本。</small></div>
-<div><label class="checkline"><input id="owner-dm-collect" type="checkbox">收藏指定 BV 视频</label><small class="setting-note">示例：大肥鱼 收藏 BV1xxxxxxxxx 到 我的收藏夹；必须指定已存在的收藏夹。</small></div>
-<div><label class="checkline"><input id="owner-dm-follow" type="checkbox">关注／取关 UP 主</label><small class="setting-note">示例：大肥鱼 关注 BV1xxxxxxxxx，或 大肥鱼 取关 UID12345；取关仍限大肥鱼自己关注满 7 天的账号。</small></div>
-<div><label class="checkline"><input id="owner-dm-comment-draft" type="checkbox">构思评论草稿</label><small class="setting-note">示例：大肥鱼 生成评论 BV1xxxxxxxxx；只用专用无 B站工具的模型生成本地草稿，不会公开。</small></div>
-<div><label class="checkline"><input id="owner-dm-comment-publish" type="checkbox">公开发表评论</label><small class="setting-note">示例：大肥鱼 发表评论 BV1xxxxxxxxx：我的评论正文；或先生成草稿，再「大肥鱼 发布评论草稿 草稿ID」。受评论模式与每日额度限制。</small></div>
-<div><label class="checkline"><input id="owner-dm-dynamic-draft" type="checkbox">构思 B站生活动态草稿</label><small class="setting-note">示例：大肥鱼 构思动态；只使用真实公开视频经历，保存本地草稿。</small></div>
-<div><label class="checkline"><input id="owner-dm-dynamic-publish" type="checkbox">公开发布已有动态草稿</label><small class="setting-note">示例：大肥鱼 发布动态草稿 草稿ID；沿用现有动态启用开关、每日额度及不确定结果禁止重试规则。</small></div>
-<div><label class="checkline"><input id="owner-dm-friend-message" type="checkbox">给指定白名单好友发私信</label><small class="setting-note">示例：大肥鱼 给 UID12345 发私信：你好；对方须在好友名册开启允许私信权限。</small></div>
-</div>
-<p class="muted">“生成”与“发布”是两套独立权限；没有通过主人精确命令明确要求公开发送，就不会自动发。只有已有安全接口支持的操作才能使用；不开放上传视频、转账、删稿、任意网页命令或不受控工具执行。</p></div>
-<div class="actions"><button type="button" class="primary" id="owner-dm-agent-save">保存主人私信 Agent 与权限</button><button type="button" id="owner-dm-agent-reload">重新读取</button></div>
-<p id="owner-dm-agent-save-status" class="muted" role="status">尚未保存或验证本次设置。</p>
-</div>
 <div class="card" style="margin-bottom:14px"><h3>后台私信规则</h3><p class="muted">修改后保存到 DSH 本机配置。陌生人自动回复默认关闭；开启前请确认你接受自动回复行为。</p>
 <div class="settings-stack">
 <div class="settings-section"><h4>监听与可回复对象</h4><div class="fields">
@@ -669,7 +689,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 </div></div>
 </div><div class="actions"><button id="dm-settings-save" class="primary">保存私信规则</button><button id="dm-settings-reload">重新读取</button></div></div>
 <div class="toolbar"><h2 style="margin:0">限额聊天申请</h2><select id="dm-filter"><option value="pending">只看待审批</option><option value="">全部申请</option><option value="approved">已通过</option><option value="rejected">已拒绝</option></select></div><p class="muted">这里只审核 B站 用户申请，不修改可信白名单。通过后仍受每日／累计额度控制。</p><div class="grid" id="dm-list"></div>
-<div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3>最近私信会话</h3><button id="dm-recent-reload">刷新会话</button></div><p class="muted">只显示本插件已经保存的对话片段；不从 B站 额外拉取完整历史。旧版心愿已停止自动处理，历史资料只随本地备份保留；新的陌生人探索灵感与好友观看邀请在「人设与好友」查看。记录仅在本机展示。</p><div id="dm-recent-list" class="records"></div></div>
+<div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3>最近私信会话</h3><button id="dm-recent-reload">刷新会话</button></div><p class="muted">只显示本插件已经保存的对话片段；不从 B站 额外拉取完整历史。旧版心愿已停止自动处理，历史资料只随本地备份保留；新的陌生人探索灵感与好友观看邀请在「社交互动」查看。记录仅在本机展示。</p><div id="dm-recent-list" class="records"></div></div>
 </section>
 <footer class="muted" style="margin-top:30px">数据只保存在本机 DSH 插件目录；此页面不从第三方加载脚本。若页面打不开，请先从 DSH 的「大肥鱼」设置点击管理中心入口。</footer>
 </main>

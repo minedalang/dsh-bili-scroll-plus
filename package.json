@@ -1,6 +1,6 @@
 {
   "name": "dsh-dafeiyu-life",
-  "version": "2.5.0-dev.5",
+  "version": "2.5.0-dev.6",
   "description": "大肥鱼 · DSH 生活系统：主 Session 可回忆人生记忆与真实经历、管理自主待办，并按权限使用 B站读取与互动；支持低成本 AI 维护本地表情包检索规则与兴趣感知排序。",
   "keywords": [
     "dsh",

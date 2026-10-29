@@ -149,12 +149,12 @@ observed → eligible → deferred ──┐
 7. 模型报错、平台断线、宿主重启和重复轮询均不造成重复发送；旧 dev.4 好友权限与账户数据迁移后无扩权。
 8. 全量 Node、Python、自检、Windows DSH + 真实 B站端到端验收均完成，才将 README 的“规划中”改成“已实现”，并考虑标记和发布 dev.5。
 
-详细卖点与可公开使用的文案见 [dev.5 产品叙事](./DEV5_PRODUCT_HIGHLIGHTS.md)，测试与发布准则见 [dev.5 验收计划](./DEV5_ACCEPTANCE.md)。
+详细卖点与可公开使用的文案见 [dev.5 产品叙事](./DEV5_FEATURES.md)，测试与发布准则见 [dev.5 验收计划](./DEV5_ACCEPTANCE.md)。
 
 ## dev.5 首版的实际代码、存储与接口（2026-10-29）
 
 - `lib/social-cognition.mjs`：`createSocialCognition().observe()` 从 B站私信、已授权好友 @ 读取新近事件。状态持久化到 `$DSH_HOME/bili-duty/social-cognition.json`（沿用插件实际 `stateDir`）；陌生人只保存 SHA-256 截短来源哈希、有限词库主题和 7 天失效时间，不保存 UID 原文或完整私信；好友邀请记录 UID、已核实 BV、消息哈希、14 天失效时间。
-- `socialCognition.inspirationKeywords()`：最多少量低权重主题插入日常选片提示，不给旧版获批心愿的 `temporary_wish_id` / 自动 @ 授权；`tick()` 默认关闭自动执行，开启后每 4 小时至多一个候选，只读调用 `executeOwnerTodo({type:'watch_video'})`，成功状态为 `inspected-metadata`，不是 `watched`。
+- `socialCognition.inspirationKeywords()`：最多少量低权重主题插入日常选片提示，不给已删除的旧版 `temporary_wish_id` / 自动 @ 路径；`tick()` 默认关闭自动执行，开启后每 4 小时至多一个候选，只读调用 `executeOwnerTodo({type:'watch_video'})`，成功状态为 `inspected-metadata`，不是 `watched`。
 - `lib/friend-learning.mjs`：新增 `recommendation-consent` 证据事件；全局退订/本人恢复依时间及同时间消息顺序处理，`friendRecommendationGuard` 是主动推荐和旧草稿发送前统一的硬闸。渠道拒绝不因全局恢复而自动清除。
 - `lib/owner-comment-agent.mjs`：`parseOwnerCommentIntent` 限定点赞、草稿或“发评论：明确正文”；`createOwnerCommentAgent().accept(row)` 对通知种类、真实主人 UID、BV、rpid、24h 时效与独立权限复核，在远端写操作前先写 `owner-comment-agent.json` 去重账本。公众回执只用小型固定自然语句，默认关闭，且必须已经明确成功。
 - 管理 API：`GET /api/bili-duty/dev5-social` 返回最少化候选和公开 Agent 状态，`POST` 只允许 `{"action":"preview"}` 做只读候选预览（不会执行 B站操作）；同源校验并禁止缓存。
