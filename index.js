@@ -2939,6 +2939,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
         const decision=await decideOwnerSocialComment({
           info:evidence.video,bvid:action.bvid,context:evidence.context,invitation:action.invitation||'',
           style:emotionalState.styleHint(),willingness:action.willingness||{},commentRequested:action.commentRequested===true,
+          priorCommentOutcomes:action.priorCommentOutcomes||[],
           canPublish:actorTier==='owner',requireReply:action.aiSocial===true,maxAttempts:action.aiSocial===true?1:2,
           invoke:p=>invokeInteractionPrompt(p,2200,{modelRoute:'interaction'}),
         })
