@@ -2069,7 +2069,7 @@ function reportMeta() {
       )
     }
     try {
-      const overlayKind = modelPrefixOverride === 'reflection' ? 'reflection' : modelPrefixOverride === 'dailyDynamic' ? 'dailyDynamic' : (dmSafe ? 'dm' : 'main')
+      const overlayKind = modelPrefixOverride === 'reflection' ? 'reflection' : modelPrefixOverride === 'dailyDynamic' ? 'dailyDynamic' : modelPrefixOverride === 'ownerDmAgent' ? 'ownerDmAgent' : (dmSafe ? 'dm' : 'main')
       return writeSecureHeadlessOverlay(file, yml.join('\n'), { kind: overlayKind, stateDir })
     } catch (e) {
       log(`🔒 写安全 overlay 失败：${e?.message ?? e}`)
