@@ -162,7 +162,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <button data-tab="home" aria-selected="false">大肥鱼的家</button>
 <button data-tab="models" aria-selected="false">AI 模型</button>
 <button data-tab="bili" aria-selected="false">B站生活</button>
-<button data-tab="dynamic" aria-selected="false">日常动态</button>
+<button data-tab="dynamic" aria-selected="false">B站动态创作</button>
 <button data-tab="quotas" aria-selected="false">次数与额度</button>
 <button data-tab="polling" aria-selected="false">后台轮询</button></div>
 <div class="tab-cluster"><span class="tab-cluster-label">身份与记忆</span>
@@ -183,7 +183,8 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="feature-intro"><div><h2>🧠 AI 模型配置</h2><p>所有 AI 模型只在这里设置。Provider 和模型 ID 留空时继承 DSH 当前模型；不需要在插件重复填写 API Key。每日次数统计的是插件启动的模型任务，并非 Provider 实际 API 请求数；安装本版后开始记录，不补算历史。测试连接不计入统计，但会产生实际模型请求，可能消耗额度。请先保存模型配置再测试。独立视觉的测试只验证文字连接，不验证识图能力。表情包规则优化只在你手动点击时调用，日常评论仍使用本地零 Token 检索。</p></div></div>
 <div class="settings-stack">
 <div class="settings-section"><h4>刷视频与内容理解</h4><div class="model-activity"><span id="models-video-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-video-test" class="model-test-button">测试连接</button><span id="models-video-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">负责搜索、阅读视频、选片、评论决策与点赞收藏决策。</p><div class="fields" id="models-video"></div></div>
-<div class="settings-section"><h4>后台评论与私信</h4><div class="model-activity"><span id="models-interaction-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-interaction-test" class="model-test-button">测试连接</button><span id="models-interaction-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">负责后台评论、私信和生活动态草稿；人生反思在下方单独配置。</p><div class="fields" id="models-interaction"></div></div>
+<div class="settings-section"><h4>后台评论与私信</h4><div class="model-activity"><span id="models-interaction-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-interaction-test" class="model-test-button">测试连接</button><span id="models-interaction-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">负责后台评论与私信；B站动态草稿有独立模型配置，不使用人生反思模型。</p><div class="fields" id="models-interaction"></div></div>
+<div class="settings-section"><h4>生活动态文案 · 专用模型（可继承）</h4><div class="model-activity"><span id="models-dailyDynamic-usage" class="muted">今日调用次数：读取中…</span><button type="button" id="models-dailyDynamic-test" class="model-test-button">测试连接</button><span id="models-dailyDynamic-test-result" class="muted" role="status"></span></div><p class="muted">负责 B站公开生活动态的草稿构思，既不是人生反思，也不会读取私人聊天。留空时继承后台评论与私信模型；它也未配置时继承 DSH 默认模型。</p><div class="fields" id="models-dailyDynamic"></div></div>
 <div class="settings-section"><h4>人生反思与经历提炼</h4><div class="model-activity"><span id="models-reflection-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-reflection-test" class="model-test-button">测试连接</button><span id="models-reflection-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">专门分析积累的真实经历，决定哪些内容值得凝练成人生记忆。这里的模型不会获得 B站、文件或 Shell 工具。Provider 和模型 ID 留空时继承 DSH 当前默认模型。</p><div class="fields" id="models-reflection"></div></div>
 <div class="settings-section"><h4>独立视觉识图</h4><div class="model-activity"><span id="models-vision-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-vision-test" class="model-test-button">测试连接</button><span id="models-vision-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">只有开启独立视觉模式时才使用；普通模式复用视频模型。</p><div class="fields" id="models-vision"></div>
 <div class="fields"><div><label for="models-vision-mode">识图方式</label><select id="models-vision-mode"><option value="reuse_video_model">复用视频模型（默认）</option><option value="independent_dsh">独立 DSH 视觉模型</option><option value="auto">自动（历史兼容：当前等同复用视频模型）</option></select></div>
@@ -216,14 +217,14 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="fields"><div><label for="bili-asr-model">Whisper 转写模型</label><select id="bili-asr-model"><option value="tiny">tiny</option><option value="base">base</option><option value="small">small</option><option value="medium">medium</option><option value="large-v3">large-v3</option></select></div></div>
 <label class="checkline"><input id="bili-comment-memes" type="checkbox">评论时允许自主搭配本地表情包</label>
 <label class="checkline"><input id="bili-comment-memes-debug" type="checkbox">记录表情包选择原因（调试用）</label></div>
-<div class="settings-section"><h4>大肥鱼的日常动态</h4>
+<div class="settings-section"><h4>B站生活动态创作</h4>
 <label class="checkline"><input id="bili-daily-enabled" type="checkbox">允许大肥鱼生成自己的生活动态</label>
 <label class="checkline"><input id="bili-daily-draft" type="checkbox">仅生成草稿，不自动发布（建议先开启）</label>
 <p class="muted">仅根据公开、真实的已选视频经历创作。持续情绪状态可在「人生记忆 → 情绪与心情」查看；它只影响表达节奏，不会成为公开发布私人聊天的理由。</p></div>
 <div class="toolbar"><button id="bili-save" class="primary">保存 B站生活设置</button><button id="bili-refresh">重新读取</button></div>
 </div></section>
 <section id="panel-dynamic" hidden>
-<div class="feature-intro"><div><h2>📝 大肥鱼的日常动态</h2><p>大肥鱼从真实经历中自主选择值得分享的事情。先预览草稿，再决定是否公开；自动发布默认关闭。</p></div></div>
+<div class="feature-intro"><div><h2>📝 B站生活动态创作</h2><p>这里是准备发布到 B站的公开动态草稿；「人生记忆 → 大肥鱼的一天」是内部生活时间线，两者不同。使用 AI 模型页的「生活动态文案」模型（未配置时继承互动模型），先生成草稿再决定是否公开；自动发布默认关闭。</p></div></div>
 <div class="toolbar"><button id="daily-dynamic-refresh">刷新动态草稿</button><button id="daily-dynamic-generate" class="primary">让大肥鱼构思一条动态</button></div>
 <p id="daily-dynamic-status" class="muted" role="status" aria-live="polite"></p>
 <p id="daily-dynamic-action-status" class="action-feedback" role="status" aria-live="polite">点击“构思一条动态”后，页面会显示模型处理状态；没有真实视频、模型选择沉默或生成失败，也会解释原因。</p>
@@ -322,17 +323,39 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label for="emotion-recall-daily">每天最多发送（0=禁止，可填任意正整数）</label><input id="emotion-recall-daily" type="number" min="0" step="1" value="1"><small class="setting-note">只限制实际主动发出的消息；设为 0 表示禁止。可填任意非负安全整数，两个渠道合计。</small></div>
 <div><label class="checkline"><input id="emotion-recall-unlimited" type="checkbox">不限制每天的发送次数</label><small class="setting-note">仅在每日上限大于 0 时忽略次数上限；0 始终禁止发送。仍必须符合时间窗口、独立授权、评估间隔、记忆证据和去重条件；可能增加模型开销和打扰。</small></div>
 <div><label for="emotion-recall-cooldown">两次评估间隔（小时，1–48）</label><input id="emotion-recall-cooldown" type="number" min="1" max="48" value="24"><small class="setting-note">至少隔这么久才重新让模型考虑是否分享；评估不是发送，调小可能增加模型调用。</small></div>
+<div><label for="emotion-recall-candidates">每次最多考虑的相关记忆（1–100）</label><input id="emotion-recall-candidates" type="number" min="1" max="100" value="12"><small class="setting-note">候选越多可能发现更多相关旧事，但会增加决策模型的输入长度。只从有原始证据的经历中取。</small></div>
+<div><label for="emotion-recall-history">历史经历检索条数（20–1000）</label><input id="emotion-recall-history" type="number" min="20" max="1000" value="300"><small class="setting-note">从较大范围的本地历史里寻找线索，不再隐式锁在前 20 条。</small></div>
+<div><label for="emotion-recall-recent-days">新事件回看天数（1–30）</label><input id="emotion-recall-recent-days" type="number" min="1" max="30" value="3"><small class="setting-note">决定最近多久内的新观看/评论可能触发回忆；不会自动读取私人消息正文。</small></div>
+<div><label for="emotion-recall-old-days">旧记忆至少相隔天数（1–365）</label><input id="emotion-recall-old-days" type="number" min="1" max="365" value="2"><small class="setting-note">把旧事与新事件拉开一定时间，降低普通重复观看被当成重要回忆的概率。</small></div>
+<div><label for="emotion-recall-min-intensity">触发情绪最低强度（1–100）</label><input id="emotion-recall-min-intensity" type="number" min="1" max="100" value="30"><small class="setting-note">越低越容易进入候选评估，但不会跳过真实证据和主人授权。</small></div>
+<div><label for="emotion-recall-emotion-hours">情绪有效期（1–72 小时）</label><input id="emotion-recall-emotion-hours" type="number" min="1" max="72" value="12"><small class="setting-note">近期模拟情绪在这段时间内可以影响回忆联想；过期后不再以旧情绪触发。</small></div>
 <div><label for="emotion-recall-start">每日最早开始（0–23 时）</label><input id="emotion-recall-start" type="number" min="0" max="23" value="9"></div>
 <div><label for="emotion-recall-end">每日最晚结束（1–24 时）</label><input id="emotion-recall-end" type="number" min="1" max="24" value="22"></div></div>
 <p class="muted">模型只能从核验的旧记忆 ID 中决定是否分享；正文根据真实新旧经历模板生成，不接受模型编造的事实。默认每天最多一次、24 小时内不重复评估，夜间免打扰。B站消息为真实对外发送行为。</p>
 <div class="toolbar"><button id="emotion-recall-save" class="life-action life-green">保存自主回忆权限</button><button id="emotion-recall-preview" class="life-action life-sky">只预览评估（不发送）</button></div>
-<p id="emotion-recall-status" class="muted" role="status">尚未读取自主回忆状态</p></div></div>
+<p id="emotion-recall-status" class="muted" role="status">尚未读取自主回忆状态</p><div class="inset"><h4>最近评估诊断 · 为什么回忆或沉默</h4><div id="emotion-recall-diagnostics" class="records"><p class="muted">尚无诊断记录。仅保存数量、阶段、原因，不保存私信正文。</p></div></div></div></div>
 <div id="life-timeline-section" class="settings-section life-section"><div class="toolbar"><h4 style="margin:0">📅 大肥鱼的一天 · 真实生活时间线</h4><select id="life-timeline-days" aria-label="时间线范围"><option value="7">最近 7 天</option><option value="30" selected>最近 30 天</option><option value="90">最近 90 天</option></select><button id="life-timeline-refresh" class="life-action life-sky">刷新时间线</button></div>
 <p class="muted">把真实入选视频、公开评论、情绪变化和关系阶段整理在一处。不会展示好友私信正文或把私密画像拼进公开内容；心情变化只显示类别，不显示触发原因。</p><div id="life-timeline-list" class="records records-scroll tall"></div></div>
 <div id="life-todo-section" class="settings-section life-section"><div class="toolbar"><h4 style="margin:0">📝 自主待办 · 记下下一步，不强迫立即执行</h4><span id="owner-todo-status" class="live-badge">● 正在整理待办</span><button id="owner-todo-refresh" class="life-action life-sky">刷新待办</button></div>
 <p class="muted">别人私信推荐的 BV 会自动变成“考虑是否观看”的待办。主 Session 也可以记录“看这个视频、点赞指定 BV、看看自己的空间投稿、查看某位 UP 的投稿、搜索主题、检查通知”等下一步。主人说现在做时可立即处理；否则大肥鱼可在相关聊天里考虑时机。自动择机检查是独立可选项，不依赖定时刷视频。外部写入操作必须来自主人明确授权并继续遵守 B站额度；推荐私信本身不授权点赞、关注或评论。</p>
 <div class="fields"><div><label for="owner-todo-auto-review">自主待办自动择机检查</label><select id="owner-todo-auto-review"><option value="false">关闭（默认，只在聊天或手动操作时考虑）</option><option value="true">开启（定时提醒主 Session 评估待办）</option></select></div><div><label for="owner-todo-review-minutes">检查间隔（分钟）</label><input id="owner-todo-review-minutes" type="number" min="15" max="1440" step="15" value="60"></div></div>
-<div class="inset"><h4>✉️ 主人 B站私信中的只读指令</h4><p class="muted">默认关闭。启用前必须在「私信与好友」中单独填写主人 UID（dmOwnerUid）；只识别 B站接口验证的该 UID，不能通过私信正文自称主人。支持「大肥鱼 看 BV号」「大肥鱼 搜索 关键词」「大肥鱼 查看我的投稿」「大肥鱼 查看UP 12345 投稿」「大肥鱼 检查通知」；入队后由主人或独立调度决定是否执行。点赞、关注、评论、发私信等写操作不接受这条入口自动授权。</p><label class="checkline"><input id="owner-dm-read-commands" type="checkbox">启用主人私信只读待办入口</label></div>
+<div class="inset"><h4>✉️ 主人 B站私信 · 可独立授权的远程指令</h4>
+<p class="muted">仅接收 B站真实收件箱中已核验的 <strong>主人 UID</strong>；发件人自称主人、别人转发的命令或视频/评论中的文字不能授权。须开启「私信与好友 → 后台私信监听」，设置主人 UID，并开启下方对应权限。只读与公开写入权限完全独立，所有开关默认关闭。私信轮询一般在约 1 分钟内发现新消息；为防旧消息回放，写入命令只接受最近 15 分钟内收到的消息。</p>
+<label class="checkline"><input id="owner-dm-read-commands" type="checkbox">允许主人私信只读指令（看视频、搜索、查投稿与通知）</label>
+<p class="muted">示例：<code>大肥鱼 现在看 BV1xxxxxxxxx</code>／<code>大肥鱼 有空看看 BV1xxxxxxxxx</code>（仅入待办）。看视频是读取实际可用资料，不等于完整播放。</p>
+<div class="inset" style="margin-top:12px"><h4>🔐 对外操作总开关及独立授权（默认全部关闭）</h4>
+<label class="checkline"><input id="owner-dm-actions" type="checkbox">允许主人通过私信下达 B站写操作（总开关）</label>
+<div class="fields" style="margin-top:10px">
+<div><label class="checkline"><input id="owner-dm-like" type="checkbox">点赞指定 BV 视频</label><small class="setting-note">示例：大肥鱼 点赞 BV1xxxxxxxxx；使用现有每日点赞额度及去重账本。</small></div>
+<div><label class="checkline"><input id="owner-dm-collect" type="checkbox">收藏指定 BV 视频</label><small class="setting-note">示例：大肥鱼 收藏 BV1xxxxxxxxx 到 我的收藏夹；必须指定已存在的收藏夹。</small></div>
+<div><label class="checkline"><input id="owner-dm-follow" type="checkbox">关注／取关 UP 主</label><small class="setting-note">示例：大肥鱼 关注 BV1xxxxxxxxx，或 大肥鱼 取关 UID12345；取关仍限大肥鱼自己关注满 7 天的账号。</small></div>
+<div><label class="checkline"><input id="owner-dm-comment-draft" type="checkbox">构思评论草稿</label><small class="setting-note">示例：大肥鱼 生成评论 BV1xxxxxxxxx；只用专用无 B站工具的模型生成本地草稿，不会公开。</small></div>
+<div><label class="checkline"><input id="owner-dm-comment-publish" type="checkbox">公开发表评论</label><small class="setting-note">示例：大肥鱼 发表评论 BV1xxxxxxxxx：我的评论正文；或先生成草稿，再「大肥鱼 发布评论草稿 草稿ID」。受评论模式与每日额度限制。</small></div>
+<div><label class="checkline"><input id="owner-dm-dynamic-draft" type="checkbox">构思 B站生活动态草稿</label><small class="setting-note">示例：大肥鱼 构思动态；只使用真实公开视频经历，保存本地草稿。</small></div>
+<div><label class="checkline"><input id="owner-dm-dynamic-publish" type="checkbox">公开发布已有动态草稿</label><small class="setting-note">示例：大肥鱼 发布动态草稿 草稿ID；沿用现有动态启用开关、每日额度及不确定结果禁止重试规则。</small></div>
+<div><label class="checkline"><input id="owner-dm-friend-message" type="checkbox">给指定白名单好友发私信</label><small class="setting-note">示例：大肥鱼 给 UID12345 发私信：你好；对方须在好友名册开启允许私信权限。</small></div>
+</div>
+<p class="muted">“生成”与“发布”是两套独立权限；没有通过主人精确命令明确要求公开发送，就不会自动发。只有已有安全接口支持的操作才能使用；不开放上传视频、转账、删稿、任意网页命令或不受控工具执行。</p></div></div>
 <div class="inset"><h4>🤖 独立自主调度 · 真正由后台择机决定</h4>
 <p class="muted">与旧版「提醒主 Session」不同：开启后，后台可调用 AI 从已存在的只读待办中选择执行、延期、忽略或跳过，也可以按现有证据条件请求人生反思。不会自动点赞、关注、收藏、发评论或发私信；独立于自动刷视频。默认关闭。</p>
 <div class="fields"><div><label for="autonomous-planner-enabled">独立自主调度</label><select id="autonomous-planner-enabled"><option value="false">关闭（默认）</option><option value="true">开启 · 只读任务和反思</option></select></div>
