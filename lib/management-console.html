@@ -461,6 +461,13 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="settings-section" id="unified-friends">
 <h4>🐳 好友关系与互动 · 统一名册</h4>
 <p class="muted">只维护一份 UID 好友名册，统一管理私信往来、主动推荐方式、被 @ 意愿和人物关系。<strong>默认推荐渠道为私信</strong>，公开 @ 仅在你为该好友选择后才有资格被考虑。原有的三套名单会兼容合并，不会自动替已有好友增加权限。昵称只是备注，主人角色也不会带来管理权限。</p>
+<div class="inset"><h4>🌱 dev.5 社会认知 · 候选灵感和好友邀请</h4>
+<p class="muted">陌生人的私信视频心愿只是短期探索灵感，不回信、不建陌生人画像、不产生任务或公开 @；好友分享 BV / 通过 @ 请求“有空看看”，会形成可到期的只读观看邀请。大肥鱼好奇心充足时可选择审阅，<strong>默认不自动查看，不保证已观看</strong>。</p>
+<label class="checkline"><input id="social-stranger-inspiration" type="checkbox">允许读取陌生人私信里的短期视频灵感（默认关闭）</label>
+<label class="checkline"><input id="social-friend-invitations" type="checkbox">允许记录可信好友的只读视频邀请（默认关闭）</label>
+<label class="checkline"><input id="social-invitation-auto" type="checkbox">当好奇心充足时，最多每 4 小时考虑自动只读查看一条（默认关闭）</label>
+<div class="toolbar"><button id="social-dev5-save" type="button" class="primary">保存社会认知权限</button><button id="social-dev5-refresh" type="button">刷新意愿状态</button><span id="social-dev5-status" class="muted">尚未加载</span></div>
+<div id="social-dev5-records" class="records records-scroll"></div></div>
 <div class="inset"><h4>好友意愿监听</h4>
 <label class="checkline"><input id="friend-at-feedback-enabled" type="checkbox">只读收取白名单好友的 @ 意愿（默认关闭）</label>
 <p class="muted">开启后可记录他们通过 @ 提出的“别推这类”“多推某类”等明确反馈，<strong>不会因为收取意见而公开回复</strong>。公开回复仍需在「后台评论互动」单独开启，且遵守额度；首次读取只建立历史基线，不重放旧通知。</p></div>
@@ -500,6 +507,15 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="fields"><div><label for="comment-at-mode">回应范围</label><select id="comment-at-mode"><option value="whitelist">仅白名单用户（推荐）</option><option value="all">所有人</option></select></div>
 <div hidden><label for="comment-at-whitelist">被 @ 白名单（由可信好友名册同步）</label><textarea id="comment-at-whitelist" rows="4"></textarea></div></div>
 <p class="muted">可在「人设与好友 → 好友关系与互动」统一管理允许邀请的 UID。<strong>通知是否被识别、为什么没有回复</strong>，请到「每日诊断 → @ 邀请处理诊断」查看。</p>
+</div>
+<div class="settings-section"><h4>🐳 dev.5 主人公开评论受限 Agent</h4>
+<p class="muted">从平台通知核验真实主人 UID 和当前 BV，识别“给这条视频点赞”“写评论草稿”“发评论：明确正文”。不读取主人私信或主 Session 私密信息，所有写操作均独立授权、登记后执行，结果不确定不会自动重试。公开确认采用简短自然短句，默认关闭。</p>
+<label class="checkline"><input id="owner-comment-agent-enabled" type="checkbox">启用主人评论 Agent（默认关闭；独立于普通 @ 回复）</label>
+<label class="checkline"><input id="owner-comment-like" type="checkbox">允许主人在当前视频下请求点赞</label>
+<label class="checkline"><input id="owner-comment-draft" type="checkbox">允许生成本地评论草稿（不发布）</label>
+<label class="checkline"><input id="owner-comment-publish" type="checkbox">允许带明确正文的主人评论直接发表（高风险，默认关闭）</label>
+<label class="checkline"><input id="owner-comment-ack" type="checkbox">在确认成功后，自然地公开回复一句（默认静默）</label>
+<p id="owner-comment-agent-status" class="muted">Agent 状态尚未读取。</p>
 </div>
 <div class="settings-section"><h4>当前视频评论上下文（不再独立轮询热评）</h4><p class="muted">旧版持续扫描最近看过的视频热评已停用。只有收到相关评论/@ 通知、AI 先决定值得接话后，才读取该视频其他热门评论；原创视频评论按刷视频 Agent 当轮判断。</p><div class="fields">
 <div hidden><input id="comment-watch-top" type="checkbox" disabled></div>

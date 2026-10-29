@@ -73,3 +73,19 @@ flowchart TB
 ## 好友互动不是多个独立白名单
 
 目前 `dev.4` 的好友系统改为单一 UID 名册：主 Session、B站浏览 Agent 的公开 @ 决策、后台私信互动和主动社交草稿共用经过归一化的 UID 身份与授权，但使用各自的工具权限闸门。好友收到私信或通过 @ 留言提出的明确推荐偏好会记录到仅与该 UID 关联的本地观察档案，推荐发送前再次校验。公开 @ 的只读监听与公开评论回复是不同权限。详细流程与迁移边界见 [好友互动架构](./FRIEND_CONTACTS.md)。
+
+## dev.5 预研：主人公开评论 Agent 和自然表达层（尚未实现）
+
+与本页描述的 **dev.4 私信 Agent** 不同，拟新增的主人**公开评论** Agent 必须单独核验平台真实 UID 与评论所属 BV；只能接触本条评论、对应视频公开资料、受限操作状态及可公开的角色语气。即使发出请求的是主人，也**不能**因此访问主人私信、主 Session 近期对话、私密待办或其他好友画像。动作执行与可选的自然公开回复分离，评论发布有独立权限、额度、冷却、去重与未知回执保护。
+
+完整设计见 [dev.5 社会认知与有机互动架构](./DEV5_SOCIAL_COGNITION.md)，宣传与验收边界见 [产品亮点文案](./DEV5_PRODUCT_HIGHLIGHTS.md) 和 [测试计划](./DEV5_ACCEPTANCE.md)。本页上方 dev.4 已实现的能力不因设计文档而自动升级。
+
+## dev.5 社会认知模块与主人评论受限 Agent（源码开发快照）
+
+`getNewDmMessages → dmAutoreply.onIncoming → socialCognition.observe`：新鲜真实私信分类为陌生人匿名临时探索主题或好友只读观看邀请。原有主人私信 Agent 仍优先分流独立处理，绝不会落入陌生人候选。
+
+`commentInteract.onIncoming → ownerCommentAgent.accept`：只对真实主人 B站 @ 评论分流；仅接受真实 UID、平台视频 BV、评论 ID 与有效时间。后台独立动作权限控制点赞、草稿、明确正文发布；公众回复不读取 owner DM 主 Session 私密内容。普通评论模块在识别到主人动作指令时标记已交由该 Agent，不再额外 AI 回复。
+
+`commentInteract.onIncoming → friend-learning + socialCognition.observe`：对已授权好友的 @ 反馈，更新个人偏好、全局视频推荐退订或独立只读观看候选。非好友 @ 不建立画像。情绪只影响择机只读行为，不扩大权限。
+
+两项新 JSON 文件与旧记忆/主人私信账本分开，默认所有新开关关闭；此次未引入跨 Session 的社交隐私读取桥。
