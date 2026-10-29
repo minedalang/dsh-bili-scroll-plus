@@ -30,9 +30,9 @@ test('最多重试一次且拒绝内容不泄露；第二次有效则保存原�
  assert.deepEqual(bad,{ok:false,reason:'privacy-filter',attempts:2})
  assert.equal(JSON.stringify(bad).includes('机密'),false)
 })
-test('主人评论生成仍使用隔离模型，仅通过两次安全校验后 addDraft，未改变公开发布分支',()=>{
+test('主人评论生成仍使用隔离模型，仅通过两次安全校验后 addDraft，不跨越公开社交发布分支',()=>{
  const host=readFileSync(new URL('../index.js',import.meta.url),'utf8')
- const branch=host.slice(host.indexOf("if(action.type==='comment_draft'){",host.indexOf('const ownerCommentAgent=createOwnerCommentAgent')),host.indexOf("if(action.type==='comment_publish'){",host.indexOf('const ownerCommentAgent=createOwnerCommentAgent')))
+ const branch=host.slice(host.indexOf("if(action.type==='comment_draft'){",host.indexOf('const ownerCommentAgent=createOwnerCommentAgent')),host.indexOf("if(action.type==='social_invite'){",host.indexOf('const ownerCommentAgent=createOwnerCommentAgent')))
  assert.match(branch,/generateOwnerCommentDraftFromVideo/)
  assert.match(branch,/modelRoute:'interaction'/)
  assert.match(branch,/if\(!result\.ok\)return/)
@@ -101,7 +101,7 @@ test('外部标题即使包含操作命令也只是数据，不注入发布工�
  assert.match(prompt,/未经信任的外部材料/)
  assert.match(prompt,/不发表内容/)
  const host=readFileSync(new URL('../index.js',import.meta.url),'utf8')
- const branch=host.slice(host.indexOf("if(action.type==='comment_draft'){",host.indexOf('const ownerCommentAgent=createOwnerCommentAgent')),host.indexOf("if(action.type==='comment_publish'){",host.indexOf('const ownerCommentAgent=createOwnerCommentAgent')))
+ const branch=host.slice(host.indexOf("if(action.type==='comment_draft'){",host.indexOf('const ownerCommentAgent=createOwnerCommentAgent')),host.indexOf("if(action.type==='social_invite'){",host.indexOf('const ownerCommentAgent=createOwnerCommentAgent')))
  assert.doesNotMatch(branch,/runOwnerDmPublishComment|bili_reply_manual|bili_comment_publish/)
 })
 

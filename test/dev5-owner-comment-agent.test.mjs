@@ -6,7 +6,7 @@ import {join} from 'node:path'
 import {parseOwnerCommentIntent,createOwnerCommentAgent} from '../lib/owner-comment-agent.mjs'
 const BV='BV1zznd61EbU'
 const make=(extras={})=>{const home=mkdtempSync(join(tmpdir(),'dev5-owner-comment-'))
-  const cfg={masterEnabled:true,ownerCommentAgentEnabled:true,ownerCommentLikeEnabled:true,ownerCommentDraftEnabled:false,ownerCommentPublishEnabled:false,ownerCommentNaturalAckEnabled:false,commentDailyLimit:10,commentReplyPerDay:10,dmOwnerUid:'999',...extras}
+  const cfg={masterEnabled:true,ownerCommentAgentEnabled:true,ownerCommentLikeEnabled:true,ownerCommentDraftEnabled:false,ownerCommentSocialPublishEnabled:false,ownerCommentNaturalAckEnabled:false,commentDailyLimit:10,commentReplyPerDay:10,dmOwnerUid:'999',...extras}
   const performed=[],replies=[];const now=()=>1_790_000_000_000
   const agent=createOwnerCommentAgent({dataDir:home,getConfig:()=>cfg,perform:async action=>{performed.push(action);return {ok:true,summary:'confirmed'}},sendReply:async x=>{replies.push(x);return {ok:true}},now})
   return {home,cfg,agent,performed,replies,close:()=>rmSync(home,{recursive:true,force:true}),row:(id='at:1',uid='999')=>({kind:'at',id,uid,bvid:BV,rpid:'12345',root:'',timestampMs:now(),text:'@大肥鱼 这条视频帮我点个赞'})}
@@ -14,7 +14,10 @@ const make=(extras={})=>{const home=mkdtempSync(join(tmpdir(),'dev5-owner-commen
 test('natural owner like is recognized; command denies cancellation',()=>{
  assert.deepEqual(parseOwnerCommentIntent('@大肥鱼 给这个视频点个赞'),{type:'like'})
  assert.equal(parseOwnerCommentIntent('@大肥鱼 别给这个视频点赞'),null)
- assert.deepEqual(parseOwnerCommentIntent('@大肥鱼 发评论：这条视频讲得不错'),{type:'comment_publish',text:'这条视频讲得不错'})
+ assert.deepEqual(parseOwnerCommentIntent('@大肥鱼 发评论：这条视频讲得不错'),{type:'unsupported_public_command'})
+ assert.deepEqual(parseOwnerCommentIntent('@大肥鱼 帮我写一条评论草稿'),{type:'unsupported_public_command'})
+ assert.deepEqual(parseOwnerCommentIntent('@大肥鱼 来看看这个视频'),{type:'social_invite'})
+ assert.deepEqual(parseOwnerCommentIntent('@大肥鱼 给这个视频投个币'),{type:'coin_unavailable'})
 })
 test('owner UID must be platform verified, nickname and comment text cannot impersonate',async()=>{
  const t=make();try{
@@ -40,7 +43,8 @@ test('separate publish permission and natural response are both opt-in',async()=
   const ok=await t.agent.accept(t.row());assert.equal(ok.ack,'sent')
   assert.equal(t.replies.length,1);assert.ok(t.replies[0].text.length<35)
   assert.equal(t.replies[0].bvid,BV)
-  assert.equal((await t.agent.accept({...t.row('at:2'),text:'@大肥鱼 发评论：你好'})).reason,'action-disabled')
+  assert.equal((await t.agent.accept({...t.row('at:2'),text:'@大肥鱼 来看看这个视频'})).reason,'action-disabled')
+  assert.equal((await t.agent.accept({...t.row('at:3'),text:'@大肥鱼 发评论：你好'})).skipped,'public-technical-command-disabled')
  }finally{t.close()}
 })
 test('write outcome uncertain is never retried',async()=>{

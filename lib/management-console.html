@@ -544,11 +544,10 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 </div>
 <div class="card" id="social-owner-comment"><h4>🐳 主人公开评论 · 受限 Agent</h4>
 <p id="owner-comment-authorized-uid" class="muted">唯一授权主人 UID：读取中…</p>
-<p class="muted">从平台通知核验真实主人 UID 和当前 BV，识别“给这条视频点赞”“写评论草稿”“发评论：明确正文”。不读取主人私信或主 Session 私密信息，所有写操作均独立授权、登记后执行，结果不确定不会自动重试。公开确认采用简短自然短句，默认关闭。</p>
+<p class="muted">从平台通知核验真实主人 UID 和当前 BV。主人可以自然地邀请大肥鱼来看视频，大肥鱼自行决定是否有话想说，不需要主人逐句审核；点赞仍要明确请求和独立授权。公开评论区不接受“指定正文发表”或“生成草稿”这类技术命令。所有公开写入都受额度、隐私校验和去重保护，不读取主 Session 私密信息。</p>
 <label class="checkline"><input id="owner-comment-agent-enabled" type="checkbox">启用主人评论 Agent（默认关闭；独立于普通 @ 回复）</label>
 <label class="checkline"><input id="owner-comment-like" type="checkbox">允许主人在当前视频下请求点赞</label>
-<label class="checkline"><input id="owner-comment-draft" type="checkbox">允许生成本地评论草稿（不发布）</label>
-<label class="checkline"><input id="owner-comment-publish" type="checkbox">允许带明确正文的主人评论直接发表（高风险，默认关闭）</label>
+<label class="checkline"><input id="owner-comment-publish" type="checkbox">允许主人自然邀请后，由大肥鱼自主决定是否公开发表评论（高风险，升级后需重新授权，默认关闭）</label>
 <label class="checkline"><input id="owner-comment-ack" type="checkbox">在确认成功后，自然地公开回复一句（默认静默）</label>
 <p id="owner-comment-agent-status" class="muted">Agent 状态尚未读取。</p>
 <div class="toolbar"><button type="button" class="primary" id="owner-comment-settings-save">保存主人公开评论权限</button><button type="button" id="owner-comment-settings-reload">重新读取</button></div>
