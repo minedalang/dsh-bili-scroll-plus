@@ -56,7 +56,7 @@ test('配置入口、独立权限及按钮都要同步存在',()=>{
   assert.ok(host.includes(`'${flag}'`),flag+' route must save config')
   assert.ok(js.includes(flag),flag+' must have UI save')
  }
- for(const id of ['owner-dm-actions','owner-dm-like','owner-dm-collect','owner-dm-follow','owner-dm-comment-draft','owner-dm-comment-publish','owner-dm-dynamic-draft','owner-dm-dynamic-publish','owner-dm-friend-message'])assert.ok(ui.includes(`id="${id}"`))
+ for(const id of ['owner-dm-agent-save','owner-dm-like','owner-dm-collect','owner-dm-follow','owner-dm-comment-draft','owner-dm-comment-publish','owner-dm-dynamic-draft','owner-dm-dynamic-publish','owner-dm-friend-message'])assert.ok(ui.includes(`id="${id}"`))
  assert.match(host,/ownerDmActions\.claim/)
  assert.match(host,/ownerDmActions\.finish/)
 })
