@@ -366,9 +366,9 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div id="main-session-history" class="records records-scroll tall"></div></div>
 
 <div id="life-social-section" class="settings-section life-section"><h4>主动回访 · 真正看过后才考虑联系</h4>
-<p class="muted">大肥鱼只会因真实新入选视频与已允许私信的白名单好友的推荐产生社交意图。不会根据私人聊天内容生成公开信息；非白名单用户不建立长期兴趣画像。社交草稿默认不发送；主动私信请务必尊重对方拒绝和冷却期。</p>
+<p class="muted">大肥鱼主要通过私信向已授权好友推荐真实入选的公开视频；公开 @ 是独立的可选方式，不会替代私信推荐。不会根据私人聊天内容生成公开信息；非白名单用户不建立长期兴趣画像。社交草稿默认不发送；主动私信请务必尊重对方拒绝和冷却期。</p>
 <label class="checkline"><input id="social-enabled" type="checkbox">允许自主判断要不要形成回访草稿（默认关闭）</label>
-<label class="checkline"><input id="social-life-intent-enabled" type="checkbox">允许大肥鱼根据自己的真实经历，主动考虑分享相关公开视频给白名单好友（默认关闭）</label><p class="muted">这是独立权限：只会在真实入选视频与好友初始兴趣/重复明确表达的兴趣有合理匹配时，生成“联系或跳过”的草稿；不会因为心情变化就盲目私信。需要先开启上面的自主社交草稿。非白名单用户不参与。</p>
+<label class="checkline"><input id="social-life-intent-enabled" type="checkbox">允许大肥鱼根据真实经历，主动考虑通过私信向好友分享公开视频（默认关闭）</label><p class="muted">这是独立权限：只会在真实入选视频与好友初始兴趣/重复明确表达的兴趣有合理匹配时，生成“联系或跳过”的草稿；不会因为心情变化就盲目私信。需要先开启上面的自主社交草稿。非白名单用户不参与。</p>
 <label class="checkline"><input id="social-auto-send" type="checkbox">允许自动发送给白名单好友（高风险，默认关闭，建议先不开启）</label>
 <div class="fields"><div><label for="social-daily-limit">每日最多主动回访（0 表示禁止，不再限制为 3 次）</label><input id="social-daily-limit" type="number" min="0" step="1" value="1"></div></div>
 <div class="toolbar"><button id="social-save" class="life-action life-indigo">保存社交权限</button><button id="social-refresh" class="life-action life-sky">刷新草稿</button></div>
@@ -459,8 +459,14 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p class="muted">默认提示词是第一次安装的官方规则；此前保存的自定义提示词不会自动覆盖。恢复默认只清除这一项的自定义，不清理成长记忆、好友画像或历史。</p>
 <div class="settings-stack">
 <div class="settings-section" id="unified-friends">
-<h4>可信好友名册 · 一处设置三项权限</h4>
-<p class="muted">UID 是唯一身份；昵称是可选备注。可独立勾选「后台私信」「大肥鱼主动 @」「允许对方 @ 大肥鱼」；主人的角色标签仅供人设使用，目前没有管理权限。原有名单会在本次打开时合并展示；保存后请手动核对三项权限。</p>
+<h4>🐳 好友关系与互动 · 统一名册</h4>
+<p class="muted">只维护一份 UID 好友名册，统一管理私信往来、主动推荐方式、被 @ 意愿和人物关系。<strong>默认推荐渠道为私信</strong>，公开 @ 仅在你为该好友选择后才有资格被考虑。原有的三套名单会兼容合并，不会自动替已有好友增加权限。昵称只是备注，主人角色也不会带来管理权限。</p>
+<div class="inset"><h4>好友意愿监听</h4>
+<label class="checkline"><input id="friend-at-feedback-enabled" type="checkbox">只读收取白名单好友的 @ 意愿（默认关闭）</label>
+<p class="muted">开启后可记录他们通过 @ 提出的“别推这类”“多推某类”等明确反馈，<strong>不会因为收取意见而公开回复</strong>。公开回复仍需在「后台评论互动」单独开启，且遵守额度；首次读取只建立历史基线，不重放旧通知。</p></div>
+<div class="inset"><h4>公开 @ 的额外策略（仅对选用公开 @ 渠道的好友生效）</h4>
+<label for="friends-mode">何时考虑公开 @</label><select id="friends-mode"><option value="off">关闭公开 @（推荐）</option><option value="ai_select">AI 根据真实内容选择个别好友</option><option value="ai">AI 判断是否 @ 所有允许的好友</option><option value="always">每次 @ 全部允许好友（容易打扰，不推荐）</option></select>
+<p class="muted">私信推荐由「人生记忆 → 主动回访」的独立授权、草稿、额度与冷却控制；此处的公开 @ 策略不会替代私信推荐，也不会直接发送消息。</p></div>
 <div class="fields"><div><label for="friend-new-uid">B站 UID（必填）</label><input id="friend-new-uid" inputmode="numeric" placeholder="210228238"></div><div><label for="friend-new-name">昵称备注（可留空）</label><input id="friend-new-name" maxlength="40" placeholder="长条动物"></div></div>
 <div class="toolbar" style="margin-top:12px"><button type="button" id="friend-add">加入名册</button><span class="muted">添加后记得点击底部保存</span></div>
 <div id="friend-directory-editor" class="settings-stack"></div>
@@ -474,12 +480,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="settings-section"><h4>AI 选图提示词</h4><p class="muted">决定什么时候给顶层评论配表情包；硬限额与真实文件校验不会被提示词修改。</p><textarea id="meme-prompt-text" maxlength="4000" rows="12"></textarea><div class="toolbar"><button id="meme-prompt-save" class="primary">保存选图提示词</button><button id="meme-prompt-reset">恢复默认</button><span id="meme-prompt-status" class="muted"></span></div></div>
 <div class="settings-section"><h4>视觉识图提示词</h4><p class="muted">判断何时需要识图和如何描述真实预览帧，不会绕过图片来源安全检查。</p><textarea id="vision-prompt-text" maxlength="4000" rows="10"></textarea><div class="toolbar"><button id="vision-prompt-save" class="primary">保存识图提示词</button><button id="vision-prompt-reset">恢复默认</button><span id="vision-prompt-status" class="muted"></span></div></div>
 <div class="settings-section"><h4>虚构角色背景与关系</h4><p class="muted">单独补充世界观；与主人自定义人设共同生效。</p><textarea id="lore-text" maxlength="4000" rows="8"></textarea><div class="toolbar"><button id="lore-save" class="primary">保存角色背景</button><button id="lore-reset">恢复默认</button><span id="lore-status" class="muted"></span></div></div>
-<div class="settings-section"><h4>主动 @ 好友的决策方式</h4>
-<p class="muted">具体哪些 UID 允许主动 @，请在本页顶部「可信好友名册」勾选。好友画像也统一在名册下编辑。</p>
-<label for="friends-mode">@ 策略</label><select id="friends-mode"><option value="ai_select">AI 根据性格爱好挑选（推荐）</option><option value="ai">AI 判断是否 @ 全部好友</option><option value="off">永不 @</option><option value="always">每次 @ 全部好友</option></select>
 
-<div class="toolbar"><button id="friends-generate">刷新画像</button><button id="friends-save" class="primary">保存好友策略与画像</button></div>
-</div>
 </div>
 </section>
 <section id="panel-reports" hidden>
@@ -494,11 +495,11 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 </div><p class="muted">重要区别：接口返回成功、本地评论账本有记录，都不等于评论当前一定对其他用户公开可见。此处不会把未向 B 站核验的记录标成“平台可见”。</p>
 <div class="settings-stack">
 <div class="settings-section"><h4>被 @ 邀请（默认关闭）</h4>
-<p class="muted">监听 B站发给本账号的评论 @ 通知；先检查视频资料、热评与当前评论串，再由 AI 决定是否接话。首次开启只将已有通知标记为历史，不补发；仍共用所有评论额度。</p>
+<p class="muted">这是公开回复权限：监听 @ 后由 AI 决定是否在评论区回话，且受评论额度限制。<strong>仅记录好友 @ 中的偏好反馈不需要开启公开回复</strong>，请在「人设与好友 → 好友关系与互动」启用只读监听。首次开启不会回复旧通知。</p>
 <div class="checkline"><input type="checkbox" id="comment-at-enabled"><label for="comment-at-enabled">开启被 @ 邀请监听</label></div>
 <div class="fields"><div><label for="comment-at-mode">回应范围</label><select id="comment-at-mode"><option value="whitelist">仅白名单用户（推荐）</option><option value="all">所有人</option></select></div>
 <div hidden><label for="comment-at-whitelist">被 @ 白名单（由可信好友名册同步）</label><textarea id="comment-at-whitelist" rows="4"></textarea></div></div>
-<p class="muted">可在「人设与好友 → 可信好友名册」统一管理允许邀请的 UID。<strong>通知是否被识别、为什么没有回复</strong>，请到「每日诊断 → @ 邀请处理诊断」查看。</p>
+<p class="muted">可在「人设与好友 → 好友关系与互动」统一管理允许邀请的 UID。<strong>通知是否被识别、为什么没有回复</strong>，请到「每日诊断 → @ 邀请处理诊断」查看。</p>
 </div>
 <div class="settings-section"><h4>当前视频评论上下文（不再独立轮询热评）</h4><p class="muted">旧版持续扫描最近看过的视频热评已停用。只有收到相关评论/@ 通知、AI 先决定值得接话后，才读取该视频其他热门评论；原创视频评论按刷视频 Agent 当轮判断。</p><div class="fields">
 <div hidden><input id="comment-watch-top" type="checkbox" disabled></div>

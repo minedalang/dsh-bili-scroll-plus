@@ -74,7 +74,7 @@ import { buildBalancedMemeInventory } from './lib/meme-inventory-prompt.mjs'
 import { DEFAULT_VISION_PROMPT, buildVisionPrompt, normalizeVisionPrompt } from './lib/vision-prompt.mjs'
 import { parseMentionTargets, decideMentions } from './lib/mentions.mjs'
 import { DEFAULT_CHARACTER_LORE, normalizeCharacterLore, normalizeMentionProfiles, buildMentionProfilePrompt, buildSenderRelationshipContext } from './lib/character-social.mjs'
-import { normalizeFriendDirectory } from './lib/friend-directory.mjs'
+import { normalizeFriendDirectory, directoryToLegacy } from './lib/friend-directory.mjs'
 import { shouldRunWindow, parsePeakWindows, readPeakWindows, activePeakWindow, DEFAULT_PEAK_INTERVAL_MINUTES } from './lib/peak-schedule.mjs'
 import { effectiveModelSelection } from './lib/model-routing.mjs'
 import { HEADLESS_DENY_TOOLS, writeSecureHeadlessOverlay, validateHeadlessOverlayFile, assertSafeHeadlessLaunch } from './lib/headless-security.mjs'
@@ -233,6 +233,7 @@ export const Config = !z ? undefined : z.object({
   commentWatchReplies: z.boolean().default(false).extra('volatile', true),
   commentWatchTop: z.boolean().default(false).extra('volatile', true),
   commentAtEnabled: z.boolean().default(false).extra('volatile',true),
+  friendAtFeedbackEnabled: z.boolean().default(false).extra('volatile',true),
   commentAtMode: z.string().default('whitelist').extra('volatile',true),
   commentAtWhitelist: z.string().default('').extra('volatile',true),
   commentTopCount: z.natural().default(5).extra('volatile', true),
@@ -479,7 +480,7 @@ function reportMeta() {
     dmWhitelist: '', dmStrangerOnce: false, dmStrangerMaxReplies: 1, dmStrangerFirstFixed: true,
     dmApprovalEnabled: false, dmApprovalPhrase: '白饭🍚', dmApprovedTotalLimit: 50, dmApprovedDailyLimit: 10, dmWishMentionLimit: 3,
     videoModelProvider: '', videoModelId: '', videoReasoningEffort: '', interactionModelProvider: '', interactionModelId: '', interactionReasoningEffort: '', memeRulesModelProvider:'', memeRulesModelId:'', memeRulesReasoningEffort:'', memeRulesPrompt:'',
-    commentWatchReplies: false, commentWatchTop: false, commentAtEnabled: false, commentAtMode:'whitelist', commentAtWhitelist:'', commentTopCount: 5, commentTopVideoCount: 3, commentReplyHotCount: 12, backupDirectory: '',
+    commentWatchReplies: false, commentWatchTop: false, commentAtEnabled: false, friendAtFeedbackEnabled:false, commentAtMode:'whitelist', commentAtWhitelist:'', commentTopCount: 5, commentTopVideoCount: 3, commentReplyHotCount: 12, backupDirectory: '',
     commentAllowGeneralTop: false, commentReplyPerPoll: 1, commentReplyPerDay: 5, commentOwnTopPerUser: 5, commentOwnNestedPerUser: 3,
     mainSessionBridgeEnabled: false, mainSessionId: '', mainSessionAutoSync: true, mainSessionSyncMinutes: 60, mainSessionDailyBatches: 4, mainSessionBatchSize: 8, mainSessionIncludeComments: true,
     mainSessionMemoryEnabled: false, mainSessionMemoryAutoBili: true, mainSessionMemorySemanticEnabled: false, mainSessionMemoryModelProvider: '', mainSessionMemoryModelId: '', mainSessionMemoryReasoningEffort: '', mainSessionMemoryCandidates: 48, mainSessionMemorySearchDailyLimit: 80, socialOutreachEnabled:false, socialLifeIntentEnabled:false, emotionSystemEnabled:true, socialAutoSend:false, socialOutreachDailyLimit:1, ownerTodoAutoReviewEnabled:false, ownerTodoReviewMinutes:60, autonomousPlannerEnabled:false, emotionRecallEnabled:false, emotionRecallMainEnabled:false, emotionRecallDmEnabled:false, emotionRecallUnlimited:false, emotionRecallDailyLimit:1, emotionRecallCooldownHours:24, emotionRecallStartHour:9, emotionRecallEndHour:22, ownerDmAgentEnabled:false, ownerDmAgentReadMainContext:false, ownerDmAgentSyncMain:false, ownerDmAgentContextTurns:6, ownerDmAgentContextChars:1500, ownerDmAgentModelProvider:'', ownerDmAgentModelId:'', ownerDmAgentReasoningEffort:'', ownerDmReadCommandsEnabled:false, ownerDmActionsEnabled:false, ownerDmLikeEnabled:false, ownerDmCollectEnabled:false, ownerDmFollowEnabled:false, ownerDmCommentDraftEnabled:false, ownerDmCommentPublishEnabled:false, ownerDmDynamicDraftEnabled:false, ownerDmDynamicPublishEnabled:false, ownerDmFriendMessageEnabled:false, emotionRecallCandidateLimit:12, emotionRecallHistoryLimit:300, emotionRecallRecentDays:3, emotionRecallMinAgeDays:2, emotionRecallEmotionMinIntensity:30, emotionRecallEmotionMaxAgeHours:12, autonomousPlannerMinutes:90, autonomousPlannerDailyLimit:3, autonomousPlannerStartHour:9, autonomousPlannerEndHour:23, mainSessionReflectionAuto: true, mainSessionReflectionModelProvider: '', mainSessionReflectionModelId: '', mainSessionReflectionReasoningEffort: '', mainSessionReflectionMinCandidates: 6, mainSessionReflectionBatchSize: 16, mainSessionReflectionIntervalHours: 6, mainSessionReflectionDailyBatches: 2, mainSessionMemoryHalfLifeDays: 30, mainSessionMemoryThreshold: 0.35, mainSessionMemoryMaxItems: 6, mainSessionMemoryMaxChars: 800, mainSessionMemoryDailyQuota: 8, mainSessionMemoryFactsMax: 2,
@@ -618,7 +619,7 @@ function reportMeta() {
     if ('dmApprovedTotalLimit' in p) p.dmApprovedTotalLimit = Math.max(1,Math.min(10000,Math.floor(Number(p.dmApprovedTotalLimit)||50)))
     if ('dmApprovedDailyLimit' in p) p.dmApprovedDailyLimit = Math.max(1,Math.min(1000,Math.floor(Number(p.dmApprovedDailyLimit)||10)))
     if ('dmWishMentionLimit' in p) p.dmWishMentionLimit = Math.max(1,Math.min(10,Math.floor(Number(p.dmWishMentionLimit)||3)))
-    for (const k of ['commentWatchReplies', 'commentWatchTop', 'commentAtEnabled', 'commentAllowGeneralTop']) if(k in p) p[k] = p[k] === true
+    for (const k of ['commentWatchReplies', 'commentWatchTop', 'commentAtEnabled', 'friendAtFeedbackEnabled', 'commentAllowGeneralTop']) if(k in p) p[k] = p[k] === true
     if ('commentAtMode' in p) p.commentAtMode = p.commentAtMode==='all'?'all':'whitelist'
     if ('commentAtWhitelist' in p) p.commentAtWhitelist = String(p.commentAtWhitelist||'').slice(0,2500)
     for (const [k,min,max,def] of [['commentTopCount',1,20,5],['commentTopVideoCount',1,6,3],['commentReplyHotCount',1,30,12],['commentReplyPerPoll',1,5,1],['commentReplyPerDay',1,1000,5],['commentOwnTopPerUser',1,1000,5],['commentOwnNestedPerUser',1,1000,3]]) {
@@ -809,7 +810,10 @@ function reportMeta() {
    */
   const persistCfg = async (patch) => {
     if ('peakWindows' in patch) parsePeakWindows(patch.peakWindows) // 保存错误要明说，不能悄悄清空列表
-    const clean = clampPatch('mentionProfiles' in patch ? {...patch, mentionTargets: patch.mentionTargets ?? cfg.mentionTargets, friendDirectory: patch.friendDirectory ?? cfg.friendDirectory, mentionName: patch.mentionName ?? cfg.mentionName} : patch)
+    const mergedPatch = 'friendDirectory' in patch
+      ? {...patch,...directoryToLegacy(patch.friendDirectory)}
+      : patch
+    const clean = clampPatch('mentionProfiles' in mergedPatch ? {...mergedPatch, mentionTargets: mergedPatch.mentionTargets ?? cfg.mentionTargets, friendDirectory: mergedPatch.friendDirectory ?? cfg.friendDirectory, mentionName: mergedPatch.mentionName ?? cfg.mentionName} : mergedPatch)
     if ('masterEnabled' in clean) {
       // 先同步文件，再持久化；写入失败必须报错，不能出现界面显示已暂停而 Python 仍可外发。
       const previous = cfg.masterEnabled
@@ -1282,7 +1286,7 @@ function reportMeta() {
       // A trusted friend’s explicit rejection overrides even an always-@ strategy.
       // Suppress only that UID for this BV/category; keep the owner’s public comment intact.
       const permittedTargets=targets.filter(t=>!friendRecommendationGuard(stateDir,t.uid,cfg.friendDirectory,
-        {bvid:String(args.bvid??''),videoTitle:String(heatInfo?.title||heatInfo?.data?.title||'')}).blocked)
+        {bvid:String(args.bvid??''),videoTitle:String(heatInfo?.title||heatInfo?.data?.title||''),channel:'mention'}).blocked)
       const choice=decideMentions({mode:cfg.mentionMode,isReply:false,
         shouldMention:args.should_mention,selectedNames:args.mention_names,targets:permittedTargets,position:args.mention_position})
       return call('bili_reply', {
@@ -2788,7 +2792,8 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       return {
         watchReplies: cfg.masterEnabled === true && cfg.commentWatchReplies === true,
         watchTop: false, // v2.4.89: disable old unprompted heat-comment polling even for legacy configs
-        watchAt: cfg.masterEnabled === true && cfg.commentAtEnabled === true,
+        watchAt: cfg.masterEnabled === true && (cfg.commentAtEnabled === true || cfg.friendAtFeedbackEnabled === true),
+        replyAt: cfg.commentAtEnabled === true,
         diagAtInviteEnabled:cfg.diagAtInviteEnabled!==false,
         diagReplyInboxEnabled:cfg.diagReplyInboxEnabled!==false,
         atMode: cfg.commentAtMode, atWhitelist: cfg.commentAtWhitelist,
@@ -2811,6 +2816,13 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       if(isFriendRecommendationFeedback(req.text)&&req.bvid){
         try{const info=await call('bili_video_info',{bvid:req.bvid});videoTitle=String(info?.title||info?.data?.title||'').slice(0,180)}catch{}
       }
+      // For @ notifications, prefer an explicitly trusted sender who opted into
+      // this channel. Existing reply notifications from trusted friends also count.
+      let allowedAt=true
+      if(req.kind==='at')try{
+        allowedAt=JSON.parse(normalizeFriendDirectory(cfg.friendDirectory)).some(r=>r.uid===String(req.uid)&&r.atInvite===true)
+      }catch{allowedAt=false}
+      if(!allowedAt)return
       observeFriendInterest(stateDir,{uid:req.uid,text:req.text,source:'comment',eventId,bvid:req.bvid,
         videoTitle,now:req.timestampMs||Date.now(),friendDirectory:cfg.friendDirectory})
       recordFriendInteraction(stateDir,{uid:req.uid,source:'comment',direction:'incoming',eventId,now:req.timestampMs||Date.now(),friendDirectory:cfg.friendDirectory})
@@ -4442,7 +4454,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
         'diagMentionEnabled','diagDynamicEnabled','diagVisionEnabled','diagMemeEnabled','diagAtInviteEnabled','diagReplyInboxEnabled','commentMemesEnabled','commentMemesDebug','commentMemesPerDay','commentMemesPerRound','commentMemePrompt','visionPrompt','memeMemoryEnabled', 'memeMemoryMaxEntries', 'visionEnabled', 'visionDebug', 'visionMode', 'visionModelProvider', 'visionModelId', 'visionReasoningEffort', 'visionEndpoint', 'visionFrames', 'visionDailyLimit', 'commentPerRound', 'mentionName', 'mentionTargets', 'mentionProfiles', 'friendDirectory', 'mentionMode', 'dmMode', 'dmUid', 'commentSyncDynamic', 'dynamicDailyLimit', 'commentDailyLimit',
         'videoModelProvider','videoModelId','videoReasoningEffort','interactionModelProvider','interactionModelId','interactionReasoningEffort','memeRulesModelProvider','memeRulesModelId','memeRulesReasoningEffort','memeRulesPrompt',
         'keywords', 'coreInterestTopics', 'pythonPath', 'dshBin', 'headlessProfile', 'workspace', 'reportLevel', 'personaPrompt', 'characterLore', 'dmWatch', 'dmWatchMinutes', 'commentReplyWatchMinutes', 'commentAtWatchMinutes', 'commentTopWatchMinutes', 'dmReplyPerDay', 'dmContextMessages', 'dmOwnerUid', 'dmWhitelist', 'dmStrangerOnce', 'dmStrangerText', 'dmStrangerMaxReplies', 'dmStrangerFirstFixed', 'dmApprovalEnabled','dmApprovalPhrase','dmApprovedTotalLimit','dmApprovedDailyLimit','dmWishMentionLimit',
-        'commentWatchReplies', 'commentWatchTop', 'commentAtEnabled', 'commentAtMode', 'commentAtWhitelist', 'commentTopCount', 'commentTopVideoCount', 'commentReplyHotCount', 'commentAllowGeneralTop', 'commentReplyPerPoll', 'commentReplyPerDay', 'commentOwnTopPerUser', 'commentOwnNestedPerUser', 'mainSessionBridgeEnabled', 'mainSessionId', 'mainSessionAutoSync', 'mainSessionSyncMinutes', 'mainSessionDailyBatches', 'mainSessionBatchSize', 'mainSessionIncludeComments', 'mainSessionMemoryEnabled', 'mainSessionMemoryAutoBili', 'mainSessionMemorySemanticEnabled', 'mainSessionMemoryModelProvider', 'mainSessionMemoryModelId', 'mainSessionMemoryReasoningEffort', 'mainSessionMemoryCandidates', 'mainSessionMemorySearchDailyLimit', 'socialOutreachEnabled', 'socialLifeIntentEnabled', 'emotionSystemEnabled', 'socialAutoSend', 'socialOutreachDailyLimit', 'ownerTodoAutoReviewEnabled', 'ownerTodoReviewMinutes', 'autonomousPlannerEnabled','emotionRecallEnabled','emotionRecallMainEnabled','emotionRecallDmEnabled','emotionRecallUnlimited','emotionRecallDailyLimit','emotionRecallCooldownHours','emotionRecallStartHour','emotionRecallEndHour','emotionRecallCandidateLimit','emotionRecallHistoryLimit','emotionRecallRecentDays','emotionRecallMinAgeDays','emotionRecallEmotionMinIntensity','emotionRecallEmotionMaxAgeHours','ownerDmAgentEnabled','ownerDmAgentReadMainContext','ownerDmAgentSyncMain','ownerDmAgentContextTurns','ownerDmAgentContextChars','ownerDmAgentModelProvider','ownerDmAgentModelId','ownerDmAgentReasoningEffort','ownerDmReadCommandsEnabled','ownerDmActionsEnabled','ownerDmLikeEnabled','ownerDmCollectEnabled','ownerDmFollowEnabled','ownerDmCommentDraftEnabled','ownerDmCommentPublishEnabled','ownerDmDynamicDraftEnabled','ownerDmDynamicPublishEnabled','ownerDmFriendMessageEnabled','dailyDynamicModelProvider','dailyDynamicModelId','dailyDynamicReasoningEffort','autonomousPlannerMinutes','autonomousPlannerDailyLimit','autonomousPlannerStartHour','autonomousPlannerEndHour', 'mainSessionReflectionAuto', 'mainSessionReflectionModelProvider', 'mainSessionReflectionModelId', 'mainSessionReflectionReasoningEffort', 'mainSessionReflectionMinCandidates', 'mainSessionReflectionBatchSize', 'mainSessionReflectionIntervalHours', 'mainSessionReflectionDailyBatches', 'mainSessionMemoryHalfLifeDays', 'mainSessionMemoryThreshold', 'mainSessionMemoryMaxItems', 'mainSessionMemoryMaxChars', 'mainSessionMemoryDailyQuota', 'mainSessionMemoryFactsMax', 'favFolderId','autoVideoLike','autoVideoLikeDailyLimit','autoVideoCollect','agentFollowEnabled','dailyDynamicEnabled','dailyDynamicDailyLimit','dailyDynamicDraftOnly']) {
+        'commentWatchReplies', 'commentWatchTop', 'commentAtEnabled', 'friendAtFeedbackEnabled', 'commentAtMode', 'commentAtWhitelist', 'commentTopCount', 'commentTopVideoCount', 'commentReplyHotCount', 'commentAllowGeneralTop', 'commentReplyPerPoll', 'commentReplyPerDay', 'commentOwnTopPerUser', 'commentOwnNestedPerUser', 'mainSessionBridgeEnabled', 'mainSessionId', 'mainSessionAutoSync', 'mainSessionSyncMinutes', 'mainSessionDailyBatches', 'mainSessionBatchSize', 'mainSessionIncludeComments', 'mainSessionMemoryEnabled', 'mainSessionMemoryAutoBili', 'mainSessionMemorySemanticEnabled', 'mainSessionMemoryModelProvider', 'mainSessionMemoryModelId', 'mainSessionMemoryReasoningEffort', 'mainSessionMemoryCandidates', 'mainSessionMemorySearchDailyLimit', 'socialOutreachEnabled', 'socialLifeIntentEnabled', 'emotionSystemEnabled', 'socialAutoSend', 'socialOutreachDailyLimit', 'ownerTodoAutoReviewEnabled', 'ownerTodoReviewMinutes', 'autonomousPlannerEnabled','emotionRecallEnabled','emotionRecallMainEnabled','emotionRecallDmEnabled','emotionRecallUnlimited','emotionRecallDailyLimit','emotionRecallCooldownHours','emotionRecallStartHour','emotionRecallEndHour','emotionRecallCandidateLimit','emotionRecallHistoryLimit','emotionRecallRecentDays','emotionRecallMinAgeDays','emotionRecallEmotionMinIntensity','emotionRecallEmotionMaxAgeHours','ownerDmAgentEnabled','ownerDmAgentReadMainContext','ownerDmAgentSyncMain','ownerDmAgentContextTurns','ownerDmAgentContextChars','ownerDmAgentModelProvider','ownerDmAgentModelId','ownerDmAgentReasoningEffort','ownerDmReadCommandsEnabled','ownerDmActionsEnabled','ownerDmLikeEnabled','ownerDmCollectEnabled','ownerDmFollowEnabled','ownerDmCommentDraftEnabled','ownerDmCommentPublishEnabled','ownerDmDynamicDraftEnabled','ownerDmDynamicPublishEnabled','ownerDmFriendMessageEnabled','dailyDynamicModelProvider','dailyDynamicModelId','dailyDynamicReasoningEffort','autonomousPlannerMinutes','autonomousPlannerDailyLimit','autonomousPlannerStartHour','autonomousPlannerEndHour', 'mainSessionReflectionAuto', 'mainSessionReflectionModelProvider', 'mainSessionReflectionModelId', 'mainSessionReflectionReasoningEffort', 'mainSessionReflectionMinCandidates', 'mainSessionReflectionBatchSize', 'mainSessionReflectionIntervalHours', 'mainSessionReflectionDailyBatches', 'mainSessionMemoryHalfLifeDays', 'mainSessionMemoryThreshold', 'mainSessionMemoryMaxItems', 'mainSessionMemoryMaxChars', 'mainSessionMemoryDailyQuota', 'mainSessionMemoryFactsMax', 'favFolderId','autoVideoLike','autoVideoLikeDailyLimit','autoVideoCollect','agentFollowEnabled','dailyDynamicEnabled','dailyDynamicDailyLimit','dailyDynamicDraftOnly']) {
         if (k in body) patch[k] = body[k]
       }
       // ⭐⭐ 2.0.4（issue #83）：**服务端空值保护** —— 前端某次自动保存会把空字符串/空数组推上来，
