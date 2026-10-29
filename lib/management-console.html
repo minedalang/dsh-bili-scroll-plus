@@ -465,7 +465,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="toolbar" style="margin-top:12px"><button type="button" id="friend-add">加入名册</button><span class="muted">添加后记得点击底部保存</span></div>
 <div id="friend-directory-editor" class="settings-stack"></div>
 <div class="inset"><h4>好友兴趣变化 · 仅记录白名单 UID 自己明确说出的喜好</h4>
-<p class="muted">初始好友画像不自动覆盖。真实私信/评论中的“我喜欢/不喜欢…”先形成待确认观察；仅记录精简主题、证据编号，不保存整条私信。非白名单用户不生成长期画像。<strong>好友观察仅用于同一个人的私信，不用于公开评论或分享给其他人。</strong></p>
+<p class="muted">初始好友画像不自动覆盖。真实私信或评论中的“我喜欢/不喜欢…”“别再给我推这些”“多推点……”会形成针对该 UID 的兴趣观察。若只说“这些”，只有在 B 站实际视频标题能明确确认类别时才记录对应主题；否则只阻止重复推荐同一 BV。仅保存精简主题、证据编号与拒绝重复推荐的 BV，不保存整条原话。非白名单用户不建立画像。<strong>这些观察只影响对这位好友的后续 @ 邀请与获授权的主动分享，不改变大肥鱼自己的兴趣、全局选片或其他好友的推荐，也不会对外展示好友画像。</strong></p>
 <div class="toolbar"><button id="friend-learning-refresh" type="button">刷新兴趣观察</button><span id="friend-learning-status" class="muted">尚未读取</span></div>
 <div id="friend-learning-list" class="records records-scroll"></div></div>
 <div class="toolbar" style="margin-top:12px"><button id="friend-save-all" class="primary">保存名册、权限及画像</button></div>

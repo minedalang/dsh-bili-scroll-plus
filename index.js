@@ -50,7 +50,7 @@ import { parseOwnerDmAction, createOwnerDmActionLedger, OWNER_DM_ACTION_FLAGS } 
 import { createOwnerDmAgent } from './lib/owner-dm-agent.mjs'
 import { formatLocalLogTimestamp } from './lib/log-time.mjs'
 import { collectLocalLifeEvents } from './lib/local-life-source.mjs'
-import { observeFriendInterest, learnedFriendContext, listFriendLearning, clearFriendLearning } from './lib/friend-learning.mjs'
+import { observeFriendInterest, learnedFriendContext, listFriendLearning, clearFriendLearning, isFriendRecommendationFeedback, friendRecommendationGuard } from './lib/friend-learning.mjs'
 import { createSocialIntentEngine } from './lib/social-intentions.mjs'
 import { createEmotionalState } from './lib/emotional-state.mjs'
 import { createEmotionRecall } from './lib/emotion-recall.mjs'
@@ -1272,8 +1272,6 @@ function reportMeta() {
         }
       }
       const targets = parseMentionTargets(cfg.mentionTargets, cfg.mentionName)
-      const choice = decideMentions({mode:cfg.mentionMode, isReply:false,
-        shouldMention:args.should_mention, selectedNames:args.mention_names, targets, position:args.mention_position})
       // 公开顶层评论前二次校验视频热度；AI 忽略提示词时也不能对冷清视频直接发表评论。
       // 后台回复别人的评论使用独立链路，不受选片热度门槛影响。
       let heatInfo
@@ -1281,13 +1279,19 @@ function reportMeta() {
       catch(e) {return {ok:false,blocked:true,error:'入选热度复核失败，未发表评论：'+String(e?.message||e).slice(0,130)}}
       const heat=judgeVideoHeat(heatInfo,{views:cfg.minVideoViews,likes:cfg.minVideoLikes,replies:cfg.minVideoReplies})
       if(!heat.ok) return {ok:false,blocked:true,error:'视频热度未达要求，未发表评论：'+heat.reason,stats:heat.stats}
+      // A trusted friend’s explicit rejection overrides even an always-@ strategy.
+      // Suppress only that UID for this BV/category; keep the owner’s public comment intact.
+      const permittedTargets=targets.filter(t=>!friendRecommendationGuard(stateDir,t.uid,cfg.friendDirectory,
+        {bvid:String(args.bvid??''),videoTitle:String(heatInfo?.title||heatInfo?.data?.title||'')}).blocked)
+      const choice=decideMentions({mode:cfg.mentionMode,isReply:false,
+        shouldMention:args.should_mention,selectedNames:args.mention_names,targets:permittedTargets,position:args.mention_position})
       return call('bili_reply', {
         bvid: String(args.bvid ?? ''),
         text: String(args.text ?? ''),
         rpid: 0,
         root: 0,
         mention_mode: cfg.mentionMode,
-        mention_targets: targets,
+        mention_targets: permittedTargets,
         // 保留 AI 的原始意愿做诊断；真正能 @ 谁仍由 Python 的名单白名单和模式强制限制。
         // 否则 AI 想 @ 但没选到名单里的人，会被宿主提前改写为 false，误报 ai_declined。
         should_mention: args.should_mention === true,
@@ -2799,16 +2803,25 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     getAtNotifications: () => call('bili_received_at_and_likes', {}),
     getVideoContext: (bvid,details) => videoContext.forReply(bvid,details),
     getOwnComments: () => ownCommentTargets(stateDir),
+    onIncoming: async (req) => {
+      if(!req.uid||!req.text)return
+      const eventId=(req.bvid||'')+':'+String(req.rpid||req.id||'unknown')
+      let videoTitle=''
+      // Only fetch title metadata for plausible feedback; do not infer broad dislikes from a vague comment.
+      if(isFriendRecommendationFeedback(req.text)&&req.bvid){
+        try{const info=await call('bili_video_info',{bvid:req.bvid});videoTitle=String(info?.title||info?.data?.title||'').slice(0,180)}catch{}
+      }
+      observeFriendInterest(stateDir,{uid:req.uid,text:req.text,source:'comment',eventId,bvid:req.bvid,
+        videoTitle,now:req.timestampMs||Date.now(),friendDirectory:cfg.friendDirectory})
+      recordFriendInteraction(stateDir,{uid:req.uid,source:'comment',direction:'incoming',eventId,now:req.timestampMs||Date.now(),friendDirectory:cfg.friendDirectory})
+    },
     getVideos: async () => {
       // 旧版兼容：调度器已永久禁止使用本接口发起逐视频热评扫描。
       const cutoff = dayKey(new Date(Date.now()-7*86400_000))
       return [...new Set(parseSeenTable().filter(x => x.day >= cutoff && (x.picked || x.delivered)).map(x => x.bvid))]
     },
     getComments: (bvid, num) => call('bili_comments', {bvid, num}),
-    generateReply: (req) => {
-      if(req.uid&&req.text)try{const eventId=(req.bvid||'')+':'+String(req.rpid||req.id||'unknown');observeFriendInterest(stateDir,{uid:req.uid,text:req.text,source:'comment',eventId,friendDirectory:cfg.friendDirectory});recordFriendInteraction(stateDir,{uid:req.uid,source:'comment',direction:'incoming',eventId,friendDirectory:cfg.friendDirectory})}catch(e){log('评论好友爱好学习失败：'+String(e?.message||e).slice(0,90))}
-      return interactionBatcher.generate({...req,identityContext:''})
-    },
+    generateReply: (req) => interactionBatcher.generate({...req,identityContext:''}),
     send: async (req) => {
       // 后台独立发送，受评论互动专用开关保护，不使用 model 的 force 绕过公开评论安全闸。
       refreshCfg()
