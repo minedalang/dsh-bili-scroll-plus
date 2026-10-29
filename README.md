@@ -2,7 +2,7 @@
 
 > **`dsh-dafeiyu-life`** 是一个运行在 DeepSeek Harness（DSH）中的 AI 角色生活插件。大肥鱼可以自主浏览 B 站内容、决定是否互动、积累真实经历、反思并形成长期记忆，也能在受限权限下逐渐了解白名单好友。
 
-**源码开发快照：2.5.0-dev.6（尚未正式发布，须在 DSH Desktop/B站验收）** · **最新正式版：v2.4.99** · [更新记录](./CHANGELOG.md) · [v2.4.99 Release](https://github.com/minedalang/dsh-dafeiyu-life/releases/tag/v2.4.99) · [GitHub 仓库](https://github.com/minedalang/dsh-dafeiyu-life)
+**源码开发快照：2.5.0-dev.7（尚未正式发布，须在 DSH Desktop/B站验收）** · **最新正式版：v2.4.99** · [更新记录](./CHANGELOG.md) · [v2.4.99 Release](https://github.com/minedalang/dsh-dafeiyu-life/releases/tag/v2.4.99) · [GitHub 仓库](https://github.com/minedalang/dsh-dafeiyu-life)
 
 它不只是定时发评论的机器人，也不只是一个 B 站 MCP 外壳。项目希望把角色、人设、生活经历、长期记忆、兴趣、模拟情绪、关系和有限自主行为连接成一个可持续运行的系统。
 
