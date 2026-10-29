@@ -36,12 +36,12 @@ test('comment skip feedback obeys toggles and quota, despite high willingness',a
   const m=create(cfg)
   try{const result=await m.agent.accept(m.row());assert.equal(result.status,'skipped');assert.equal(m.replies.length,0);assert.equal(JSON.parse(readFileSync(join(m.dataDir,'owner-comment-agent.json'))).items[0].replyStatus,'blocked')}finally{m.close()}
  }
- const m=create({ownerCommentSocialPublishEnabled:false});try{assert.equal((await m.agent.accept(m.row())).reason,'action-disabled');assert.equal(m.replies.length,0)}finally{m.close()}
+ const m=create({ownerCommentSocialPublishEnabled:false});try{assert.equal((await m.agent.accept(m.row())).status,'skipped');assert.equal(m.replies.length,0)}finally{m.close()}
 })
 test('revoked consent before an acknowledgement prevents sending, without retry',async()=>{
  let m
  m=create({},()=>({decision:'allow',score:87}),async()=>{m.opts.ownerCommentSocialPublishEnabled=false;return {ok:true,skipped:true,summary:'self-chose-not-to-comment:no-opinion'}})
- try{await m.agent.accept(m.row());assert.equal(m.replies.length,0);assert.equal((await m.agent.accept(m.row())).reason,'action-disabled')}finally{m.close()}
+ try{await m.agent.accept(m.row());assert.equal(m.replies.length,0);assert.equal((await m.agent.accept(m.row())).skipped,'duplicate')}finally{m.close()}
 })
 test('uncertain reply remains reserved, is not resent by repeated notification',async()=>{
  const m=create()

@@ -43,7 +43,9 @@ test('separate publish permission and natural response are both opt-in',async()=
   const ok=await t.agent.accept(t.row());assert.equal(ok.ack,'sent')
   assert.equal(t.replies.length,1);assert.ok(t.replies[0].text.length<35)
   assert.equal(t.replies[0].bvid,BV)
-  assert.equal((await t.agent.accept({...t.row('at:2'),text:'@大肥鱼 来看看这个视频'})).reason,'action-disabled')
+  assert.equal((await t.agent.accept({...t.row('at:2'),text:'@大肥鱼 来看看这个视频'})).status,'done')
+  assert.equal(t.performed.at(-1).type,'social_invite')
+  assert.equal(t.replies.length,1,'只读探索不应因缺少公开评论授权而发送回复')
   assert.equal((await t.agent.accept({...t.row('at:3'),text:'@大肥鱼 发评论：你好'})).skipped,'public-technical-command-disabled')
  }finally{t.close()}
 })

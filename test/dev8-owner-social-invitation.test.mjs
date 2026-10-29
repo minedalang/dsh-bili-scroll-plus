@@ -28,12 +28,12 @@ test('natural invitations allow personal choice, not dictated text',()=>{
  assert.equal(parseOwnerCommentIntent('@大肥鱼 喜欢的话点个赞'),null)
  assert.equal(parseOwnerCommentIntent('@大肥鱼 今天开心吗'),null)
 })
-test('public invite only accepted from verified owner, with independent disabled publishing flag',async()=>{
+test('public invite only accepted from verified owner; read-only explore does not depend on publication consent',async()=>{
  const t=make({ownerCommentSocialPublishEnabled:false,ownerCommentPublishEnabled:true}) // Legacy dev.7 approval must NOT carry over
  try{
   assert.equal((await t.agent.accept(t.row('@大肥鱼 来看看这个视频','at:1','888'))).reason,'not-verified-owner-comment')
-  assert.equal((await t.agent.accept(t.row('@大肥鱼 来看看这个视频'))).reason,'action-disabled')
-  assert.equal(t.calls.length,0)
+  assert.equal((await t.agent.accept(t.row('@大肥鱼 来看看这个视频'))).status,'done')
+  assert.equal(t.calls.length,1)
  }finally{t.close()}
 })
 test('AI decision to skip is stored once and sends one bounded reply to the original owner @',async()=>{
