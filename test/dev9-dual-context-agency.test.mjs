@@ -106,7 +106,7 @@ test('real entry points are wired before owner DM or public @ side effects',()=>
  assert.ok(code.indexOf('declinedOwnerRequests=new Set()')<code.indexOf('ownerDmAgent.processMessages(ownerRows)'))
  assert.ok(code.indexOf('declinedOwnerRequests=new Set()')<code.indexOf('queueOwnerDmReadTodo({messages:incoming'))
  assert.ok(code.indexOf('declinedOwnerRequests=new Set()')<code.indexOf('ownerDmActions.claim({uid:row.senderUid'))
- assert.match(code,/decideAgency:\(\{uid,messageId,text,intent,bvid\}\)=>dualContextAgency.decide/)
+ assert.match(code,/decideAgency:\(\{uid,messageId,text,intent,bvid,thread\}\)=>dualContextAgency.decide/)
  assert.match(code,/source:'bili-comment'/)
 })
 test('elliptical polite @ followups only reopen a previously refused social invitation, never a like',async()=>{
@@ -118,11 +118,11 @@ test('elliptical polite @ followups only reopen a previously refused social invi
   perform:async x=>{calls.push(x);return {ok:true}}})
  const row=(text,id,bvid=BV)=>({kind:'at',uid:'210228238',bvid,rpid:'123',id,timestampMs:time,text})
  try{
-  assert.equal((await agent.accept(row('拜托啦～','at:0'))).skipped,'no-command')
+  assert.equal((await agent.accept(row('拜托啦～','at:0'))).status,'skipped')
   await agent.accept(row('@大肥鱼 来看看这个视频','at:1'))
   const follow=await agent.accept(row('@大肥鱼 拜托啦，我真的觉得你会喜欢','at:2'))
   assert.equal(follow.status,'skipped')
-  assert.equal((await agent.accept(row('@大肥鱼 拜托啦','at:3','BV1zznd61EbU'))).skipped,'no-command')
+  assert.equal((await agent.accept(row('@大肥鱼 拜托啦','at:3','BV1zznd61EbU'))).status,'skipped')
   assert.equal(calls.length,0)
  }finally{m.close()}
 })

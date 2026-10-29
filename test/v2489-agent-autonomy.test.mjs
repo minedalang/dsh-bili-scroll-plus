@@ -54,13 +54,14 @@ test('关注/取关默认无权限；白名单只放两项及其只读个人信�
  assert.match(html,/bili-agent-follow/)
 })
 
-test('真实后台回复：AI 初判 SKIP 时完全不读取视频其他热评；初判愿回复才补读',async()=>{
+test('好友后台回复：AI 初判 SKIP 时不读取其他热评；初判愿回复才补读',async()=>{
   const {createCommentInteract}=await import('../lib/comment-interact.mjs')
   const {readFileSync}=await import('node:fs')
   const dir=mkdtempSync(join(tmpdir(),'v2489-reply-pass-'))
   let ids=[],readHot=[],replies=[],notices=[]
   const obj=n=>({user:{mid:123},item:{business_id:1,subject_id:456,source_id:n,root_id:400,source_content:'这个片段很好看',content:'这个片段很好看',subject_bvid:BV}})
   const engine=createCommentInteract({dataDir:dir,selfUid:async()=> '900',
+    socialTier:()=> 'friend',decideSocial:()=>({decision:'allow'}),
     getConfig:()=>({watchReplies:true,watchTop:false,watchAt:false,replyPerPoll:5,replyPerDay:10,globalDailyLimit:100}),
     getNotifications:async()=>({data:{items:notices}}),getOwnComments:async()=>({top:new Set(),nested:new Set()}),
     getVideoContext:async(bvid,detail)=>{

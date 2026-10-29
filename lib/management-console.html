@@ -404,8 +404,8 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="inset"><h4>🤖 独立自主调度 · 真正由后台择机决定</h4>
 <p class="muted">与旧版「提醒主 Session」不同：开启后，后台可调用 AI 从已存在的只读待办中选择执行、延期、忽略或跳过，也可以按现有证据条件请求人生反思。不会自动点赞、关注、收藏、发评论或发私信；独立于自动刷视频。默认关闭。</p>
 <div class="fields"><div><label for="autonomous-planner-enabled">独立自主调度</label><select id="autonomous-planner-enabled"><option value="false">关闭（默认）</option><option value="true">开启 · 只读任务和反思</option></select></div>
-<div><label for="autonomous-planner-minutes">至少间隔（分钟，15–1440）</label><input id="autonomous-planner-minutes" type="number" min="15" max="1440" value="90"></div>
-<div><label for="autonomous-planner-limit">每日最多 AI 自主决策（0–12）</label><input id="autonomous-planner-limit" type="number" min="0" max="12" value="3"></div>
+<div><label for="autonomous-planner-minutes">至少间隔（分钟，5–1440）</label><input id="autonomous-planner-minutes" type="number" min="5" max="1440" value="30"></div>
+<div><label for="autonomous-planner-limit">每日最多 AI 自主决策（0–288，0 表示关闭）</label><input id="autonomous-planner-limit" type="number" min="0" max="288" value="24"><small class="setting-note">只限制独立 AI 调度的模型调用；频率和活跃时段也会限制实际次数。提高额度可能增加模型费用，已有配置不会自动覆盖。</small></div>
 <div><label for="autonomous-planner-start">每日开始时（宿主当地小时）</label><input id="autonomous-planner-start" type="number" min="0" max="23" value="9"></div>
 <div><label for="autonomous-planner-end">每日结束时（宿主当地小时，24=午夜）</label><input id="autonomous-planner-end" type="number" min="1" max="24" value="23"></div></div>
 <p id="autonomous-planner-status" class="muted" role="status">尚未读取自主调度状态</p></div>

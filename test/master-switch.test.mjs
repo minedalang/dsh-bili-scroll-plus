@@ -59,7 +59,7 @@ test('总开关覆盖定时器、后台互动和 Python MCP 外发', () => {
   const sidecar=readFileSync(new URL('../lib/favops.py',import.meta.url),'utf8')
   assert.match(index,/cfg\.masterEnabled !== true \|\| !cfg\.peakValley/)
   assert.match(index,/enabled: cfg\.masterEnabled === true && cfg\.dmWatch/)
-  assert.match(index,/watchReplies: cfg\.masterEnabled === true && cfg\.commentWatchReplies/)
+  assert.match(index,/watchReplies: cfg\.masterEnabled === true && \(cfg\.commentWatchReplies === true \|\| cfg\.ownerCommentAgentEnabled === true\)/)
   assert.doesNotMatch(index,/favToday\('auto'\)/)
   assert.match(mcp,/_guard\('bili_video_like'\)/)
   assert.match(mcp,/_guard\('bili_video_collect'\)/)
