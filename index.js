@@ -2876,7 +2876,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
         }catch(e){log('主人社交邀请只读上下文不可用：'+String(e?.message||e).slice(0,100))}
         const decision=await decideOwnerSocialComment({
           info,bvid:action.bvid,context,invitation:action.invitation||'',
-          style:emotionalState.styleHint(),
+          style:emotionalState.styleHint(),willingness:action.willingness||{},
           invoke:p=>invokeInteractionPrompt(p,1600,{modelRoute:'interaction'}),
         })
         if(!decision.ok)return {ok:false,error:'自主评论选择未通过公开校验（'+decision.reason+'）'}
@@ -2891,9 +2891,11 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       }
       return {ok:false,error:'不支持的评论动作'}
     },
-    sendReply:async({bvid,rpid,root,text,actorUid})=>{
+    sendReply:async({bvid,rpid,root,text,actorUid,kind})=>{
       refreshCfg();if(!cfg.dmOwnerUid||String(actorUid||'')!==String(cfg.dmOwnerUid||''))return {ok:false}
-      if(cfg.masterEnabled!==true||cfg.ownerCommentAgentEnabled!==true||cfg.ownerCommentNaturalAckEnabled!==true||cfg.commentDailyLimit<=0)return {ok:false}
+      if(cfg.masterEnabled!==true||cfg.ownerCommentAgentEnabled!==true||cfg.commentDailyLimit<=0||cfg.commentReplyPerDay<=0)return {ok:false}
+      if(kind==='social-skip'){if(cfg.ownerCommentSocialPublishEnabled!==true)return {ok:false}}
+      else if(cfg.ownerCommentNaturalAckEnabled!==true)return {ok:false}
       const r=parseMaybeJson(await call('bili_reply_manual',{bvid,rpid:Number(rpid),root:Number(root)||0,text,confirm:true}))
       return {ok:r?.ok===true&&r?.sent===true}
     },logger:{warn:m=>log('主人评论 Agent：'+m)}

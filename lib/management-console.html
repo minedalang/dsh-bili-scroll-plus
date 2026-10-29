@@ -165,6 +165,53 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 #panel-social .settings-stack{gap:16px}
 #panel-social .settings-stack>.card,#panel-social .settings-stack>.settings-section{border-top:3px solid color-mix(in srgb,var(--ui-teal) 55%,var(--stroke))}
 @media(max-width:580px){#panel-social .social-hero{padding:14px}}
+
+/* 生动但克制的人生记忆可视化：数值来自真实状态；无障碍降低动态效果 */
+#panel-life .emotion-card.mood-atmosphere{position:relative;min-height:150px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding-right:132px;border-color:color-mix(in srgb,var(--ui-indigo) 40%,var(--stroke));background:linear-gradient(130deg,var(--panel),color-mix(in srgb,var(--ui-indigo) 10%,var(--panel)))}
+#panel-life .mood-orbit{position:absolute;right:19px;top:50%;transform:translateY(-50%);width:92px;height:92px;display:grid;place-items:center;pointer-events:none}
+#panel-life .mood-orbit::before,#panel-life .mood-orbit::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid color-mix(in srgb,var(--ui-indigo) 35%,transparent);animation:mood-breathe 5s ease-in-out infinite}
+#panel-life .mood-orbit::after{inset:14px;animation-delay:-2s;opacity:.68}
+#panel-life .mood-orbit span{font-size:36px;filter:drop-shadow(0 3px 8px rgba(61,81,164,.16))}
+@keyframes mood-breathe{0%,100%{transform:scale(.92);opacity:.36}50%{transform:scale(1.08);opacity:1}}
+#panel-life .emotion-meter span{transition:width .85s cubic-bezier(.22,1,.36,1);position:relative}
+#panel-life .emotion-meter span::after{content:"";position:absolute;top:0;right:0;width:25%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28))}
+#panel-life .emotion-trend{margin:12px 0;padding:12px 15px;border:1px solid var(--stroke);background:linear-gradient(120deg,color-mix(in srgb,var(--ui-indigo) 6%,var(--panel)),var(--panel));border-radius:14px}
+#panel-life .emotion-trend .trend-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;font-size:12px}
+#panel-life .emotion-trend svg{display:block;width:100%;height:104px;overflow:visible}
+#panel-life .emotion-trend .trend-line{fill:none;stroke:var(--ui-indigo);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:420;animation:trend-draw 1.3s ease forwards}
+#panel-life .emotion-trend .trend-area{fill:color-mix(in srgb,var(--ui-indigo) 10%,transparent)}
+#panel-life .emotion-trend .trend-dot{fill:var(--panel);stroke:var(--ui-indigo);stroke-width:2}
+@keyframes trend-draw{from{stroke-dashoffset:420}to{stroke-dashoffset:0}}
+#panel-life .recall-overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px;margin:12px 0}
+#panel-life .recall-summary{padding:11px 13px;border:1px solid var(--stroke);border-radius:12px;background:var(--panel);border-top:3px solid var(--ui-indigo)}
+#panel-life .recall-summary[data-tone=quiet]{border-top-color:var(--ui-amber)}
+#panel-life .recall-summary[data-tone=share]{border-top-color:var(--ui-teal)}
+#panel-life .recall-summary strong{display:block;font-size:19px;font-variant-numeric:tabular-nums}
+#panel-life .recall-summary span{color:var(--muted);font-size:12px}
+#panel-life .recall-diagnostics{max-height:340px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:2px 8px 3px 0}
+#panel-life .recall-event{display:grid;grid-template-columns:9px minmax(0,1fr);gap:12px;position:relative;background:var(--panel)}
+#panel-life .recall-event:before{content:"";width:9px;height:9px;margin-top:7px;border-radius:50%;background:var(--ui-amber);box-shadow:0 0 0 4px color-mix(in srgb,var(--ui-amber) 13%,transparent)}
+#panel-life .recall-event[data-tone=share]:before{background:var(--ui-teal);box-shadow:0 0 0 4px color-mix(in srgb,var(--ui-teal) 13%,transparent)}
+#panel-life .recall-event[data-tone=error]:before{background:var(--bad)}
+#panel-life .recall-event .event-heading{display:flex;justify-content:space-between;gap:9px;flex-wrap:wrap;align-items:center}
+#panel-life .recall-event time{font-size:12px;color:var(--muted)}
+#panel-life .recall-event p{margin:5px 0 0;font-size:13px}
+#panel-life .recall-event details{margin-top:6px;color:var(--muted);font-size:12px}
+#panel-life .recall-event summary{cursor:pointer;width:max-content}
+@media(max-width:560px){#panel-life .emotion-card.mood-atmosphere{padding-right:104px}#panel-life .mood-orbit{right:7px;width:80px;height:80px}}
+@media(prefers-reduced-motion:reduce){#panel-life .mood-orbit::before,#panel-life .mood-orbit::after,#panel-life .emotion-trend .trend-line{animation:none}#panel-life .emotion-meter span{transition:none}}
+
+#panel-life .recall-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:13px 0}
+#panel-life .recall-step{min-width:0;text-align:center;padding:10px 6px;border:1px solid var(--stroke);border-radius:12px;background:var(--panel);transition:border-color .25s,background .25s,transform .25s}
+#panel-life .recall-step .step-icon{display:block;font-size:20px;margin-bottom:3px}
+#panel-life .recall-step strong{display:block;font-size:12px;line-height:1.5}
+#panel-life .recall-step small{color:var(--muted);font-size:11px}
+#panel-life .recall-step.is-current{border-color:var(--ui-teal);background:color-mix(in srgb,var(--ui-teal) 9%,var(--panel));box-shadow:0 3px 13px color-mix(in srgb,var(--ui-teal) 12%,transparent)}
+#panel-life .recall-step.is-current .step-icon{animation:mood-breathe 3s ease-in-out infinite}
+#life-timeline-list .record{position:relative;margin-left:13px;border-left:2px solid color-mix(in srgb,var(--ui-indigo) 48%,var(--stroke));padding-left:18px}
+#life-timeline-list .record::before{content:"";position:absolute;left:-6px;top:16px;width:10px;height:10px;border-radius:50%;background:var(--ui-indigo);box-shadow:0 0 0 4px color-mix(in srgb,var(--ui-indigo) 12%,transparent)}
+@media(max-width:550px){#panel-life .recall-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){#panel-life .recall-step.is-current .step-icon{animation:none}}
 </style>
 <script defer src="/api/bili-duty/manage.js"></script>
 </head>
@@ -312,7 +359,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="toolbar"><button id="main-memory-save" class="primary">保存记忆与反思设置</button></div><p id="main-memory-status" class="muted" role="status">正在读取…</p></div></div></section>
 <section id="panel-life" hidden>
 <div class="life-hero"><div><div class="status-line"><span id="life-learning-status" class="live-badge">● 正在整理真实经历</span></div><h2>🧠 人生记忆</h2><p class="muted">真实经历、兴趣趋势、人物关系、长期回忆与反思记录，都集中在这里查看。</p></div><button id="main-life-refresh" class="life-action life-indigo">↻ 刷新人生记忆</button></div>
-<nav class="life-jump" aria-label="人生记忆分区快捷跳转"><a href="#life-emotion-section">💗 情绪状态</a><a href="#life-timeline-section">📅 生活时间线</a><a href="#life-todo-section">📝 自主待办</a><a href="#life-interest-section">🌱 兴趣趋势</a><a href="#life-relationship-section">🤝 人物关系</a><a href="#life-sync-section">📨 告诉主 Session</a><a href="#life-social-section">💬 自主社交</a><a href="#life-recall-section">🧠 长期回忆</a></nav>
+<nav class="life-jump" aria-label="人生记忆分区快捷跳转"><a href="#life-emotion-section">💗 情绪状态</a><a href="#life-timeline-section">📅 生活时间线</a><a href="#life-todo-section">📝 自主待办</a><a href="#life-interest-section">🌱 兴趣趋势</a><a href="#life-relationship-section">🤝 人物关系</a><a href="#life-sync-section">📨 告诉主 Session</a><a href="?tab=social#unified-friends" data-nav-tab="social">💬 社交互动 ↗</a><a href="#life-recall-section">🧠 长期回忆</a></nav>
 <p class="muted"><strong>这里展示大肥鱼记得什么，以及如何从真实生活中变化。</strong>「行为与表达改进」是直接附加在评论提示词里的规则，与这里的事实/经历不同。主人批准的旧版关系、兴趣、视频经历会在历史区只读保留，不再作为第二份提示词叠加。</p>
 <div class="settings-stack">
 <div class="settings-section life-section"><h4>记忆怎样形成</h4>
@@ -329,7 +376,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <label class="checkline"><input id="emotion-enabled" type="checkbox" checked>启用持续情绪状态（默认开启）</label>
 <div id="emotion-current" class="grid emotion-grid" aria-live="polite"></div>
 <div class="toolbar"><button id="emotion-save" class="life-action life-green">保存情绪设置</button><button id="emotion-reset" class="life-action life-amber">重置为平稳</button></div>
-<h4 style="margin-top:15px">最近情绪变化</h4><div id="emotion-history" class="records records-scroll"></div>
+<h4 style="margin-top:15px">最近情绪变化</h4><div id="emotion-trend" class="emotion-trend" role="img" aria-label="近期情绪变化趋势"></div><div id="emotion-history" class="records records-scroll"></div>
 <div class="inset" style="margin-top:18px"><h4>💌 情绪驱动的自主回忆与分享 · 让过去自然浮现</h4>
 <p class="muted">例如今天再次刷到一个以前看过的系列，开心或怀念的模拟情绪变化，让大肥鱼想起有真实 BV 证据的旧经历；它可以决定沉默，也可以在已授权的渠道主动找主人聊聊。不是每次情绪波动都会分享。<strong>总开关与两个渠道默认全部关闭。</strong></p>
 <label class="checkline"><input type="checkbox" id="emotion-recall-enabled">允许情绪触发自主回忆（需同时开启长期记忆）</label>
@@ -348,7 +395,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label for="emotion-recall-end">每日最晚结束（1–24 时）</label><input id="emotion-recall-end" type="number" min="1" max="24" value="22"></div></div>
 <p class="muted">模型只能从核验的旧记忆 ID 中决定是否分享；正文根据真实新旧经历模板生成，不接受模型编造的事实。默认每天最多一次、24 小时内不重复评估，夜间免打扰。B站消息为真实对外发送行为。</p>
 <div class="toolbar"><button id="emotion-recall-save" class="life-action life-green">保存自主回忆权限</button><button id="emotion-recall-preview" class="life-action life-sky">只预览评估（不发送）</button></div>
-<p id="emotion-recall-status" class="muted" role="status">尚未读取自主回忆状态</p><div class="inset"><h4>最近评估诊断 · 为什么回忆或沉默</h4><div id="emotion-recall-diagnostics" class="records"><p class="muted">尚无诊断记录。仅保存数量、阶段、原因，不保存私信正文。</p></div></div></div></div>
+<p id="emotion-recall-status" class="muted" role="status">尚未读取自主回忆状态</p><div class="inset"><h4>🫧 最近回忆评估 · 为什么想起或保持安静</h4><p class="muted">看看大肥鱼最近是在等待情绪、寻找有证据的回忆，还是决定主动分享。不会展示私信正文或私人聊天。</p><div id="emotion-recall-flow" class="recall-flow" role="group" aria-label="情绪触发回忆的进展"></div><div id="emotion-recall-overview" class="recall-overview" aria-live="polite"></div><div id="emotion-recall-diagnostics" class="records records-scroll recall-diagnostics" aria-label="最近回忆评估记录，可滚动"><p class="muted">尚无诊断记录。</p></div></div></div></div>
 <div id="life-timeline-section" class="settings-section life-section"><div class="toolbar"><h4 style="margin:0">📅 大肥鱼的一天 · 真实生活时间线</h4><select id="life-timeline-days" aria-label="时间线范围"><option value="7">最近 7 天</option><option value="30" selected>最近 30 天</option><option value="90">最近 90 天</option></select><button id="life-timeline-refresh" class="life-action life-sky">刷新时间线</button></div>
 <p class="muted">把真实入选视频、公开评论、情绪变化和关系阶段整理在一处。不会展示好友私信正文或把私密画像拼进公开内容；心情变化只显示类别，不显示触发原因。</p><div id="life-timeline-list" class="records records-scroll tall"></div></div>
 <div id="life-todo-section" class="settings-section life-section"><div class="toolbar"><h4 style="margin:0">📝 自主待办 · 记下下一步，不强迫立即执行</h4><span id="owner-todo-status" class="live-badge">● 正在整理待办</span><button id="owner-todo-refresh" class="life-action life-sky">刷新待办</button></div>
@@ -548,7 +595,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <label class="checkline"><input id="owner-comment-agent-enabled" type="checkbox">启用主人评论 Agent（默认关闭；独立于普通 @ 回复）</label>
 <label class="checkline"><input id="owner-comment-like" type="checkbox">允许主人在当前视频下请求点赞</label>
 <label class="checkline"><input id="owner-comment-publish" type="checkbox">允许主人自然邀请后，由大肥鱼自主决定是否公开发表评论（高风险，升级后需重新授权，默认关闭）</label>
-<label class="checkline"><input id="owner-comment-ack" type="checkbox">在确认成功后，自然地公开回复一句（默认静默）</label>
+<label class="checkline"><input id="owner-comment-ack" type="checkbox">点赞成功后自然回复一句（默认静默；自主选择不评论时的简短答复独立于此开关）</label><p class="muted">主人自然邀请后，大肥鱼即使决定不发表评论，也会在权限和回复额度允许时尝试回复原 @，说明这次想偷懒、暂无想法或资料不足；不会额外发顶层评论。</p>
 <p id="owner-comment-agent-status" class="muted">Agent 状态尚未读取。</p>
 <div class="toolbar"><button type="button" class="primary" id="owner-comment-settings-save">保存主人公开评论权限</button><button type="button" id="owner-comment-settings-reload">重新读取</button></div>
 </div>

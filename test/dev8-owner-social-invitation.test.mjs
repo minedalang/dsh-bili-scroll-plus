@@ -36,16 +36,17 @@ test('public invite only accepted from verified owner, with independent disabled
   assert.equal(t.calls.length,0)
  }finally{t.close()}
 })
-test('AI decision to skip is stored once; neither publishing nor public acknowledgement occurs',async()=>{
+test('AI decision to skip is stored once and sends one bounded reply to the original owner @',async()=>{
  const t=make({},async()=>({ok:true,skipped:true,summary:'self-chose-not-to-comment'}))
  try{
   const result=await t.agent.accept(t.row('@大肥鱼 来看看这个视频'))
   assert.equal(result.status,'skipped');assert.equal(result.ok,true)
   assert.equal((await t.agent.accept(t.row('@大肥鱼 来看看这个视频'))).skipped,'duplicate')
   assert.equal(t.calls.length,1);assert.equal(t.calls[0].text,undefined)
-  assert.equal(t.replies.length,0)
+  assert.equal(t.replies.length,1);assert.equal(t.replies[0].rpid,'123');assert.equal(t.replies[0].kind,'social-skip')
+  assert.match(t.replies[0].text,/不评论|发表评论|想说/)
   const d=JSON.parse(readFileSync(join(t.home,'owner-comment-agent.json'),'utf8'))
-  assert.equal(d.items[0].status,'skipped');assert.equal(d.items[0].type,'social_invite')
+  assert.equal(d.items[0].status,'skipped');assert.equal(d.items[0].type,'social_invite');assert.equal(d.items[0].replyStatus,'sent')
  }finally{t.close()}
 })
 test('a publication is only attempted after verified social invitation and stays deduplicated',async()=>{
@@ -53,7 +54,7 @@ test('a publication is only attempted after verified social invitation and stays
  try{
   const message='@大肥鱼 你觉得这个视频怎么样'
   assert.equal((await t.agent.accept(t.row(message))).status,'done')
-  assert.deepEqual(t.calls,[{type:'social_invite',invitation:message,bvid:BV,actorUid:'999'}])
+  assert.deepEqual(t.calls,[{type:'social_invite',invitation:message,willingness:null,bvid:BV,actorUid:'999'}])
   assert.equal(t.replies.length,0) // No extra robotic success ack for a top-level comment
   assert.equal((await t.agent.accept(t.row(message))).skipped,'duplicate')
  }finally{t.close()}
