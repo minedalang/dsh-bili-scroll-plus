@@ -60,6 +60,32 @@ test('拒绝评论后同线程温和劝说，重新评价社会意愿；不同�
   assert.equal(x.replies.at(-1).kind,'social-chat')
  }finally{rmSync(dir,{recursive:true,force:true})}
 })
+test('主人自然语言请求去视频底下安慰并发表评论，须进入 explore 而不是 chat',async()=>{
+ const real='我说这视频里的肥鱼忧郁，又没说你忧郁，你不去他视频底下发条评论安慰安慰她吗'
+ assert.deepEqual(parseOwnerCommentIntent(real),{type:'social_invite',commentRequested:true})
+ assert.deepEqual(parseOwnerCommentIntent('你能不能去视频评论区安慰她两句？'),{type:'social_invite',commentRequested:true})
+ assert.deepEqual(parseOwnerCommentIntent('请去这条视频下面留个言鼓励她'),{type:'social_invite',commentRequested:true})
+ assert.equal(parseOwnerCommentIntent('视频评论区有人问为什么鱼会忧郁'),null)
+ assert.equal(parseOwnerCommentIntent('我说视频底下有人发条评论安慰她'),null)
+ assert.equal(parseOwnerCommentIntent('你别去视频底下发条评论'),null)
+ const dir=home()
+ try{
+  const x=makeOwner(dir,{perform:async()=>({ok:true,summary:'public top-level comment published'})})
+  const first=await x.engine.accept(x.row('at:1190717892419600','at','@大肥鱼 你怎么不理我'))
+  assert.equal(first.status,'done')
+  const second=await x.engine.accept(x.row('comment:322276235456','notice',real))
+  assert.equal(second.status,'done')
+  assert.equal(x.actions.length,1,'发视频评论的邀请不能被 chat 分支吞掉')
+  assert.equal(x.actions[0].type,'social_invite')
+  assert.equal(x.actions[0].bvid,BV)
+  assert.equal(x.actions[0].commentRequested,true)
+  assert.equal(x.agency.status().recent.at(-1).intent,'publish')
+  assert.equal(x.replies.length,1,'发布顶层评论不应被替换成回复主人')
+  const rows=JSON.parse(readFileSync(join(dir,'owner-comment-agent.json'),'utf8')).items
+  assert.equal(rows.at(-1).type,'social_invite')
+  assert.equal(rows.at(-1).commentRequested,true)
+ }finally{rmSync(dir,{recursive:true,force:true})}
+})
 test('“现在看”走即时动作，“有空看”仅记录待办；投币仍不可凭评论执行',async()=>{
  const dir=home()
  try{

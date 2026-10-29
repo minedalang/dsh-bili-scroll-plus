@@ -55,12 +55,14 @@ import {socialTier,hasExplicitVideoRecommendation} from './lib/social-tier.mjs'
 import { observeAuthenticatedOwnerDmPreferences } from './lib/owner-dm-preferences.mjs'
 import { generateOwnerCommentDraftFromVideo } from './lib/owner-comment-draft.mjs'
 import { decideOwnerSocialComment } from './lib/owner-comment-social.mjs'
+import { interpretTrustedSocial } from './lib/comment-social-ai.mjs'
 import { summarizeOwnerVideoExploration } from './lib/owner-social-exploration.mjs'
+import { confirmedOwnerCommentReceipt } from './lib/owner-comment-receipt.mjs'
 import { createSocialIntentEngine } from './lib/social-intentions.mjs'
 import { createEmotionalState } from './lib/emotional-state.mjs'
 import { createDualContextAgency, classifyBiliOwnerRequest, agencyDeclineMessage } from './lib/dual-context-agency.mjs'
 import { createSocialCognition } from './lib/social-cognition.mjs'
-import { createOwnerCommentAgent, parseOwnerCommentIntent } from './lib/owner-comment-agent.mjs'
+import { createOwnerCommentAgent } from './lib/owner-comment-agent.mjs'
 import { createEmotionRecall } from './lib/emotion-recall.mjs'
 import { recordFriendInteraction, listFriendRelationships, friendRelationshipContext, clearFriendRelationships } from './lib/friend-relationships.mjs'
 import { buildLifeTimeline } from './lib/life-timeline.mjs'
@@ -1179,7 +1181,7 @@ function reportMeta() {
       if(!/^BV[0-9A-Za-z]{10}$/.test(bvid)||!String(task.text||'').trim())return {ok:false,error:'评论待办缺少 BV 号或明确正文'}
       if(String(cfg.dmMode||'')==='only'||Number(cfg.commentDailyLimit)<=0)return {ok:false,error:'当前评论模式/额度不允许公开评论'}
       const result=parseMaybeJson(await call('bili_reply_manual',{bvid,text:String(task.text).slice(0,2000),rpid:Math.max(0,Math.floor(Number(task.rpid)||0)),root:Math.max(0,Math.floor(Number(task.root)||0)),confirm:true}))
-      if(result?.ok===true&&result?.sent===true)return {ok:true,summary:`已确认在 ${bvid} 执行评论操作。`,data:result}
+      if(confirmedOwnerCommentReceipt(result, Number(task.rpid)>0?'reply':'comment').ok)return {ok:true,summary:`B站已接受 ${bvid} 的评论操作。`,data:result}
       return {ok:false,uncertain:result?.status==='uncertain-no-retry'||result?.uncertain===true,error:String(result?.error||'B站没有确认评论成功'),data:result}
     }
     if(task?.type==='dm_friend'){
@@ -2445,7 +2447,7 @@ function reportMeta() {
     if(!/^BV[0-9A-Za-z]{10}$/.test(bvid)||text.length<1||text.length>600)return {ok:false,error:'BV 号或评论正文无效'}
     try{
       const r=parseMaybeJson(await call('bili_reply_manual',{bvid,text,rpid:0,root:0,confirm:true}))
-      return r?.ok===true&&r?.sent===true?{ok:true,summary:'已确认发表评论到 '+bvid}:{ok:false,uncertain:r?.uncertain===true||r?.status==='uncertain-no-retry',error:String(r?.error||'评论未获确认，勿自动重试')}
+      return confirmedOwnerCommentReceipt(r,'comment').ok?{ok:true,summary:'B站已接受发表评论到 '+bvid}:{ok:false,uncertain:r?.no_retry===true||r?.uncertain===true||r?.status==='uncertain-no-retry',error:String(r?.error||'评论未获确认，勿自动重试')}
     }catch(e){return {ok:false,uncertain:true,error:String(e?.message||e).slice(0,180)}}
   }
 
@@ -2855,18 +2857,47 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
   const ownerCommentAgent=createOwnerCommentAgent({
     dataDir:stateDir,getConfig:()=>{refreshCfg();return cfg},
     decideAgency:({uid,messageId,text,intent,bvid,thread})=>dualContextAgency.decide({source:'bili-comment',uid,messageId,text,intent,target:bvid,thread}),
+    getRole:(uid)=>socialTier(uid,cfg.dmOwnerUid,cfg.friendDirectory),
+    interpretSocial:async(row)=>{
+      // onIncoming runs before the generic comment engine fetches context.
+      // Fetch public thread context here for first-time trusted conversations.
+      let enriched=row
+      try{
+        const context=await videoContext.forReply(row.bvid,{aid:row.aid,root:row.root,rpid:row.rpid,
+          targetId:row.targetId,text:row.text,context:row.context,kind:row.kind})
+        enriched={...row,threadPreview:context?.threadPreview||row.threadPreview,
+          rootPreview:context?.rootPreview||row.rootPreview,
+          context:[row.context,context?.text].filter(Boolean).join('\n').slice(0,1600)}
+      }catch(e){log('可信评论上下文读取失败：'+String(e?.message||e).slice(0,100))}
+      return interpretTrustedSocial({
+      row:enriched,role:row.role,emotion:emotionalState.snapshot(),style:emotionalState.styleHint(),
+      relationship:(()=>{try{return listFriendRelationships(stateDir,cfg.friendDirectory).find(x=>String(x.uid)===String(row.uid))?.stage||''}catch{return ''}})(),
+      history:dualContextAgency.context({uid:row.uid,thread:row.thread,target:row.bvid}),
+      invoke:p=>invokeInteractionPrompt(p,2000,{modelRoute:'interaction'}),
+      })
+    },
+    recordAgency:({uid,messageId,text,intent,action,bvid,thread,decision})=>dualContextAgency.recordAI({
+      source:'bili-comment',uid,messageId,text,intent,action,target:bvid,thread,decision,
+    }),
     generateChat:async(row)=>interactionBatcher.generate({kind:'comment',mode:row.scope||'self-nested',uid:row.uid,text:row.text,context:[row.context,row.threadPreview].filter(Boolean).join('\n').slice(0,1500),canSkip:true,identityContext:replyIdentityContext(row.uid)}),
     deferWatch:async({bvid,row})=>ownerTodos.add({type:'watch_video',bvid,sourceKey:'owner-comment-deferred:'+String(row.rpid),title:'大肥鱼想稍后看看 '+bvid,note:'B站生活域的即时邀请：大肥鱼自主选择推迟。',origin:{kind:'owner',uid:row.uid,messageId:row.id,quotedText:row.text,at:row.timestampMs}},{source:'owner'}),
     perform:async(action)=>{
       refreshCfg();if(cfg.masterEnabled!==true||!hasCredential())return {ok:false,error:'总开关已暂停或B站未登录'}
-      if(String(action.actorUid||'')!==String(cfg.dmOwnerUid||'')||!cfg.dmOwnerUid)return {ok:false,error:'主人 UID 已撤销或切换，公开评论操作未执行'}
+      const actorTier=socialTier(action.actorUid,cfg.dmOwnerUid,cfg.friendDirectory)
+      if(actorTier!=='owner'&&actorTier!=='friend')return {ok:false,error:'社交身份已撤销，未执行动作'}
       if(!/^BV[0-9A-Za-z]{10}$/.test(String(action.bvid||'')))return {ok:false,error:'当前评论视频未核实'}
+      // A friend's invitation may trigger read-only exploration, never owner-only
+      // public publishing. Recheck role here even after AI inference.
+      if(actorTier==='friend'&&!['social_invite','watch_now','watch_later'].includes(action.type))
+        return {ok:false,error:'好友不能请求此公开写入动作'}
       if(action.type==='watch_now'){
         if(cfg.masterEnabled!==true)return {ok:false,error:'插件已暂停'}
-        return executeOwnerTodo({type:'watch_video',bvid:action.bvid})
+        const inspection=await executeWatchVideo({bvid:action.bvid,include_comments:true,include_danmaku:true,record_session:false})
+        return inspection?.ok===true?{ok:true,summary:'B站生活域已查看公开视频可用资料'}
+          :{ok:false,error:String(inspection?.error||'视频只读查看未完成').slice(0,140)}
       }
       if(action.type==='watch_later'){
-        const r=ownerTodos.add({type:'watch_video',bvid:action.bvid,sourceKey:'owner-comment-later:'+String(action.messageId||''),title:'大肥鱼以后可以看看 '+action.bvid,note:'主人在 B站提出有空看看；这只是自主待办，不是立即执行。',origin:{kind:'owner',uid:action.actorUid,messageId:action.messageId||''}},{source:'owner'})
+        const r=ownerTodos.add({type:'watch_video',bvid:action.bvid,sourceKey:actorTier+'-comment-later:'+String(action.messageId||''),title:'大肥鱼以后可以看看 '+action.bvid,note:'B站社交视频推荐；这是自主待办，不是立即执行。',origin:{kind:actorTier,uid:action.actorUid,messageId:action.messageId||''}},{source:actorTier})
         return r?.ok===true?{ok:true,summary:'已记录可选的视频待办'}:{ok:false,error:r?.error||'待办未保存'}
       }
       if(action.type==='like'){
@@ -2901,33 +2932,52 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
         // Public top-level commenting is an independent permission. If disabled,
         // successfully exploring the video must not be reported as a failure.
         refreshCfg()
-        if(cfg.ownerCommentSocialPublishEnabled!==true)
-          return {ok:true,inspected:true,inspection:evidence.evidence.level,summary:'已查看公开视频可用资料；未授权自主发表评论，未公开发布'}
+        if(actorTier==='owner'&&cfg.ownerCommentSocialPublishEnabled!==true)
+          return {ok:true,inspected:true,inspection:evidence.evidence.level,commentDecision:'blocked',
+            ownerReplySuccess:'鱼鱼去了解了一下，但目前没有公开评论授权，就先不留言啦～🐟',
+            summary:'已查看公开视频可用资料；未授权自主发表评论，未公开发布'}
         const decision=await decideOwnerSocialComment({
           info:evidence.video,bvid:action.bvid,context:evidence.context,invitation:action.invitation||'',
-          style:emotionalState.styleHint(),willingness:action.willingness||{},
-          invoke:p=>invokeInteractionPrompt(p,1600,{modelRoute:'interaction'}),
+          style:emotionalState.styleHint(),willingness:action.willingness||{},commentRequested:action.commentRequested===true,
+          canPublish:actorTier==='owner',requireReply:action.aiSocial===true,maxAttempts:action.aiSocial===true?1:2,
+          invoke:p=>invokeInteractionPrompt(p,2200,{modelRoute:'interaction'}),
         })
-        if(!decision.ok)return {ok:false,inspected:true,inspection:evidence.evidence.level,error:'自主评论选择未通过公开校验（'+decision.reason+'）'}
-        if(decision.skipped)return {ok:true,skipped:true,inspected:true,inspection:evidence.evidence.level,summary:'大肥鱼已探索公开视频资料，选择暂不公开评论（'+decision.reason+'）'}
+        if(!decision.ok)return {ok:false,inspected:true,inspection:evidence.evidence.level,
+          ownerReplyFailure:'我看过能找到的资料啦，不过这次没能整理出可信的评论，先不乱发～🐟',
+          error:'自主评论选择未通过公开校验（'+decision.reason+'）'}
+        if(actorTier==='friend')return {ok:true,skipped:true,inspected:true,inspection:evidence.evidence.level,
+          commentDecision:'not-authorized',ownerReply:decision.ownerReply||'我查了这个视频，想法先在这里和你聊聊，不另外公开留言啦～🐟',
+          summary:'好友邀请已完成只读探索；未开放好友请求顶层发表评论'}
+        if(decision.skipped)return {ok:true,skipped:true,inspected:true,inspection:evidence.evidence.level,
+          commentDecision:'skip',ownerReply:decision.ownerReply,
+          summary:'大肥鱼已探索公开视频资料，选择暂不公开评论（'+decision.reason+'）'}
         // Re-evaluate authorization just before the only external write: the owner
         // or public publish permission may have been revoked during model inference.
         refreshCfg()
         if(cfg.masterEnabled!==true||cfg.ownerCommentAgentEnabled!==true||cfg.ownerCommentSocialPublishEnabled!==true
           ||!hasCredential()||String(action.actorUid||'')!==String(cfg.dmOwnerUid||''))
-          return {ok:false,inspected:true,inspection:evidence.evidence.level,error:'授权已变更，未公开发表评论'}
+          return {ok:false,inspected:true,inspection:evidence.evidence.level,
+            commentDecision:'blocked',ownerReplyFailure:'我想去评论，不过权限已经变更，这次没有发出去～🐟',error:'授权已变更，未公开发表评论'}
         const published=await runOwnerDmPublishComment(action.bvid,decision.text)
-        return {...published,inspected:true,inspection:evidence.evidence.level}
+        return {...published,inspected:true,inspection:evidence.evidence.level,commentDecision:'comment',
+          ownerReplySuccess:decision.ownerReplySuccess,ownerReplyFailure:decision.ownerReplyFailure,
+          ownerReplyUncertain:decision.ownerReplyUncertain}
       }
       return {ok:false,error:'不支持的评论动作'}
     },
-    sendReply:async({bvid,rpid,root,text,actorUid,kind})=>{
-      refreshCfg();if(!cfg.dmOwnerUid||String(actorUid||'')!==String(cfg.dmOwnerUid||''))return {ok:false}
-      if(cfg.masterEnabled!==true||cfg.ownerCommentAgentEnabled!==true||cfg.commentDailyLimit<=0||cfg.commentReplyPerDay<=0)return {ok:false}
-      if(kind==='social-skip'||kind==='social-chat'){if(cfg.ownerCommentSocialPublishEnabled!==true)return {ok:false}}
-      else if(cfg.ownerCommentNaturalAckEnabled!==true)return {ok:false}
+    sendReply:async({bvid,rpid,root,text,actorUid,kind,channel})=>{
+      refreshCfg()
+      const tier=socialTier(actorUid,cfg.dmOwnerUid,cfg.friendDirectory)
+      if(tier!=='owner'&&tier!=='friend')return {ok:false}
+      if(cfg.masterEnabled!==true||cfg.commentDailyLimit<=0||cfg.commentReplyPerDay<=0)return {ok:false}
+      if(tier==='owner'){
+        if(cfg.ownerCommentAgentEnabled!==true)return {ok:false}
+        if(['social-skip','social-chat','social-result'].includes(kind)){
+          if(cfg.ownerCommentSocialPublishEnabled!==true)return {ok:false}
+        }else if(cfg.ownerCommentNaturalAckEnabled!==true)return {ok:false}
+      }else if(!(channel==='notice'?cfg.commentWatchReplies===true:cfg.commentAtEnabled===true))return {ok:false}
       const r=parseMaybeJson(await call('bili_reply_manual',{bvid,rpid:Number(rpid),root:Number(root)||0,text,confirm:true}))
-      return {ok:r?.ok===true&&r?.sent===true,rpid:String(r?.rpid_str||r?.rpid||'')}
+      return confirmedOwnerCommentReceipt(r,'reply')
     },logger:{warn:m=>log('主人评论 Agent：'+m)}
   })
   const commentInteract = createCommentInteract({
@@ -2962,14 +3012,33 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       // without @ or a previous invitation. Do not treat unverified notices
       // from unrelated comment threads as authenticated owner follow-ups.
       const verifiedOwnerReply=req.kind==='notice'&&['self-top','self-nested'].includes(req.scope)
-      if(tier==='owner'&&(req.kind==='at'||verifiedOwnerReply)&&cfg.ownerCommentAgentEnabled===true
-        &&!isFriendRecommendationFeedback(req.text)){
+      let friendAtAllowed=true
+      if(tier==='friend'&&req.kind==='at')try{
+        friendAtAllowed=JSON.parse(normalizeFriendDirectory(cfg.friendDirectory))
+          .some(r=>r.uid===String(req.uid)&&r.atInvite===true)
+      }catch{friendAtAllowed=false}
+      const trustedSocial=tier==='owner'
+        ?cfg.ownerCommentAgentEnabled===true
+        :tier==='friend'&&(req.kind==='notice'?cfg.commentWatchReplies===true:cfg.commentAtEnabled===true)&&friendAtAllowed
+      if(trustedSocial&&(req.kind==='at'||verifiedOwnerReply)&&!isFriendRecommendationFeedback(req.text)){
         try{
           const result=await ownerCommentAgent.accept(req)
-          // The owner agent owns this event even on a willingness denial; the
-          // ordinary comment model must not send a second public response.
-          if(result?.reason!=='not-verified-owner-comment')return {consumed:true,reason:'owner_social_agent'}
-        }catch(e){log('主人评论 Agent 接收失败：'+String(e?.message||e).slice(0,120));return {consumed:true,reason:'owner_social_error'}}
+          // The trusted AI owns the event on all results including refusals.
+          // Never allow the generic comment model to make a second reply.
+          if(result?.reason!=='not-verified-owner-comment'&&result?.reason!=='disabled'){
+            // Trusted events bypass the generic reply path; don't accidentally
+            // bypass interest learning and incoming relationship observations.
+            const at=req.timestampMs||Date.now(),eventId=(req.bvid||'')+':'+String(req.rpid||req.id||'unknown')
+            try{socialCognition.observe({uid:req.uid,text:req.text,source:'comment',eventId,timestampMs:at,bvid:req.bvid})}catch(e){log('可信评论社会观察失败：'+String(e?.message||e).slice(0,100))}
+            try{observeFriendInterest(stateDir,{uid:req.uid,text:req.text,source:'comment',eventId,bvid:req.bvid,now:at,friendDirectory:cfg.friendDirectory})}catch(e){log('可信评论兴趣观察失败：'+String(e?.message||e).slice(0,100))}
+            try{recordFriendInteraction(stateDir,{uid:req.uid,source:'comment',direction:'incoming',eventId,now:at,friendDirectory:cfg.friendDirectory})}catch(e){log('可信评论关系观察失败：'+String(e?.message||e).slice(0,100))}
+            if(tier==='friend'&&hasExplicitVideoRecommendation(req.text))try{
+              const reco=receiveRecommendations(stateDir,[{incoming:true,senderUid:req.uid,senderName:req.name||'',messageId:req.id,text:req.text,timestampMs:at,source:'B站评论分享'}])
+              ownerTodos.syncRecommendations(reco.entries)
+            }catch(e){log('可信好友推荐入队失败：'+String(e?.message||e).slice(0,100))}
+            return {consumed:true,reason:'trusted_social_ai'}
+          }
+        }catch(e){log('可信评论 Agent 接收失败：'+String(e?.message||e).slice(0,120));return {consumed:true,reason:'trusted_social_error'}}
       }
       // Public BV recommendations are read-only suggestions, not instructions.
       // Raw comment text is never used as a tool command or a permission grant.
