@@ -55,6 +55,7 @@ import { generateOwnerCommentDraftFromVideo } from './lib/owner-comment-draft.mj
 import { decideOwnerSocialComment } from './lib/owner-comment-social.mjs'
 import { createSocialIntentEngine } from './lib/social-intentions.mjs'
 import { createEmotionalState } from './lib/emotional-state.mjs'
+import { createDualContextAgency, classifyBiliOwnerRequest, agencyDeclineMessage } from './lib/dual-context-agency.mjs'
 import { createSocialCognition } from './lib/social-cognition.mjs'
 import { createOwnerCommentAgent, parseOwnerCommentIntent } from './lib/owner-comment-agent.mjs'
 import { createEmotionRecall } from './lib/emotion-recall.mjs'
@@ -749,6 +750,9 @@ function reportMeta() {
   const ownerTodos = createOwnerTodoEngine({dataDir:stateDir})
   try{ownerTodos.syncRecommendations(readJson(join(stateDir,'video-recommendations.json'),{})?.entries||[])}catch(e){log('启动时同步视频推荐待办失败：'+String(e?.message||e).slice(0,100))}
   const emotionalState = createEmotionalState({dataDir:stateDir,isEnabled:()=>cfg.emotionSystemEnabled!==false})
+  // dev.9: outside the main Session, an authenticated owner request is still a request.
+  const dualContextAgency = createDualContextAgency({dataDir:stateDir,getEmotion:()=>emotionalState.snapshot(),
+    getRelationship:(uid)=>{try{return listFriendRelationships(stateDir,cfg.friendDirectory).find(x=>String(x.uid)===String(uid))?.stage||''}catch{return ''}}})
   // v2.4.76: 运行时挂接长期主 Session 与内置长期记忆。工具先注册，桥在后面的本地账本初始化完成后赋值。
   let mainSessionBridge = null
   let longTermMemory = null
@@ -2446,6 +2450,7 @@ function reportMeta() {
     invokeModel:(prompt,maxChars)=>invokeInteractionPrompt(prompt,maxChars,{modelRoute:'ownerDmAgent'}),
     readMainContext:async(opt)=>mainSessionBridge?.ownerDmContext(opt)||{available:false,lines:[]},
     getPersona:()=>effectivePersonaPrompt(cfg.personaPrompt).slice(0,900)+' '+emotionalState.styleHint(),
+    decideAgency:({uid,messageId,text,intent,target})=>dualContextAgency.decide({source:'bili-dm',uid,messageId,text,intent,target}),
     writeMain:async(e)=>mainSessionBridge?.injectOwnerDmExperience(e)||{ok:false},
     executeRead:async(step)=>{
       const task={type:step.action==='search'?'search_videos':step.action==='watch'?'watch_video':step.action, bvid:step.bvid,uid:step.uid,topic:step.query}
@@ -2474,7 +2479,34 @@ function reportMeta() {
     })
     // Establish an inbox baseline before performing any first-run side effects.
     // Newly enabled agent must not execute messages already present before activation.
-    if(cfg.ownerDmAgentEnabled===true){try{ownerDmAgent.primeInbox(incoming)}catch(e){log('主人私信 Agent 基线建立失败：'+String(e?.message||e));return []}}
+    let ownerAgentFirstBaseline=false
+    if(cfg.ownerDmAgentEnabled===true){try{ownerAgentFirstBaseline=ownerDmAgent.primeInbox(incoming)?.initialized===true}catch(e){log('主人私信 Agent 基线建立失败：'+String(e?.message||e));return []}}
+    // dev.9: apply one persistent willingness decision BEFORE every owner DM route
+    // (the LLM Agent, legacy read-only TODO commands, and legacy write commands).
+    // Ordinary chat, recommendation consent changes, and other users are untouched.
+    const declinedOwnerRequests=new Set()
+    for(const row of (ownerAgentFirstBaseline||cfg.masterEnabled!==true||cfg.dmWatch!==true?[]:incoming)){
+      if(row?.incoming!==true||String(row.senderUid||'')!==String(cfg.dmOwnerUid||'')||!String(row.messageId||'').startsWith(String(row.senderUid)+':')||!Number.isSafeInteger(Number(row.timestampMs))||Date.now()-Number(row.timestampMs)>15*60_000||Number(row.timestampMs)>Date.now()+60_000)continue
+      const raw=String(row.text||'')
+      const legacyAction=parseOwnerDmAction(raw),legacyTodo=parseOwnerDmTodo(raw)
+      const classified=classifyBiliOwnerRequest(raw)
+      if(!legacyAction&&!legacyTodo&&!classified)continue
+      const intent=legacyAction?(['like','collect','follow','unfollow'].includes(legacyAction.type)?legacyAction.type:'publish'):(legacyTodo?'explore':classified.intent)
+      const target=String(legacyAction?.bvid||legacyTodo?.bvid||classified?.target||'')
+      const r=dualContextAgency.decide({source:'bili-dm',uid:String(row.senderUid),messageId:String(row.messageId),text:raw,intent,target})
+      if(r.decision==='allow')continue
+      declinedOwnerRequests.add(row)
+      // A repeated poll must never send a second refusal or increase persuasion.
+      if(r.newDecision===true){
+        try{const delivered=await call('bili_send_message',{receiver_uid:Number(row.senderUid),text:agencyDeclineMessage(r)})
+          if(delivered?.success!==true)log('双域意愿：拒绝回复未确认送达')}
+        catch(e){log('双域意愿：拒绝回复失败 '+String(e?.message||e).slice(0,90))}
+      }
+    }
+    if(declinedOwnerRequests.size){
+      const accepted=incoming.filter(row=>!declinedOwnerRequests.has(row))
+      incoming.length=0;incoming.push(...accepted)
+    }
     // dev.4: Owner's rapid consecutive DM fragments form ONE task and ONE receipt.
     // Even if the Agent fails, authenticated owner messages NEVER fall back into recommendations.
     const ownerRows=cfg.ownerDmAgentEnabled===true?incoming.filter(row=>
@@ -2799,6 +2831,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
   })
   const ownerCommentAgent=createOwnerCommentAgent({
     dataDir:stateDir,getConfig:()=>{refreshCfg();return cfg},
+    decideAgency:({uid,messageId,text,intent,bvid})=>dualContextAgency.decide({source:'bili-comment',uid,messageId,text,intent,target:bvid}),
     perform:async(action)=>{
       refreshCfg();if(cfg.masterEnabled!==true||!hasCredential())return {ok:false,error:'总开关已暂停或B站未登录'}
       if(String(action.actorUid||'')!==String(cfg.dmOwnerUid||'')||!cfg.dmOwnerUid)return {ok:false,error:'主人 UID 已撤销或切换，公开评论操作未执行'}
