@@ -3572,8 +3572,8 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
   // 公开发布与模型生成严格分离：生成模型不挂 B站发送工具，实际发布由受限 Python 路径执行。
   dailyDynamic=createDailyDynamic({
     dataDir:stateDir,getConfig:()=>{refreshCfg();return cfg},
-    getPublicVideos:()=>lifeMemory?.publicVideoEvidence(20)||[],
-    getPublicSocial:()=>lifeMemory?.publicSocialEvidence(16)||[],
+    getPublicVideos:()=>lifeMemory?.publicVideoEvidence(40)||[],
+    getPublicSocial:()=>lifeMemory?.publicSocialEvidence(24)||[],
     getEmotion:()=>emotionalState.snapshot(),
     getInterests:()=>lifeReflection?.interests?.()||[],
     invokeModel:(prompt,maxChars)=>invokeInteractionPrompt(prompt,maxChars,{modelRoute:'dailyDynamic'}),
