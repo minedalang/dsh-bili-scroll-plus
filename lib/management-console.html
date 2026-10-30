@@ -212,6 +212,38 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 #life-timeline-list .record::before{content:"";position:absolute;left:-6px;top:16px;width:10px;height:10px;border-radius:50%;background:var(--ui-indigo);box-shadow:0 0 0 4px color-mix(in srgb,var(--ui-indigo) 12%,transparent)}
 @media(max-width:550px){#panel-life .recall-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){#panel-life .recall-step.is-current .step-icon{animation:none}}
+
+/* dev.13: 记忆流向可视化，展示真实统计，不模拟虚假的新记忆。 */
+#panel-life .memory-flow-panel{border:1px solid var(--stroke);border-radius:16px;padding:18px;margin-top:13px;background:var(--panel)}
+#panel-life .memory-flow-title{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+#panel-life .memory-flow-title strong{font-size:16px}
+#panel-life .memory-flow-steps{display:grid;grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr) 34px minmax(0,1fr);align-items:stretch;gap:4px}
+#panel-life .memory-flow-step{display:flex;align-items:center;flex-direction:column;text-align:center;gap:7px;border:1px solid var(--stroke);border-radius:12px;padding:14px 10px;min-width:0;background:var(--tint)}
+#panel-life .memory-flow-step:nth-of-type(3){background:color-mix(in srgb,var(--panel) 72%,#acd9ec 28%)}
+#panel-life .memory-flow-icon{display:grid;place-items:center;width:37px;height:37px;border-radius:50%;background:var(--panel);color:var(--action);font-size:22px;box-shadow:0 0 0 5px color-mix(in srgb,var(--action) 9%,transparent);animation:memory-soft-pulse 3.6s ease-in-out infinite}
+#panel-life .memory-flow-step>span:not(.memory-flow-icon){font-size:12px;color:var(--muted)}
+#panel-life .memory-flow-step em{font-style:normal;font-size:12px;font-weight:700;color:var(--action)}
+#panel-life .memory-flow-connector{display:grid;place-items:center;color:var(--action);opacity:.7;overflow:hidden}
+#panel-life .memory-flow-connector span{font-size:29px;animation:memory-move 2.4s ease-in-out infinite}
+#panel-life .memory-flow-footer{display:flex;flex-direction:column;gap:7px;font-size:12px;color:var(--muted);margin-top:14px}
+#panel-life .memory-flow-footer strong{color:var(--ink)}
+#panel-life .memory-search-bar input{flex:1;min-width:200px}
+#panel-life .memory-lessons{margin-top:20px;padding-top:16px;border-top:1px dashed var(--stroke)}
+#panel-life .memory-lessons .toolbar select{max-width:230px}
+#panel-life .memory-reflection-details,#panel-life .memory-advanced-details{border:1px solid var(--stroke);border-radius:12px;padding:11px 14px;margin-top:15px}
+#panel-life details>summary{cursor:pointer;font-weight:650;line-height:1.55}
+#panel-life details>summary:focus-visible{outline:2px solid var(--action);outline-offset:3px}
+#panel-life .memory-reflection-details[open],#panel-life .memory-advanced-details[open]{background:var(--tint)}
+#panel-life .memory-legacy-details{margin-top:12px}
+#panel-life .memory-advanced-details .toolbar{margin:12px 0}
+#panel-life .memory-advanced-details .toolbar input{flex:1;min-width:160px}
+@keyframes memory-soft-pulse{0%,100%{box-shadow:0 0 0 4px color-mix(in srgb,var(--action) 9%,transparent)}50%{box-shadow:0 0 0 9px color-mix(in srgb,var(--action) 3%,transparent)}}
+@keyframes memory-move{0%,100%{transform:translateX(-3px);opacity:.45}50%{transform:translateX(3px);opacity:1}}
+@media(max-width:680px){#panel-life .memory-flow-steps{grid-template-columns:1fr;gap:4px}#panel-life .memory-flow-connector{height:20px}#panel-life .memory-flow-connector span{transform:rotate(90deg);animation:none}#panel-life .memory-flow-step{padding:10px}#panel-life .memory-flow-title span{font-size:12px}}
+@media(prefers-reduced-motion:reduce){#panel-life .memory-flow-icon,#panel-life .memory-flow-connector span{animation:none!important}}
+#panel-life .memory-other-details{padding:14px 16px;border:1px solid var(--stroke);border-radius:14px;background:var(--panel)}
+#panel-life .memory-other-details>summary{font-size:14px}
+#panel-life .memory-other-details>.life-section{margin:11px 0}
 </style>
 <script defer src="/api/bili-duty/manage.js"></script>
 </head>
@@ -359,19 +391,42 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p class="muted">主 Session 始终携带少量真实的身份记忆；其他记忆先本地搜索，必要时由专用低成本模型挑选真实 ID，再读取正文。检索模型使用不带文件、Shell、B站 MCP 或浏览器工具的独立安全 headless 会话，必须已在 DSH 配好 Provider/模型。未配置或请求失败会回退本地记忆；不会用模型生成的文字充当过去的事实。</p>
 <div class="toolbar"><button id="main-memory-save" class="primary">保存记忆与反思设置</button></div><p id="main-memory-status" class="muted" role="status">正在读取…</p></div></div></section>
 <section id="panel-life" hidden>
-<div class="life-hero"><div><div class="status-line"><span id="life-learning-status" class="live-badge">● 正在整理真实经历</span></div><h2>🧠 人生记忆</h2><p class="muted">真实经历、兴趣趋势、人物关系、长期回忆与反思记录，都集中在这里查看。</p></div><button id="main-life-refresh" class="life-action life-indigo">↻ 刷新人生记忆</button></div>
-<nav class="life-jump" aria-label="人生记忆分区快捷跳转"><a href="#life-emotion-section">💗 情绪状态</a><a href="#life-timeline-section">📅 生活时间线</a><a href="#life-todo-section">📝 自主待办</a><a href="#life-interest-section">🌱 兴趣趋势</a><a href="#life-relationship-section">🤝 人物关系</a><a href="#life-sync-section">📨 告诉主 Session</a><a href="?tab=social#unified-friends" data-nav-tab="social">💬 社交互动 ↗</a><a href="#life-recall-section">🧠 长期回忆</a></nav>
-<p class="muted"><strong>这里展示大肥鱼记得什么，以及如何从真实生活中变化。</strong>「行为与表达改进」是直接附加在评论提示词里的规则，与这里的事实/经历不同。主人批准的旧版关系、兴趣、视频经历会在历史区只读保留，不再作为第二份提示词叠加。</p>
+<div class="life-hero"><div><div class="status-line"><span id="life-learning-status" class="live-badge">● 正在整理真实经历</span></div><h2>🐟 鱼鱼的记忆</h2><p class="muted">她经历了什么、现在还记得什么，又从中留下了什么体会，都可以在这里看到。</p></div><button id="main-life-refresh" class="life-action life-indigo">↻ 刷新记忆</button></div>
+<nav class="life-jump" aria-label="人生记忆分区快捷跳转"><a href="#life-recall-section">🧠 现在记得什么</a><a href="#life-lessons">✨ 留下了什么体会</a><a href="#life-timeline-section">📅 真实生活</a><a href="#unified-friends" data-nav-tab="social">👥 社交互动</a><a href="#life-others">⚙️ 其他生活管理</a></nav>
+<section class="memory-flow-panel" aria-label="记忆流向示意图">
+  <div class="memory-flow-title"><strong>一段经历，怎样变成鱼鱼的记忆？</strong><span id="memory-flow-updated" class="muted" role="status">正在读取记忆状态…</span></div>
+  <div class="memory-flow-steps" role="list">
+    <article class="memory-flow-step" role="listitem"><span class="memory-flow-icon" aria-hidden="true">◉</span><strong>真实发生</strong><span>看过的视频、说过的话</span><em id="memory-flow-recorded">读取中…</em></article>
+    <div class="memory-flow-connector" aria-hidden="true"><span>›</span></div>
+    <article class="memory-flow-step" role="listitem"><span class="memory-flow-icon" aria-hidden="true">◌</span><strong>现在还记得</strong><span>新鲜的清楚，旧的渐渐模糊</span><em id="memory-flow-remembered">读取中…</em></article>
+    <div class="memory-flow-connector" aria-hidden="true"><span>›</span></div>
+    <article class="memory-flow-step" role="listitem"><span class="memory-flow-icon" aria-hidden="true">✦</span><strong>留下体会</strong><span>反思有价值的经历，逐渐形成认识</span><em id="memory-flow-learned">读取中…</em></article>
+  </div>
+  <div class="memory-flow-footer"><span>⏳ 记忆会从清晰变模糊，最后可能想不起来。<strong id="memory-flow-fading">正在读取…</strong></span><span>🔒 原始记录独立封存，仅用于管理、审计和备份；鱼鱼不会用它偷偷想起忘掉的细节。「行为与表达改进」是独立的表达规则，不是经历记忆。</span></div>
+</section>
 <div class="settings-stack">
-<div class="settings-section life-section"><h4>记忆怎样形成</h4>
-<div class="grid" style="margin:12px 0">
-<article class="record"><div class="title-line">聊天层 · 当前主 Session</div><p class="muted">DSH 会话自己负责刚才聊了什么、上一条消息和当前任务。换 Session 后这层不搬家；人格和长期记忆仍属于同一只大肥鱼。</p></article>
-<article class="record"><div class="title-line">① 经历记录 · 原始事实</div><p class="muted">BV、rpid、评论原文、时间、对象和发送状态留在插件本地账本。负责“到底发生了什么”，不等于人生记忆；没有被反思选中也不会因此删除。</p></article>
-<article class="record"><div class="title-line">② 待反思经历 · 等待 AI 分析</div><p class="muted">从真实经历记录中挑出的候选材料。反思模型会综合分析；只有值得长期保留的内容才会进入人生记忆。</p></article>
-<article class="record"><div class="title-line">③ 人生记忆 · 长期保留</div><p class="muted">反思模型从一批候选中提炼少量重要信息。普通事件通常不会保存；重要经历、关系变化和特别有意义的生活片段才进入 <code>long-term-memory/dafeiyu.json</code>。</p></article>
-</div>
+<div id="life-recall-section" class="settings-section life-section memory-home">
+<h4>🧠 鱼鱼现在记得什么？</h4><p class="muted">搜视频标题、BV 号或聊天关键词；留空就看最近的经历。这里不会借用封存的完整历史补回已经忘记的细节。</p>
+<div class="toolbar memory-search-bar"><input id="main-session-history-query" maxlength="120" aria-label="搜索鱼鱼现在记得的经历" placeholder="输入视频标题 / BV号 / 聊天关键词，或留空看最近"><button id="main-session-history-search" class="life-action life-sky">搜索当前记忆</button></div>
+<p id="main-session-history-status" class="muted" role="status">等待读取最近经历…</p><div id="main-session-history" class="records records-scroll tall" aria-live="polite"></div>
+<div id="life-lessons" class="memory-lessons"><h4>✨ 这些经历给她留下了什么？</h4><p class="muted">有些经历会被忘掉具体细节，但值得保留的兴趣、约定或体会，可能继续影响鱼鱼的选择。并非每条经历都要产生感悟。</p>
+<div class="toolbar"><select id="main-memory-kind" aria-label="筛选留下的认识"><option value="">全部认识</option><option value="experience">经历带来的体会</option><option value="relationship">人物关系</option><option value="interest">兴趣变化</option><option value="fact">事实和约定</option></select><span id="memory-lessons-summary" class="muted" role="status">正在读取…</span></div>
+<input id="main-memory-query" maxlength="120" hidden aria-label="同步搜索认识的关键词"><button id="main-memory-search" hidden>搜索认识</button>
+<div id="main-memory-list" class="records records-scroll tall"></div>
+<details class="memory-reflection-details" id="life-reflection-details"><summary>✨ 鱼鱼怎样整理这些经历？<span id="reflection-learning-status" class="live-badge">● 正在读取</span> <span id="memory-reflection-short" class="muted">自动整理</span></summary><p class="muted">反思只使用鱼鱼<strong>目前还记得的经历</strong>，从中提炼有依据的体会；不强制每次都留下新认识。这里的候选是等待分析的材料，不是另一套“反思记忆”。</p>
+<p id="main-reflection-status" class="muted" role="status">正在读取整理状态…</p>
+<div id="main-reflection-list" class="records records-scroll"></div>
+<div class="toolbar"><button id="main-reflection-refresh" class="life-action life-sky">刷新待整理经历</button><button id="main-reflection-run" class="life-action life-green">手动整理一次（调用 AI）</button></div></details>
+<details class="memory-advanced-details" id="life-memory-advanced"><summary>⚙️ 高级工具与检索诊断（通常不需要操作）</summary>
+<p class="muted">下面是排查问题和手动维护用的工具。日常搜索只需使用上方一个输入框。诊断可能调用独立模型，不会改变已遗忘的经历。</p>
+<div class="toolbar"><input id="main-memory-test-query" maxlength="180" placeholder="高级检索诊断关键词"><button id="main-memory-test" class="life-action life-purple">运行检索诊断</button></div><p id="main-memory-test-result" class="muted" role="status">未运行诊断。</p>
+<div class="toolbar"><input id="main-memory-add-text" maxlength="1000" placeholder="主人手动添加一条长期认识"><button id="main-memory-add" class="life-action life-purple">手动添加认识</button></div>
+<details class="memory-legacy-details"><summary>旧版数据迁移（仅旧插件用户）</summary><p class="muted">仅从旧的 dsh-fish-memory 导入已有记录。全新安装不需要使用，不会自动读取旧数据。</p><button id="main-memory-import" class="life-action life-indigo">导入旧版 dsh-fish-memory</button></details>
+</details></div></div>
 
-</div>
+<div id="life-timeline-section" class="settings-section life-section"><div class="toolbar"><h4 style="margin:0">📅 大肥鱼的一天 · 真实生活时间线</h4><select id="life-timeline-days" aria-label="时间线范围"><option value="7">最近 7 天</option><option value="30" selected>最近 30 天</option><option value="90">最近 90 天</option></select><button id="life-timeline-refresh" class="life-action life-sky">刷新时间线</button></div>
+<p class="muted">展示有记录的视频探索（区分入选、未入选和主人指定查看）、公开评论、情绪变化和关系阶段。仅从已保存的观看／探索记录展示，不会把搜索结果当作观看经历；不展示好友私信正文或心情触发消息。</p><p id="life-timeline-summary" class="muted" role="status"></p><div id="life-timeline-list" class="records records-scroll tall"></div></div>
+<details id="life-others" class="memory-other-details"><summary>⚙️ 其他生活管理：情绪、待办、兴趣、人物关系与主 Session 汇报</summary><p class="muted">日常记忆搜索不需要操作这里。需要管理情绪、社交关系或主动向主 Session 发送生活摘要时再展开。</p>
 <div id="life-emotion-section" class="settings-section life-section"><div class="toolbar"><h4 style="margin:0">💗 情绪与心情 · 会变化，也会自然恢复</h4><span id="emotion-status" class="live-badge">● 正在读取情绪状态</span></div>
 <p class="muted">情绪驱动的自主回忆与主动分享可以选择开启：当近期真实视频再次触及过去有证据的人生记忆时，大肥鱼可以决定保持沉默、在主 Session 主动开口或给主人发送 B站私信。原始经历始终是证据；整理回忆、反思或产生念头均不能自行改写原始事实。 这是大肥鱼的角色模拟状态，不是生理测量或真实意识证明。它只保存情绪类别、强度和粗粒度来源，不保存触发心情的私信正文、UID 或具体聊天原因。情绪会随时间衰减，不能成为泄露隐私、迁怒或强行社交的理由。</p>
 <label class="checkline"><input id="emotion-enabled" type="checkbox" checked>启用持续情绪状态（默认开启）</label>
@@ -397,8 +452,6 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p class="muted">模型只能从核验的旧记忆 ID 中决定是否分享；正文根据真实新旧经历模板生成，不接受模型编造的事实。默认每天最多一次、24 小时内不重复评估，夜间免打扰。B站消息为真实对外发送行为。</p>
 <div class="toolbar"><button id="emotion-recall-save" class="life-action life-green">保存自主回忆权限</button><button id="emotion-recall-preview" class="life-action life-sky">只预览评估（不发送）</button></div>
 <p id="emotion-recall-status" class="muted" role="status">尚未读取自主回忆状态</p><div class="inset"><h4>🫧 最近回忆评估 · 为什么想起或保持安静</h4><p class="muted">看看大肥鱼最近是在等待情绪、寻找有证据的回忆，还是决定主动分享。不会展示私信正文或私人聊天。</p><div id="emotion-recall-flow" class="recall-flow" role="group" aria-label="情绪触发回忆的进展"></div><div id="emotion-recall-overview" class="recall-overview" aria-live="polite"></div><div id="emotion-recall-diagnostics" class="records records-scroll recall-diagnostics" aria-label="最近回忆评估记录，可滚动"><p class="muted">尚无诊断记录。</p></div></div></div></div>
-<div id="life-timeline-section" class="settings-section life-section"><div class="toolbar"><h4 style="margin:0">📅 大肥鱼的一天 · 真实生活时间线</h4><select id="life-timeline-days" aria-label="时间线范围"><option value="7">最近 7 天</option><option value="30" selected>最近 30 天</option><option value="90">最近 90 天</option></select><button id="life-timeline-refresh" class="life-action life-sky">刷新时间线</button></div>
-<p class="muted">展示有记录的视频探索（区分入选、未入选和主人指定查看）、公开评论、情绪变化和关系阶段。仅从已保存的观看／探索记录展示，不会把搜索结果当作观看经历；不展示好友私信正文或心情触发消息。</p><p id="life-timeline-summary" class="muted" role="status"></p><div id="life-timeline-list" class="records records-scroll tall"></div></div>
 <div id="life-todo-section" class="settings-section life-section"><div class="toolbar"><h4 style="margin:0">📝 自主待办 · 记下下一步，不强迫立即执行</h4><span id="owner-todo-status" class="live-badge">● 正在整理待办</span><button id="owner-todo-refresh" class="life-action life-sky">刷新待办</button></div>
 <p class="muted">主人私信受限 Agent 和操作权限已移到「私信与好友」页面，单独保存，不属于自主待办。别人私信推荐的 BV 会自动变成“考虑是否观看”的待办。主 Session 也可以记录“看这个视频、点赞指定 BV、看看自己的空间投稿、查看某位 UP 的投稿、搜索主题、检查通知”等下一步。主人说现在做时可立即处理；否则大肥鱼可在相关聊天里考虑时机。自动择机检查是独立可选项，不依赖定时刷视频。外部写入操作必须来自主人明确授权并继续遵守 B站额度；推荐私信本身不授权点赞、关注或评论。</p>
 <div class="fields"><div><label for="owner-todo-auto-review">自主待办自动择机检查</label><select id="owner-todo-auto-review"><option value="false">关闭（默认，只在聊天或手动操作时考虑）</option><option value="true">开启（定时提醒主 Session 评估待办）</option></select></div><div><label for="owner-todo-review-minutes">检查间隔（分钟）</label><input id="owner-todo-review-minutes" type="number" min="15" max="1440" step="15" value="60"></div></div>
@@ -424,26 +477,9 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div id="life-sync-section" class="settings-section life-section"><h4>告诉主 Session：大肥鱼最近做了什么</h4><div class="toolbar"><button id="main-session-sync" class="life-action life-green">现在把新经历告诉主 Session</button><button id="main-session-backfill" class="life-action life-sky">把过去 7 天遗漏的经历加入待汇报</button></div>
 <p class="muted">“过去 7 天”是<strong>从现在往回数 7 天</strong>，不是再等待 7 天。点击补充后只将尚未汇报的已选视频和已发评论放进本地待汇报队列，操作本身不会发送消息。启用主 Session 桥接和自动同步后，下一次符合间隔与每日额度的定时检查会尝试发送；否则可点击“现在把新经历告诉主 Session”手动发送。目标会话不在线时仍留在本地。此操作只汇报上下文，不直接写入人生记忆；人生反思会独立读取待反思经历。</p>
 <p id="main-session-queue-status" class="muted" role="status">正在读取…</p>
-<div class="toolbar"><input id="main-session-history-query" maxlength="120" placeholder="留空看最近经历；输入视频标题或聊天关键词可搜索"><button id="main-session-history-search" class="life-action life-sky">查看当前记忆</button></div>
-<p id="main-session-history-status" class="muted" role="status">最近经历会兼顾入选视频和评论互动，且只使用可衰减记忆。</p>
-<div id="main-session-history" class="records records-scroll tall"></div></div>
+<p class="muted">这里仅控制是否把近期生活摘要主动发送给选定的主 Session；不影响上方“鱼鱼现在记得什么”的记忆搜索。</p></div>
 
-<div id="life-recall-section" class="settings-section life-section"><h4>长期回忆 · 检索、反思和手动管理</h4>
-<div class="toolbar"><input id="main-memory-test-query" maxlength="180" placeholder="测试长期记忆召回，例如“紫色模型小姐”"><button id="main-memory-test" class="life-action life-purple">测试记忆召回</button></div>
-<p id="main-memory-test-result" class="muted" role="status">尚未测试记忆召回。</p>
-<div class="toolbar"><button id="main-memory-import" class="life-action life-indigo">导入当前主 Session 的旧 dsh-fish-memory 记忆</button></div>
-
-<div class="card" style="margin:12px 0"><div class="toolbar"><h4 style="margin:0">待反思经历</h4><span id="reflection-learning-status" class="live-badge">● 正在积累经历</span><button id="main-reflection-run" class="life-action life-green">现在反思一次</button><button id="main-reflection-refresh" class="life-action life-sky">刷新候选</button></div>
-<p id="main-reflection-status" class="muted" role="status">正在读取…</p>
-<p class="muted">反思模型会读取「待反思经历」，挑选值得长期保留的信息写入「人生记忆」。它与「待汇报经历」队列独立：是否发送给主 Session，不影响反思。模型不带 B站 MCP、文件、Shell 或任意网络工具；输出会由插件校验。手动“现在反思一次”会忽略候选数量和间隔限制，但仍执行相同安全校验。</p>
-<div id="main-reflection-list" class="records records-scroll"></div></div>
-<p class="muted">独立版 <code>dsh-fish-memory</code> 的旧文件仍按 Session 保存，因此导入按钮需要先选一个主 Session 来确定来源；导入后内容会合并进大肥鱼统一身份记忆，不删除旧文件。</p>
-<div class="toolbar"><input id="main-memory-add-text" maxlength="1000" placeholder="主人手动补一条大肥鱼长期记忆（可选）"><button id="main-memory-add" class="life-action life-purple">手动加入记忆</button></div>
-<div class="toolbar"><select id="main-memory-kind" aria-label="按记忆类型筛选">
-<option value="">全部回忆</option><option value="experience">真实经历</option><option value="relationship">人物关系</option><option value="interest">兴趣变化</option><option value="fact">长期事实/约定</option>
-</select><input id="main-memory-query" maxlength="120" placeholder="搜索大肥鱼跨 Session 长期记忆"><button id="main-memory-search" class="life-action life-sky">搜索记忆</button></div>
-<div id="main-memory-list" class="records records-scroll tall"></div>
-</div></div></section>
+</div></details></div></section>
 <section id="panel-diagnostics" hidden>
 <div class="toolbar"><h2 style="margin:0">今日诊断</h2><button id="diag-refresh" class="primary">刷新诊断</button><button id="diag-save">保存诊断开关</button></div>
 <p class="muted">勾选后会记录后续诊断；关闭仅停止新日志，不影响评论、同步、取帧和选图的正常功能。已存在的历史诊断记录不会自动删除。诊断里的“要求 AI 回复这条”必须人工确认；不绕过回复额度、去重或上下文验证。</p>

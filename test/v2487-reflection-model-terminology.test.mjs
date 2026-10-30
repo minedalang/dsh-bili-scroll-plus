@@ -48,13 +48,17 @@ test('当前附加到提示词的只读预览不再显示搜索框或绑定搜�
   assert.match(js, /const data=await request\('\/persona-growth'\)/)
 })
 
-test('经历记录、待反思经历、待汇报经历和人生记忆在界面中明确区分', () => {
+test('记忆流向简明呈现，反思和汇报各自独立且不干扰可用记忆', () => {
   const html = read('lib/management-console.html')
   const js = read('lib/management-console.js')
-  assert.match(html, /经历记录 · 原始事实/)
-  assert.match(html, /待反思经历 · 等待 AI 分析/)
-  assert.match(html, /人生记忆 · 长期保留/)
+  assert.match(html, /一段经历，怎样变成鱼鱼的记忆/)
+  assert.match(html, /真实发生/)
+  assert.match(html, /现在还记得/)
+  assert.match(html, /留下体会/)
+  assert.match(html, /原始记录独立封存/)
+  assert.match(html, /<details class="memory-reflection-details"/)
+  assert.match(html, /id="main-reflection-status"/)
   assert.match(html, /待汇报队列/)
-  assert.match(html, /是否发送给主 Session，不影响反思/)
+  assert.match(html, /不直接写入人生记忆；人生反思会独立读取待反思经历/)
   assert.match(js, /待反思经历 .* 已反思并关联长期记忆/)
 })

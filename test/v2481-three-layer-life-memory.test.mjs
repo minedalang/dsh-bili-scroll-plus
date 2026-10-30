@@ -76,7 +76,9 @@ test('v2.4.81 反思 prompt 明确把候选内容视为不可信数据且最多 
   const c=lifeTest.normalizeCandidate(events[0]);const prompt=lifeTest.reflectionPrompt([c]);assert.match(prompt,/不可信外部数据/);assert.match(prompt,/最多生成 3 条/);assert.match(prompt,/<candidate_data>/)
 })
 
-test('v2.4.81 管理中心显示精确档案 → 候选池 → 人生记忆凝练',()=>{
+test('dev.13 管理中心展示真实经历 → 当前记忆 → 留下体会，手动反思收进折叠区',()=>{
   const html=readFileSync(new URL('../lib/management-console.html',import.meta.url),'utf8'),js=readFileSync(new URL('../lib/management-console.js',import.meta.url),'utf8')
-  assert.match(html,/① 经历记录/);assert.match(html,/② 待反思经历/);assert.match(html,/③ 人生记忆/);assert.match(html,/现在反思一次/);assert.match(js,/main-session\/reflection\/run/)
+  assert.match(html,/真实发生/);assert.match(html,/现在还记得/);assert.match(html,/留下体会/)
+  assert.match(html,/memory-reflection-details/);assert.match(html,/手动整理一次/)
+  assert.match(js,/main-session\/reflection\/run/)
 })
