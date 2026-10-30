@@ -53,12 +53,12 @@ test('不限次数时旧的每日计数不会阻止发送；未授权与无真�
    const x=createEmotionRecall({dataDir:dir,getConfig,getEmotion:()=>({enabled:true,mood:'warm',intensity:70,updatedAt:new Date(when-60_000).toISOString()}),
      getRecentEvents:()=>[],getMemories:()=>[],invokeModel:async()=>{models++;return '{"action":"skip"}'},
      sendDm:async()=>{sends++;return {ok:true}},sendMain:async()=>{sends++;return {ok:true}},canMain:()=>true,now:()=>when,logger:{warn(){}}})
-   assert.equal((await x.tick()).skipped,'no-verified-recurrence')
+   assert.equal((await x.tick()).skipped,'no-recent-events')
    assert.equal(models,0);assert.equal(sends,0)
    assert.equal(x.status().config.unlimited,true)
    const z=createEmotionRecall({dataDir:dir,getConfig:()=>({...getConfig(),emotionRecallUnlimited:false}),getEmotion:()=>({enabled:true,mood:'warm',intensity:70,updatedAt:new Date(when-60_000).toISOString()}),
      getRecentEvents:()=>[],getMemories:()=>[],invokeModel:async()=>{models++;return '{}'},sendDm:async()=>({ok:true}),sendMain:async()=>({ok:true}),canMain:()=>true,now:()=>when})
-   assert.equal((await z.tick()).skipped,'daily-limit')
+   assert.equal((await z.tick()).skipped,'no-recent-events')
  }finally{rmSync(dir,{recursive:true,force:true})}
 })
 

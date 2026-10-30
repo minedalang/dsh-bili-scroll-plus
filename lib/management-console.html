@@ -730,11 +730,11 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p id="owner-comment-agent-status" class="muted">Agent 状态尚未读取。</p>
 <div class="toolbar"><button type="button" class="primary" id="owner-comment-settings-save">保存主人公开评论权限</button><button type="button" id="owner-comment-settings-reload">重新读取</button></div>
 </div>
-<div id="social-emotion-authorization" class="card"><h3>💗 情绪驱动的自主分享权限</h3><p class="muted">发送私信与主动发起主 Session 消息都需要独立授权，默认关闭。角色心情详情仍在「人生记忆」中查看。</p>
-<p id="emotion-recall-status" class="muted" role="status">尚未读取自主回忆状态</p><div class="inset"><h4>🫧 最近回忆评估 · 为什么想起或保持安静</h4><p class="muted">看看大肥鱼最近是在等待情绪、寻找有证据的回忆，还是决定主动分享。不会展示私信正文或私人聊天。</p><div id="emotion-recall-flow" class="recall-flow" role="group" aria-label="情绪触发回忆的进展"></div><div id="emotion-recall-overview" class="recall-overview" aria-live="polite"></div><div id="emotion-recall-diagnostics" class="records records-scroll recall-diagnostics" aria-label="最近回忆评估记录，可滚动"><p class="muted">尚无诊断记录。</p></div></div>
+<div id="social-emotion-authorization" class="card"><h3>💗 情绪驱动的自主分享权限</h3><p class="muted">启用后先做有额度的内部情绪分析；只有明确授权分享渠道、满足旧记忆证据和发送限制，才可能主动发消息。默认全部关闭。角色心情详情仍在「人生记忆」查看。</p>
+<p id="emotion-recall-status" class="muted" role="status">尚未读取自主回忆状态</p><div class="inset"><h4>🫧 最近回忆评估 · 为什么想起或保持安静</h4><p class="muted">看看大肥鱼最近是否真正做过内部分析、能不能从仍清晰的经历中唤起旧事，以及为何选择沉默。不会展示私信正文或私人聊天。</p><div id="emotion-recall-flow" class="recall-flow" role="group" aria-label="情绪触发回忆的进展"></div><div id="emotion-recall-overview" class="recall-overview" aria-live="polite"></div><div id="emotion-recall-diagnostics" class="records records-scroll recall-diagnostics" aria-label="最近回忆评估记录，可滚动"><p class="muted">尚无诊断记录。</p></div></div>
 <details class="life-subdetails emotion-options"><summary>💌 自主回忆与主动分享设置（默认关闭）</summary><div class="inset" style="margin-top:18px"><h4>💌 情绪驱动的自主回忆与分享 · 让过去自然浮现</h4>
 <p class="muted">例如今天再次刷到一个以前看过的系列，开心或怀念的模拟情绪变化，让大肥鱼想起有真实 BV 证据的旧经历；它可以决定沉默，也可以在已授权的渠道主动找主人聊聊。不是每次情绪波动都会分享。<strong>总开关与两个渠道默认全部关闭。</strong></p>
-<label class="checkline"><input type="checkbox" id="emotion-recall-enabled">允许情绪触发自主回忆（需同时开启长期记忆）</label>
+<label class="checkline"><input type="checkbox" id="emotion-recall-enabled">允许情绪触发自主分析与回忆（需同时开启长期记忆；不等于授权发送）</label>
 <div class="fields"><div><label class="checkline"><input id="emotion-recall-main" type="checkbox">允许在指定 DSH 主 Session 主动开口</label><p class="muted">需要先在「告诉主 Session」选好会话，并保持目标会话在线。</p></div>
 <div><label class="checkline"><input id="emotion-recall-dm" type="checkbox">允许给主人发送 B站回忆私信</label><p class="muted">只会发送到「社交互动 → 好友关系与互动」中勾选并保存的唯一授权主人 UID（dmOwnerUid）；不会发送给其他人。</p></div>
 <div><label for="emotion-recall-daily">每天最多发送（0=禁止，可填任意正整数）</label><input id="emotion-recall-daily" type="number" min="0" step="1" value="1"><small class="setting-note">只限制实际主动发出的消息；设为 0 表示禁止。可填任意非负安全整数，两个渠道合计。</small></div>
@@ -748,7 +748,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label for="emotion-recall-emotion-hours">情绪有效期（1–72 小时）</label><input id="emotion-recall-emotion-hours" type="number" min="1" max="72" value="12"><small class="setting-note">近期模拟情绪在这段时间内可以影响回忆联想；过期后不再以旧情绪触发。</small></div>
 <div><label for="emotion-recall-start">每日最早开始（0–23 时）</label><input id="emotion-recall-start" type="number" min="0" max="23" value="9"></div>
 <div><label for="emotion-recall-end">每日最晚结束（1–24 时）</label><input id="emotion-recall-end" type="number" min="1" max="24" value="22"></div></div>
-<p class="muted">模型只能从核验的旧记忆 ID 中决定是否分享；正文根据真实新旧经历模板生成，不接受模型编造的事实。默认每天最多一次、24 小时内不重复评估，夜间免打扰。B站消息为真实对外发送行为。</p>
+<p class="muted">内部分析可从近期仍清晰的公开经历和模拟情绪里形成简短念头，不需要硬凑新旧同题；只有核验过的旧记忆与公开事件相关联，并获得渠道授权，才可能进入外发决策。内部念头不是新事实，不会写入长期记忆，也不会发送。每日发送额度仅限制对外消息；默认 24 小时评估间隔，夜间免打扰。</p>
 <div class="toolbar"><button id="emotion-recall-save" class="life-action life-green">保存自主回忆权限</button><button id="emotion-recall-preview" class="life-action life-sky">只预览评估（不发送）</button></div>
 </div></details></div>
 </div>

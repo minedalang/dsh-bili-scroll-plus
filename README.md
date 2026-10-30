@@ -17,6 +17,8 @@
 
 `dsh-dafeiyu-life` 是面向 [DeepSeek Harness（DSH）](https://github.com/deepseek-ai) 的社区插件，并非 DSH 或 B 站官方项目。
 
+**v2.5.1-dev.3 本地试验包（未发布）：** 日常动态以短句、情绪和碎碎念为主，分析型长动态仅偶尔出现；历史草稿仍按原安全规则。修复「情绪驱动自主回忆」事件匹配入口：启用情绪回忆后，即使没有适合分享的旧事也能做内部情绪分析，管理页可查看今日分析次数及最近匿名念头。**内部分析不代表自动向主 Session 或 B站私信发送**，发送仍需单独开启渠道和满足额度/旧证据限制。默认情绪回忆总开关、外发渠道不自动开启；自动动态发布授权也保持原样。要更常评估可在「社交互动 → 情绪驱动」中自行把间隔由 24 小时调至如 6 小时（会增加调用成本）。
+
 ## 🎉 已收录 Awesome DSH Plugin 社区插件市场
 
 dsh-dafeiyu-life 已发布到 [DeepSeek Harness（DSH）](https://github.com/deepseek-ai) 的社区插件市场 [Awesome DSH Plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) ，市场官网也已可以搜索到本项目。

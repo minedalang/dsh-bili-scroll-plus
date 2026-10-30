@@ -3532,7 +3532,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
   // 决策模型没有写入工具；实际发送只能通过这里固定的主人目标和宿主 Session。
   emotionRecall=createEmotionRecall({
     dataDir:stateDir,getConfig:()=>{refreshCfg();return cfg},getEmotion:()=>emotionalState.snapshot(),
-    getRecentEvents:()=>lifeMemory?.recall({query:'',maxItems:12,maxChars:2400,domain:'main-session'}).map(x=>({kind:x.kind,time:x.at,summary:x.summary}))||[],
+    getRecentEvents:()=>lifeMemory?.recentEmotionEvents(120)||[],
     getMemories:()=>longTermMemory.activeMemories(),
     getEvidenceRows:(rows)=>lifeMemory?.emotionEvidence(rows)||[],
     invokeModel:(prompt,maxChars)=>invokeInteractionPrompt(prompt,maxChars,{modelRoute:'interaction'}),

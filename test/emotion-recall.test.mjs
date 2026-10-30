@@ -15,7 +15,7 @@ const setup=(partial={},opts={})=>{
  const dir=mkdtempSync(join(tmpdir(),'dafeiyu-emotion-recall-'));mkdirSync(join(dir,'life-memory'),{recursive:true});writeFileSync(join(dir,'life-memory/candidates.json'),JSON.stringify({candidates:[old]}))
  const calls=[],messages=[];let decisions=0
  const x=createEmotionRecall({dataDir:dir,getConfig:()=>({...config,...partial}),getEmotion:()=>opts.emotion||feel,getRecentEvents:()=>opts.events||[fresh],getMemories:()=>opts.memories||[record],canMain:()=>opts.online!==false,now:()=>T,
- invokeModel:async(prompt)=>{decisions++;const found=JSON.parse(prompt.split('<verified_candidates>')[1].split('</verified_candidates>')[0]);return opts.decision?.(found)||JSON.stringify({action:'share',key:found[0].key,memory_id:found[0].memoryId,channel:opts.channel||'dm'})},
+ invokeModel:async(prompt)=>{decisions++;if(prompt.includes('<public_events>'))return JSON.stringify({action:'note',note:'想起一点轻轻的好奇，不过今天没有旧事能对上。'});const found=JSON.parse(prompt.split('<verified_candidates>')[1].split('</verified_candidates>')[0]);return opts.decision?.(found)||JSON.stringify({action:'share',key:found[0].key,memory_id:found[0].memoryId,channel:opts.channel||'dm'})},
  sendDm:async(value)=>{calls.push(value);return opts.dmResult||{ok:true}},sendMain:async(value)=>{messages.push(value);return {ok:true}},logger:{warn:()=>{}}})
  return {dir,x,calls,messages,decisions:()=>decisions,cleanup:()=>rmSync(dir,{recursive:true,force:true})}
 }
@@ -33,7 +33,7 @@ test('strict owner UID DM permission, persisted send & no repeat from same emoti
  const q=setup();try{
   const r=await q.x.tick();assert.equal(r.sent,true);assert.equal(r.channel,'dm');assert.equal(q.calls.length,1);assert.equal(q.calls[0].uid,'12345678');assert.match(q.calls[0].text,/那时候我第一次认真追完/)
   assert.equal(q.calls[0].text.includes('主人那天特别开心'),false)
-  assert.equal((await q.x.tick()).skipped,'daily-limit');assert.equal(q.x.status().sent,1)
+  assert.equal((await q.x.tick()).skipped,'cooldown');assert.equal(q.x.status().sent,1)
   assert.equal(q.x.status().recentKeys.length,1)
  }finally{q.cleanup()}
 })
@@ -47,7 +47,7 @@ test('unlimited bypasses positive daily cap but 0 remains explicitly disabled',a
   assert.equal(q.calls.length,1)
  }finally{q.cleanup()}
  const off=setup({emotionRecallUnlimited:true,emotionRecallDailyLimit:0})
- try{assert.equal((await off.x.tick()).skipped,'daily-limit');assert.equal(off.calls.length,0)}finally{off.cleanup()}
+ try{const r=await off.x.tick();assert.equal(r.analyzed,true);assert.equal(off.calls.length,0);assert.equal(off.messages.length,0)}finally{off.cleanup()}
 })
 test('main Session can speak on its own when that channel is enabled',async()=>{
  const q=setup({emotionRecallDmEnabled:false},{channel:'main'});try{const r=await q.x.tick();assert.equal(r.channel,'main');assert.equal(q.calls.length,0);assert.equal(q.messages.length,1)}finally{q.cleanup()}
@@ -60,12 +60,12 @@ test('model may skip; fabricated memory IDs and unauthorized channels cannot sen
 test('dry run never sends or consumes quota, quiet-hours and offline are respected',async()=>{
  const q=setup();try{const r=await q.x.tick({dryRun:true});assert.equal(r.dryRun,true);assert.equal(q.calls.length,0);assert.equal(q.x.status().checks,0);assert.equal(q.x.status().sent,0)}finally{q.cleanup()}
  const hour=new Date(T).getHours();const a=setup({emotionRecallStartHour:(hour+1)%24,emotionRecallEndHour:((hour+2)%24)||24});try{assert.equal((await a.x.tick()).skipped,'quiet-hours')}finally{a.cleanup()}
- const b=setup({emotionRecallDmEnabled:false},{online:false});try{assert.equal((await b.x.tick()).skipped,'offline-or-no-owner')}finally{b.cleanup()}
+ const b=setup({emotionRecallDmEnabled:false},{online:false});try{const r=await b.x.tick();assert.equal(r.analyzed,true);assert.equal(b.messages.length,0)}finally{b.cleanup()}
 })
 test('emotion alone, private memory or unrelated events do not initiate outbound messages',async()=>{
  const a=setup({}, {emotion:{...feel,intensity:5}});try{assert.equal((await a.x.tick()).skipped,'no-recent-emotion')}finally{a.cleanup()}
- const b=setup({}, {events:[{...fresh,title:'完全无关的另外一段音乐'}]});try{assert.equal((await b.x.tick()).skipped,'no-verified-recurrence')}finally{b.cleanup()}
- const c=setup({}, {memories:[{...record,memoryKind:'relationship'}]});try{assert.equal((await c.x.tick()).skipped,'no-verified-recurrence')}finally{c.cleanup()}
+ const b=setup({}, {events:[{...fresh,title:'完全无关的另外一段音乐'}]});try{const r=await b.x.tick();assert.equal(r.analyzed,true);assert.equal(b.calls.length,0)}finally{b.cleanup()}
+ const c=setup({}, {memories:[{...record,memoryKind:'relationship'}]});try{const r=await c.x.tick();assert.equal(r.analyzed,true);assert.equal(c.calls.length,0)}finally{c.cleanup()}
 })
 test('failed delivery is not recorded as success or retried within the cooldown',async()=>{
  const q=setup({}, {dmResult:{ok:false,error:'no auth'}});try{const r=await q.x.tick();assert.equal(r.ok,false);assert.equal(q.x.status().sent,0);assert.equal((await q.x.tick()).skipped,'cooldown')}finally{q.cleanup()}
