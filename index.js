@@ -2777,7 +2777,15 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     // External B站 callers have NO access to identity/owner long-term memory,
     // even if a memory was originally derived from public video text.
     // Avoid model shortlist leaks and prompt injection via long-term memory retrieval.
-    prepareMemoryContexts: async(batch)=>batch.map(()=>''),
+    // A public comment may use only this verified sender's still-clear joint
+    // episodes. Do not give DMs, owner-private memory, or another UID's history
+    // to the shared model. The batcher isolates users before assembling prompts.
+    prepareMemoryContexts: async(batch)=>batch.map(item=>{
+      if(item.kind!=='comment'||!/^[1-9]\d{0,19}$/.test(String(item.uid||'')))return ''
+      return safeSocialMemoryContext([item.text,item.context].filter(Boolean).join(' '),item.uid,
+        socialTier(item.uid,cfg.dmOwnerUid,cfg.friendDirectory),
+        item.incomingRpid&&item.bvid?`social:${item.uid}:${item.bvid}:${item.incomingRpid}`:'')
+    }),
     prepareMemeContexts: (batch) => interactionMemeLookup.forBatch(batch),
     onEmotion: ({mood,intensity,source})=>{try{emotionalState.update({mood,intensity,source})}catch(e){log('情绪状态更新失败：'+String(e?.message||e).slice(0,100))}},
     invoke: (prompt) => invokeInteractionPrompt(prompt, 24000),
@@ -2856,8 +2864,8 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     getThread:(bvid,root,targetRpid)=>call('bili_comment_thread',{bvid,root:Number(root),target_rpid:Number(targetRpid)||0,num:20}),
     logger:{warn:(msg)=>log('评论上下文：'+msg)},
   })
-  const safeSocialMemoryContext=(query,actorUid,role)=>{
-    try{return memoryRetriever?.socialContext(String(query||'').slice(0,1100),{maxItems:5,maxChars:720,actorUid,role})||''}
+  const safeSocialMemoryContext=(query,actorUid,role,excludeEventKey='')=>{
+    try{return memoryRetriever?.socialContext(String(query||'').slice(0,1100),{maxItems:5,maxChars:720,actorUid,role,excludeEventKey})||''}
     catch(e){log('B站社交记忆只读召回失败（本轮仍正常对话）：'+String(e?.message||e).slice(0,100));return ''}
   }
   const ownerCommentAgent=createOwnerCommentAgent({
@@ -2877,7 +2885,8 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       }catch(e){log('可信评论上下文读取失败：'+String(e?.message||e).slice(0,100))}
       return interpretTrustedSocial({
       row:enriched,role:row.role,emotion:emotionalState.snapshot(),style:emotionalState.styleHint(),
-      memoryContext:safeSocialMemoryContext([row.text,enriched.context,enriched.threadPreview].filter(Boolean).join(' '),row.uid,row.role),
+      memoryContext:safeSocialMemoryContext([row.text,enriched.context,enriched.threadPreview].filter(Boolean).join(' '),row.uid,row.role,
+        row.rpid?`social:${row.uid}:${row.bvid}:${row.rpid}`:''),
       relationship:(()=>{try{return listFriendRelationships(stateDir,cfg.friendDirectory).find(x=>String(x.uid)===String(row.uid))?.stage||''}catch{return ''}})(),
       history:dualContextAgency.context({uid:row.uid,thread:row.thread,target:row.bvid}),
       invoke:p=>invokeInteractionPrompt(p,2000,{modelRoute:'interaction'}),
@@ -2886,7 +2895,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     recordAgency:({uid,messageId,text,intent,action,bvid,thread,decision})=>dualContextAgency.recordAI({
       source:'bili-comment',uid,messageId,text,intent,action,target:bvid,thread,decision,
     }),
-    generateChat:async(row)=>interactionBatcher.generate({kind:'comment',mode:row.scope||'self-nested',uid:row.uid,text:row.text,context:[row.context,row.threadPreview].filter(Boolean).join('\n').slice(0,1500),canSkip:true,identityContext:replyIdentityContext(row.uid)}),
+    generateChat:async(row)=>interactionBatcher.generate({kind:'comment',mode:row.scope||'self-nested',uid:row.uid,bvid:row.bvid,incomingRpid:row.rpid,text:row.text,context:[row.context,row.threadPreview].filter(Boolean).join('\n').slice(0,1500),canSkip:true,identityContext:replyIdentityContext(row.uid)}),
     deferWatch:async({bvid,row})=>ownerTodos.add({type:'watch_video',bvid,sourceKey:'owner-comment-deferred:'+String(row.rpid),title:'大肥鱼想稍后看看 '+bvid,note:'B站生活域的即时邀请：大肥鱼自主选择推迟。',origin:{kind:'owner',uid:row.uid,messageId:row.id,quotedText:row.text,at:row.timestampMs}},{source:'owner'}),
     perform:async(action)=>{
       refreshCfg();if(cfg.masterEnabled!==true||!hasCredential())return {ok:false,error:'总开关已暂停或B站未登录'}
@@ -2986,7 +2995,10 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
         }else if(cfg.ownerCommentNaturalAckEnabled!==true)return {ok:false}
       }else if(!(channel==='notice'?cfg.commentWatchReplies===true:cfg.commentAtEnabled===true))return {ok:false}
       const r=parseMaybeJson(await call('bili_reply_manual',{bvid,rpid:Number(rpid),root:Number(root)||0,text,confirm:true}))
-      return confirmedOwnerCommentReceipt(r,'reply')
+      const receipt=confirmedOwnerCommentReceipt(r,'reply')
+      if(receipt?.ok===true)try{lifeMemory?.recordSocialReply({actorUid,bvid,incomingRpid:rpid,text})}
+      catch(e){log('可信社交回复经历写入失败：'+String(e?.message||e).slice(0,100))}
+      return receipt
     },logger:{warn:m=>log('主人评论 Agent：'+m)}
   })
   const commentInteract = createCommentInteract({
@@ -3092,14 +3104,19 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       return {...result,tier}
     },
     socialTier:(uid)=>socialTier(uid,cfg.dmOwnerUid,cfg.friendDirectory),
-    generateReply: (req) => interactionBatcher.generate({...req,identityContext:''}),
+    generateReply: (req) => interactionBatcher.generate({...req,identityContext:'',incomingRpid:req.rpid}),
     send: async (req) => {
       // 后台独立发送，受评论互动专用开关保护，不使用 model 的 force 绕过公开评论安全闸。
       refreshCfg()
       if (!(cfg.masterEnabled && (req.manual===true || cfg.commentWatchReplies || cfg.commentAtEnabled))) return {ok:false,error:'后台评论回复已关闭'}
       const r = await call('bili_reply', {bvid: req.bvid || '', aid: Number(req.aid)||0,
         rpid: Number(req.rpid), root: Number(req.root)||0, text:String(req.text).slice(0,130)})
-      if(r?.success===true){if(req.uid)try{recordFriendInteraction(stateDir,{uid:req.uid,source:'comment',direction:'outgoing',eventId:'sent:'+String(req.bvid||'')+':'+Date.now()+':'+Math.random(),friendDirectory:cfg.friendDirectory})}catch{};return {ok:true,rpid:String(r?.rpid_str||r?.rpid||'')}}
+      if(r?.success===true){
+        if(req.uid)try{recordFriendInteraction(stateDir,{uid:req.uid,source:'comment',direction:'outgoing',eventId:'sent:'+String(req.bvid||'')+':'+Date.now()+':'+Math.random(),friendDirectory:cfg.friendDirectory})}catch{}
+        try{lifeMemory?.recordSocialReply({actorUid:req.uid,bvid:req.bvid,incomingRpid:req.rpid,text:req.text})}
+        catch(e){log('社交回复经历写入失败：'+String(e?.message||e).slice(0,100))}
+        return {ok:true,rpid:String(r?.rpid_str||r?.rpid||'')}
+      }
       return {ok:false,error:String(r?.error||r?.message||'评论未确认成功')}
     },
     logger: {warn: (msg) => log('评论互动警告：'+msg),error:(msg)=>log('评论互动错误：'+msg)},

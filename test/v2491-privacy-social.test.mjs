@@ -51,8 +51,8 @@ test('隐私：套取第三人私信或凭据在进入模型前拒绝，无须�
 
 test('隐私：外部互动禁用身份长记忆读取，视频 Agent 的公开投影不信任自动反思',()=>{
  const index=src('index.js'),python=src('vendor/bilibili-mcp/mcp_server.py')
- assert.match(index,/prepareMemoryContexts: async\(batch\)=>batch\.map\(\(\)=>''\)/)
- assert.match(index,/interactionBatcher\.generate\(\{\.\.\.req,identityContext:''\}\)/)
+ assert.match(index,/prepareMemoryContexts: async\(batch\)=>batch\.map\(item=>/)
+ assert.match(index,/interactionBatcher\.generate\(\{\.\.\.req,identityContext:'',incomingRpid:req\.rpid\}\)/)
  assert.match(python,/m\.get\('visibility'\) == 'public'/)
  assert.match(python,/m\.get\('publicApproved'\) is True/)
  const r=createMemoryRetriever({getMemories:()=>[{id:'secret',text:'主人私人地址...',source:'main-session-ai'},{id:'bili',text:'其他人公开评论带有隐私',source:'life-reflection'}],getConfig:()=>({mainSessionMemoryEnabled:true})})

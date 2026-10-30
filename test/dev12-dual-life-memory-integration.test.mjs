@@ -43,7 +43,7 @@ test('真实档案永久留存；可用记忆丢细节且遗忘不可逆',()=>{
  }finally{rmSync(dir,{recursive:true,force:true})}
 })
 
-test('经过验证的 UID 只能回忆自己的公开互动，陌生人不获得他人经历',()=>{
+test('经过验证的 UID 只能回忆自己的公开互动，陌生人也可记得自己的经历',()=>{
  const dir=home()
  try{
   const gate=createLifeMemoryGateway({dataDir:dir,getConfig:config,now:()=>t0})
@@ -51,7 +51,7 @@ test('经过验证的 UID 只能回忆自己的公开互动，陌生人不获得
     {kind:'social',bvid:BV,key:'social:202:thread:1',actorUid:'202',at:t0,text:'一起聊聊料理吧'}])
   const a=gate.recall({query:'',domain:'bili-life',role:'friend',actorUid:'101'})
   assert.equal(a.length,1);assert.match(a[0].summary,/明天还记得/);assert.doesNotMatch(a[0].summary,/料理/)
-  assert.equal(gate.recall({query:'',domain:'bili-life',role:'stranger',actorUid:'101'}).length,0)
+  assert.equal(gate.recall({query:'',domain:'bili-life',role:'stranger',actorUid:'101'}).length,1)
   // A returning friend may say only 'I'm back'; a safe, recent UID match
   // should recall yesterday's exchange even without shared keywords.
   assert.equal(gate.recall({query:'我又来啦！',domain:'bili-life',role:'friend',actorUid:'101'}).length,1)
@@ -59,7 +59,7 @@ test('经过验证的 UID 只能回忆自己的公开互动，陌生人不获得
   const retriever=createMemoryRetriever({getMemories:()=>[],getConfig:config,getEpisodes:(query,opts)=>gate.recall({query,...opts})})
   assert.match(retriever.socialContext('你明天还记得我吗？',{role:'friend',actorUid:'101'}),/明天还记得/)
   assert.doesNotMatch(retriever.socialContext('你明天还记得我吗？',{role:'friend',actorUid:'202'}),/明天还记得/)
-  assert.equal(retriever.socialContext('你明天还记得我吗？',{role:'stranger',actorUid:'101'}),'')
+  assert.match(retriever.socialContext('你明天还记得我吗？',{role:'stranger',actorUid:'101'}),/明天还记得/)
  }finally{rmSync(dir,{recursive:true,force:true})}
 })
 
