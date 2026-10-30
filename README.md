@@ -17,6 +17,16 @@
 
 `dsh-dafeiyu-life` 是面向 [DeepSeek Harness（DSH）](https://github.com/deepseek-ai) 的社区插件，并非 DSH 或 B 站官方项目。
 
+## 🎉 已收录 Awesome DSH Plugin 社区插件市场
+
+dsh-dafeiyu-life 已发布到 [DeepSeek Harness（DSH）](https://github.com/deepseek-ai) 的社区插件市场 [Awesome DSH Plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) ，市场官网也已可以搜索到本项目。
+
+- **[在市场官网查看dsh-dafeiyu-life](https://awesome-dsh-plugin.com/zh/?q=dsh-dafeiyu-life)**：搜索 `dsh-dafeiyu-life`、`minedalang` 或「大肥鱼」。
+- **[在dsh的dshmarket插件中搜索dsh-dafeiyu-life]**：搜索`dsh-dafeiyu-life`。
+- **[项目源码仓库](https://github.com/minedalang/dsh-dafeiyu-life)**：查看最新正式说明、源代码、问题反馈与开发分支。
+
+> **关于 DSH 内置的 `dshmarket`：** 社区网站已收录不代表本地市场索引立即刷新。不同下载区域、目录快照或缓存可能导致新插件暂时搜不到。请优先搜索完整包名、检查市场刷新或稍后重试。这里的「已收录」指社区目录合并成功，不代表 DSH 官方背书，也不代表 `dev` 测试功能已经上架。
+
 ## ✨ 和普通聊天机器人有什么不一样？
 
 ### 🌿 有自己的选择：双域意愿
