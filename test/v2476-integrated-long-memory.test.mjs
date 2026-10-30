@@ -20,7 +20,7 @@ const defineTool=x=>x
 test('Claude/Anthropic 可见的长期记忆工具 schema 只有 ASCII 参数名',async()=>{
   const dir=temp(),dsh=temp();const f=fakeAgent();
   try{
-    const mem=createLongTermMemory({dataDir:dir,dshHome:dsh,agents:{get:()=>f.agent,list:()=>[f.agent]},getConfig:cfg,defineTool})
+    const mem=createLongTermMemory({dataDir:dir,dshHome:dsh,agents:{get:()=>f.agent,list:()=>[f.agent]},getConfig:cfg,defineTool,getRetriever:()=>({localContext:()=>"【长期记忆｜统一检索】\n"+mem.activeMemories().map(x=>x.text).join("\n")})})
     mem.start();assert.equal(f.tools.length,7)
     assert.equal(f.tools[1].name,'dafeiyu_memory_recall');
     assert.deepEqual(f.tools.slice(2).map(x=>x.name),['dafeiyu_life_recall','dafeiyu_todo_list','dafeiyu_todo_add','dafeiyu_todo_update','dafeiyu_todo_execute']);assert.deepEqual(Object.keys(f.tools[1].parameters),['query'])
@@ -35,7 +35,7 @@ test('Claude/Anthropic 可见的长期记忆工具 schema 只有 ASCII 参数名
 test('身份级 remember 可保存、事实键自动淘汰旧值并按当前话题召回',async()=>{
   const dir=temp(),dsh=temp();const f=fakeAgent();
   try{
-    const mem=createLongTermMemory({dataDir:dir,dshHome:dsh,agents:{get:()=>f.agent,list:()=>[f.agent]},getConfig:cfg,defineTool})
+    const mem=createLongTermMemory({dataDir:dir,dshHome:dsh,agents:{get:()=>f.agent,list:()=>[f.agent]},getConfig:cfg,defineTool,getRetriever:()=>({localContext:()=>"【长期记忆｜统一检索】\n"+mem.activeMemories().map(x=>x.text).join("\n")})})
     mem.start();const tool=f.tools[0]
     let r=await tool.execute({text:'主人喜欢把大肥鱼叫白饭鱼',importance:1,tags:['主人','称呼'],fact_key:'主人.称呼'});assert.equal(r.ok,true)
     r=await tool.execute({text:'主人以后改叫我肥鱼队长',importance:1,tags:['主人','称呼'],fact_key:'主人.称呼'});assert.equal(r.ok,true)
@@ -48,7 +48,7 @@ test('身份级 remember 可保存、事实键自动淘汰旧值并按当前话�
 
 test('v2.4.81 B站新经历不再逐条直写长期记忆，旧入口只返回 deferred',()=>{
   const dir=temp(),dsh=temp();try{
-    const mem=createLongTermMemory({dataDir:dir,dshHome:dsh,agents:{get:()=>null,list:()=>[]},getConfig:cfg,defineTool})
+    const mem=createLongTermMemory({dataDir:dir,dshHome:dsh,agents:{get:()=>null,list:()=>[]},getConfig:cfg,defineTool,getRetriever:()=>({localContext:()=>"【长期记忆｜统一检索】\n"+mem.activeMemories().map(x=>x.text).join("\n")})})
     const ev=[{kind:'watch',day:'2026-10-27',time:'2026-10-27',bvid:'BV1234567890',title:'Claude 和 DeepSeek',note:'很好笑',key:'watch:x'}]
     const r=mem.importBiliEvents('abc',ev);assert.equal(r.added,0);assert.equal(r.deferred,true)
     assert.equal(mem.list('Claude').length,0)
@@ -68,7 +68,7 @@ test('可从原 dsh-fish-memory 同 Session JSON 合并旧记忆，不删除上�
   const dir=temp(),dsh=temp();try{
     mkdirSync(join(dsh,'fish-memory'),{recursive:true});const old=join(dsh,'fish-memory','abc.json')
     writeFileSync(old,JSON.stringify({version:2,policy:{baseHalfLifeDays:45},memories:[{id:'old1',text:'主人以前答应陪我看烟花',at:'2026-10-01T00:00:00.000Z',importance:.9,category:'event',tags:['主人'],事实键:'约定.烟花'}],traces:[],deleted:[]}), 'utf8')
-    const mem=createLongTermMemory({dataDir:dir,dshHome:dsh,agents:{get:()=>null,list:()=>[]},getConfig:cfg,defineTool})
+    const mem=createLongTermMemory({dataDir:dir,dshHome:dsh,agents:{get:()=>null,list:()=>[]},getConfig:cfg,defineTool,getRetriever:()=>({localContext:()=>"【长期记忆｜统一检索】\n"+mem.activeMemories().map(x=>x.text).join("\n")})})
     assert.equal(mem.status().externalFishMemoryAvailable,true);const r=mem.importExternal();assert.equal(r.ok,true);assert.equal(r.added,1);assert.equal(mem.status().policy.baseHalfLifeDays,30);assert.match(mem.list('烟花')[0].text,/烟花/);assert.match(readFileSync(old,'utf8'),/陪我看烟花/)
   }finally{rmSync(dir,{recursive:true,force:true});rmSync(dsh,{recursive:true,force:true})}
 })

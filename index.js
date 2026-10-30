@@ -617,7 +617,7 @@ function reportMeta() {
     if ('mainSessionMemoryMaxItems' in p) p.mainSessionMemoryMaxItems = Math.max(1,Math.min(12,Math.floor(Number(p.mainSessionMemoryMaxItems)||6)))
     if ('mainSessionMemoryMaxChars' in p) p.mainSessionMemoryMaxChars = Math.max(200,Math.min(3000,Math.floor(Number(p.mainSessionMemoryMaxChars)||800)))
     if ('mainSessionMemoryDailyQuota' in p) p.mainSessionMemoryDailyQuota = Math.max(1,Math.min(30,Math.floor(Number(p.mainSessionMemoryDailyQuota)||8)))
-    if ('mainSessionMemoryFactsMax' in p) p.mainSessionMemoryFactsMax = Math.max(0,Math.min(6,Math.floor(Number(p.mainSessionMemoryFactsMax)||2)))
+    if ('mainSessionMemoryFactsMax' in p) { const n=Number(p.mainSessionMemoryFactsMax); p.mainSessionMemoryFactsMax=Number.isFinite(n)?Math.max(0,Math.min(6,Math.floor(n))):2 }
     if ('reportLevel' in p) p.reportLevel = ['full', 'brief', 'off'].includes(String(p.reportLevel)) ? String(p.reportLevel) : 'full'
     for (const k of ['dailyDynamicModelProvider','dailyDynamicModelId','dailyDynamicReasoningEffort','videoModelProvider','videoModelId','videoReasoningEffort','interactionModelProvider','interactionModelId','interactionReasoningEffort','memeRulesModelProvider','memeRulesModelId','memeRulesReasoningEffort']) if(k in p) p[k]=String(p[k]||'').trim().slice(0,160).replace(/[\r\n\0]/g,'')
     if ('personaPrompt' in p) p.personaPrompt = String(p.personaPrompt || '').slice(0, 8000)
@@ -3523,6 +3523,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     dataDir:stateDir,getConfig:()=>{refreshCfg();return cfg},getEmotion:()=>emotionalState.snapshot(),
     getRecentEvents:()=>lifeMemory?.recall({query:'',maxItems:12,maxChars:2400,domain:'main-session'}).map(x=>({kind:x.kind,time:x.at,summary:x.summary}))||[],
     getMemories:()=>longTermMemory.activeMemories(),
+    getEvidenceRows:(rows)=>lifeMemory?.emotionEvidence(rows)||[],
     invokeModel:(prompt,maxChars)=>invokeInteractionPrompt(prompt,maxChars,{modelRoute:'interaction'}),
     canMain:()=>mainSessionBridge.canShare(),
     sendMain:({text})=>mainSessionBridge.shareRecall(text),

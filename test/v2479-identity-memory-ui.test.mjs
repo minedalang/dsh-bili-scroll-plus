@@ -49,7 +49,7 @@ test('收到主人消息本身不再直接写记忆；同一次模型回复通�
 test('切换主 Session 后读取同一份身份记忆；召回问题不能反向污染记忆',async()=>{
   const dir=temp(),a=fakeAgent('room-a'),b=fakeAgent('room-b');let room='room-a'
   try{
-    const mem=createLongTermMemory({dataDir:dir,dshHome:dir,agents:{get:id=>id.replace(/^session-/,'')==='room-a'?a.agent:b.agent,list:()=>[a.agent,b.agent]},getConfig:()=>config(room),defineTool})
+    const mem=createLongTermMemory({dataDir:dir,dshHome:dir,agents:{get:id=>id.replace(/^session-/,'')==='room-a'?a.agent:b.agent,list:()=>[a.agent,b.agent]},getConfig:()=>config(room),defineTool,getRetriever:()=>({localContext:()=>mem.activeMemories().map(x=>x.text).join("\n")})})
     mem.start();a.handlers['agent/inbox/inserted']({message:{content:[{type:'text',text:'我现在最喜欢喝可乐。'}]}})
     let r=await a.tools[0].execute({text:'主人目前最喜欢喝「可乐」。',importance:.98,tags:['主人','饮料'],fact_key:'主人.偏好.饮料'});assert.equal(r.ok,true)
     room='room-b';await sleep(900);assert.equal(typeof b.handlers['agent/inbox/inserted'],'function')
