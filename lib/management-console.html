@@ -182,36 +182,36 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 #panel-life .emotion-trend .trend-area{fill:color-mix(in srgb,var(--ui-indigo) 10%,transparent)}
 #panel-life .emotion-trend .trend-dot{fill:var(--panel);stroke:var(--ui-indigo);stroke-width:2}
 @keyframes trend-draw{from{stroke-dashoffset:420}to{stroke-dashoffset:0}}
-#panel-life .recall-overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px;margin:12px 0}
-#panel-life .recall-summary{padding:11px 13px;border:1px solid var(--stroke);border-radius:12px;background:var(--panel);border-top:3px solid var(--ui-indigo)}
-#panel-life .recall-summary[data-tone=quiet]{border-top-color:var(--ui-amber)}
-#panel-life .recall-summary[data-tone=share]{border-top-color:var(--ui-teal)}
-#panel-life .recall-summary strong{display:block;font-size:19px;font-variant-numeric:tabular-nums}
-#panel-life .recall-summary span{color:var(--muted);font-size:12px}
-#panel-life .recall-diagnostics{max-height:340px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:2px 8px 3px 0}
-#panel-life .recall-event{display:grid;grid-template-columns:9px minmax(0,1fr);gap:12px;position:relative;background:var(--panel)}
-#panel-life .recall-event:before{content:"";width:9px;height:9px;margin-top:7px;border-radius:50%;background:var(--ui-amber);box-shadow:0 0 0 4px color-mix(in srgb,var(--ui-amber) 13%,transparent)}
-#panel-life .recall-event[data-tone=share]:before{background:var(--ui-teal);box-shadow:0 0 0 4px color-mix(in srgb,var(--ui-teal) 13%,transparent)}
-#panel-life .recall-event[data-tone=error]:before{background:var(--bad)}
-#panel-life .recall-event .event-heading{display:flex;justify-content:space-between;gap:9px;flex-wrap:wrap;align-items:center}
-#panel-life .recall-event time{font-size:12px;color:var(--muted)}
-#panel-life .recall-event p{margin:5px 0 0;font-size:13px}
-#panel-life .recall-event details{margin-top:6px;color:var(--muted);font-size:12px}
-#panel-life .recall-event summary{cursor:pointer;width:max-content}
+#panel-social .recall-overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px;margin:12px 0}
+#panel-social .recall-summary{padding:11px 13px;border:1px solid var(--stroke);border-radius:12px;background:var(--panel);border-top:3px solid var(--ui-indigo)}
+#panel-social .recall-summary[data-tone=quiet]{border-top-color:var(--ui-amber)}
+#panel-social .recall-summary[data-tone=share]{border-top-color:var(--ui-teal)}
+#panel-social .recall-summary strong{display:block;font-size:19px;font-variant-numeric:tabular-nums}
+#panel-social .recall-summary span{color:var(--muted);font-size:12px}
+#panel-social .recall-diagnostics{max-height:340px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:2px 8px 3px 0}
+#panel-social .recall-event{display:grid;grid-template-columns:9px minmax(0,1fr);gap:12px;position:relative;background:var(--panel)}
+#panel-social .recall-event:before{content:"";width:9px;height:9px;margin-top:7px;border-radius:50%;background:var(--ui-amber);box-shadow:0 0 0 4px color-mix(in srgb,var(--ui-amber) 13%,transparent)}
+#panel-social .recall-event[data-tone=share]:before{background:var(--ui-teal);box-shadow:0 0 0 4px color-mix(in srgb,var(--ui-teal) 13%,transparent)}
+#panel-social .recall-event[data-tone=error]:before{background:var(--bad)}
+#panel-social .recall-event .event-heading{display:flex;justify-content:space-between;gap:9px;flex-wrap:wrap;align-items:center}
+#panel-social .recall-event time{font-size:12px;color:var(--muted)}
+#panel-social .recall-event p{margin:5px 0 0;font-size:13px}
+#panel-social .recall-event details{margin-top:6px;color:var(--muted);font-size:12px}
+#panel-social .recall-event summary{cursor:pointer;width:max-content}
 @media(max-width:560px){#panel-life .emotion-card.mood-atmosphere{padding-right:104px}#panel-life .mood-orbit{right:7px;width:80px;height:80px}}
 @media(prefers-reduced-motion:reduce){#panel-life .mood-orbit::before,#panel-life .mood-orbit::after,#panel-life .emotion-trend .trend-line{animation:none}#panel-life .emotion-meter span{transition:none}}
 
-#panel-life .recall-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:13px 0}
-#panel-life .recall-step{min-width:0;text-align:center;padding:10px 6px;border:1px solid var(--stroke);border-radius:12px;background:var(--panel);transition:border-color .25s,background .25s,transform .25s}
-#panel-life .recall-step .step-icon{display:block;font-size:20px;margin-bottom:3px}
-#panel-life .recall-step strong{display:block;font-size:12px;line-height:1.5}
-#panel-life .recall-step small{color:var(--muted);font-size:11px}
-#panel-life .recall-step.is-current{border-color:var(--ui-teal);background:color-mix(in srgb,var(--ui-teal) 9%,var(--panel));box-shadow:0 3px 13px color-mix(in srgb,var(--ui-teal) 12%,transparent)}
-#panel-life .recall-step.is-current .step-icon{animation:mood-breathe 3s ease-in-out infinite}
+#panel-social .recall-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:13px 0}
+#panel-social .recall-step{min-width:0;text-align:center;padding:10px 6px;border:1px solid var(--stroke);border-radius:12px;background:var(--panel);transition:border-color .25s,background .25s,transform .25s}
+#panel-social .recall-step .step-icon{display:block;font-size:20px;margin-bottom:3px}
+#panel-social .recall-step strong{display:block;font-size:12px;line-height:1.5}
+#panel-social .recall-step small{color:var(--muted);font-size:11px}
+#panel-social .recall-step.is-current{border-color:var(--ui-teal);background:color-mix(in srgb,var(--ui-teal) 9%,var(--panel));box-shadow:0 3px 13px color-mix(in srgb,var(--ui-teal) 12%,transparent)}
+#panel-social .recall-step.is-current .step-icon{animation:mood-breathe 3s ease-in-out infinite}
 #life-timeline-list .record{position:relative;margin-left:13px;border-left:2px solid color-mix(in srgb,var(--ui-indigo) 48%,var(--stroke));padding-left:18px}
 #life-timeline-list .record::before{content:"";position:absolute;left:-6px;top:16px;width:10px;height:10px;border-radius:50%;background:var(--ui-indigo);box-shadow:0 0 0 4px color-mix(in srgb,var(--ui-indigo) 12%,transparent)}
-@media(max-width:550px){#panel-life .recall-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(prefers-reduced-motion:reduce){#panel-life .recall-step.is-current .step-icon{animation:none}}
+@media(max-width:550px){#panel-social .recall-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){#panel-social .recall-step.is-current .step-icon{animation:none}}
 
 /* dev.13: 记忆流向可视化，展示真实统计，不模拟虚假的新记忆。 */
 #panel-life .memory-flow-panel{border:1px solid var(--stroke);border-radius:16px;padding:18px;margin-top:13px;background:var(--panel)}
@@ -285,6 +285,29 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 #panel-social #social-emotion-authorization{margin:14px 0}
 #panel-social .emotion-options{padding-top:8px}
 @media(max-width:620px){.home-overview{grid-template-columns:1fr}.context-jump a{flex:1;text-align:center}}
+
+/* dev.15 UI regression fix: 情绪回忆评估迁移至社交页后样式与控件一起生效。 */
+#panel-social .recall-flow{min-width:0}
+#panel-social .recall-summary{min-width:0}
+#panel-social .recall-diagnostics{min-height:70px}
+#panel-social .recall-step.is-current{outline:1px solid color-mix(in srgb,var(--ui-teal) 32%,transparent)}
+#panel-social .social-advanced{margin:12px 0;border-radius:12px}
+#panel-social .social-advanced>summary{cursor:pointer;padding:4px 0;font-size:14px;font-weight:700;color:var(--ink)}
+#panel-social .social-advanced[open]>summary{margin-bottom:12px}
+#panel-social .friend-directory-card{min-width:0;padding:15px 18px;border:1px solid var(--stroke);border-left:4px solid color-mix(in srgb,var(--ui-teal) 65%,var(--stroke));background:var(--panel)}
+#panel-social .friend-directory-card.is-owner{border:2px solid #9477d9;border-left:6px solid #9365d5;background:linear-gradient(110deg,color-mix(in srgb,#9d74db 12%,var(--panel)),color-mix(in srgb,#db98bd 8%,var(--panel)));box-shadow:0 5px 19px rgba(122,75,174,.12)}
+#panel-social .friend-directory-heading{display:flex;justify-content:space-between;align-items:start;gap:10px;flex-wrap:wrap}
+#panel-social .friend-directory-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;overflow-wrap:anywhere}
+#panel-social .friend-role-tag{border-radius:999px;background:var(--tint);border:1px solid var(--stroke);font-size:11px;color:var(--muted);padding:3px 8px;font-weight:700}
+#panel-social .friend-directory-card.is-owner .friend-role-tag{color:#63379c;border:1px solid #c6a6ed;background:#efe4ff}
+#panel-social .friend-directory-status{font-size:12px;color:var(--muted);margin:6px 0 10px}
+#panel-social .friend-editor{border-top:1px solid var(--stroke);margin-top:12px;padding-top:10px}
+#panel-social .friend-editor>summary{font-size:13px;cursor:pointer;color:var(--action);font-weight:700;padding:5px 2px;list-style:disclosure-closed}
+#panel-social .friend-editor[open]>summary{margin-bottom:13px;list-style:disclosure-open}
+#panel-social .friend-editor .settings-section{box-shadow:none}
+#panel-social #friend-directory-editor{display:grid;grid-template-columns:1fr;gap:10px}
+@media(max-width:550px){#panel-social .friend-directory-card{padding:13px}#panel-social .friend-directory-heading{align-items:center}}
+@media(prefers-color-scheme:dark){#panel-social .friend-directory-card.is-owner .friend-role-tag{background:#46305e;border-color:#9477d9;color:#f0dcff}}
 </style>
 <script defer src="/api/bili-duty/manage.js"></script>
 </head>
@@ -598,34 +621,34 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 </section>
 <section id="panel-social" hidden>
 <div class="social-hero"><h2>🐳 社交互动</h2><p>好友关系、社交意愿、主动回访与主人远程授权在这里统一管理。读取、草稿与公开操作分别授权；关闭某个入口不会改变其他权限。</p>
-<p><strong>🐟 双域意愿系统（dev.9）</strong>：主 Session 是执行域；B站是生活域。即使是主人在 B站私信或 @ 提请求，大肥鱼也会先看自己的模拟情绪、活力、社交意愿与重复请求情况，可以答应、拖延或拒绝；温柔地再商量可能改变她的选择，但绝不能绕过权限、额度或安全检查。判定证据保存在本地 <code>dual-context-agency.json</code>，不保存私信正文。</p><nav class="social-jump" aria-label="社交功能导航"><a href="#unified-friends">好友与意愿</a><a href="#social-outreach-section">主动回访</a><a href="#owner-dm-control-section">主人私信 Agent</a><a href="#social-owner-comment">主人评论 Agent</a></nav></div>
+<p><strong>🐟 双域意愿系统（dev.9）</strong>：主 Session 是执行域；B站是生活域。即使是主人在 B站私信或 @ 提请求，大肥鱼也会先看自己的模拟情绪、活力、社交意愿与重复请求情况，可以答应、拖延或拒绝；温柔地再商量可能改变她的选择，但绝不能绕过权限、额度或安全检查。判定证据保存在本地 <code>dual-context-agency.json</code>，不保存私信正文。</p></div>
 <nav class="context-jump" aria-label="社交互动分区"><a href="#unified-friends">好友关系</a><a href="#social-outreach-section">主动回访</a><a href="#owner-dm-control-section">主人私信授权</a><a href="#social-owner-comment">主人公开评论</a><a href="#social-emotion-authorization">情绪主动分享</a></nav>
 <div class="settings-stack">
 <div class="settings-section" id="unified-friends">
 <h4>🐳 好友关系与互动 · 统一名册</h4>
 <p class="muted">只维护一份 UID 好友名册，统一管理私信往来、主动推荐方式、被 @ 意愿和人物关系。<strong>默认推荐渠道为私信</strong>，公开 @ 仅在你为该好友选择后才有资格被考虑。原有的三套名单会兼容合并，不会自动替已有好友增加权限。昵称只是备注；勾选唯一授权主人会直接更改主人 UID，具体点赞与公开发布仍需单独开启权限。</p>
-<div class="inset"><h4>🌱 社会认知 · 候选灵感与好友邀请</h4>
+<details class="inset social-advanced"><summary>🌱 社会认知 · 候选灵感与好友邀请</summary>
 <p class="muted">陌生人的私信视频心愿只是短期探索灵感，不回信、不建陌生人画像、不产生任务或公开 @；好友分享 BV / 通过 @ 请求“有空看看”，会形成可到期的只读观看邀请。大肥鱼好奇心充足时可选择审阅，<strong>默认不自动查看，不保证已观看</strong>。</p>
 <label class="checkline"><input id="social-stranger-inspiration" type="checkbox">允许读取陌生人私信里的短期视频灵感（默认关闭）</label>
 <label class="checkline"><input id="social-friend-invitations" type="checkbox">允许记录可信好友的只读视频邀请（默认关闭）</label>
 <label class="checkline"><input id="social-invitation-auto" type="checkbox">当好奇心充足时，最多每 4 小时考虑自动只读查看一条（默认关闭）</label>
 <div class="toolbar"><button id="social-dev5-save" type="button" class="primary">保存社会认知权限</button><button id="social-dev5-refresh" type="button">刷新意愿状态</button><span id="social-dev5-status" class="muted">尚未加载</span></div>
-<div id="social-dev5-records" class="records records-scroll"></div></div>
+<div id="social-dev5-records" class="records records-scroll"></div></details>
 <div class="inset"><h4>好友意愿监听</h4>
 <label class="checkline"><input id="friend-at-feedback-enabled" type="checkbox">只读收取白名单好友的 @ 意愿（默认关闭）</label>
 <p class="muted">开启后可记录他们通过 @ 提出的“别推这类”“多推某类”等明确反馈，<strong>不会因为收取意见而公开回复</strong>。公开回复仍需在「最近评论」页面单独开启，且遵守额度；首次读取只建立历史基线，不重放旧通知。</p></div>
-<div class="inset"><h4>公开 @ 的额外策略（仅对选用公开 @ 渠道的好友生效）</h4>
+<details class="inset social-advanced"><summary>公开 @ 的额外策略（仅对选用公开 @ 渠道的好友生效）</summary>
 <label for="friends-mode">何时考虑公开 @</label><select id="friends-mode"><option value="off">关闭公开 @（推荐）</option><option value="ai_select">AI 根据真实内容选择个别好友</option><option value="ai">AI 判断是否 @ 所有允许的好友</option><option value="always">每次 @ 全部允许好友（容易打扰，不推荐）</option></select>
-<p class="muted">私信推荐由「社交互动 → 主动回访」的独立授权、草稿、额度与冷却控制；此处的公开 @ 策略不会替代私信推荐，也不会直接发送消息。</p></div>
+<p class="muted">私信推荐由「社交互动 → 主动回访」的独立授权、草稿、额度与冷却控制；此处的公开 @ 策略不会替代私信推荐，也不会直接发送消息。</p></details>
 <div class="fields"><div><label for="friend-new-uid">B站 UID（必填）</label><input id="friend-new-uid" inputmode="numeric" placeholder="210228238"></div><div><label for="friend-new-name">昵称备注（可留空）</label><input id="friend-new-name" maxlength="40" placeholder="长条动物"></div></div>
 <div class="toolbar" style="margin-top:12px"><button type="button" id="friend-add">加入名册</button><span class="muted">添加后记得点击底部保存</span></div>
 <p id="friend-owner-status" class="muted">当前授权主人 UID：读取中…</p>
 <p class="muted">管理员只在本地好友名册中勾选一位「唯一授权主人」。保存后同步主人私信、主人公开评论及回忆私信使用的 UID；取消后保存即撤销。不能通过 B站消息改变这个勾选。</p>
 <div id="friend-directory-editor" class="settings-stack"></div>
-<div class="inset"><h4>好友兴趣变化 · 仅记录白名单 UID 自己明确说出的喜好</h4>
+<details class="inset social-advanced"><summary>好友兴趣变化 · 仅记录白名单 UID 自己明确说出的喜好</summary>
 <p class="muted">初始好友画像不自动覆盖。真实私信或评论中的“我喜欢/不喜欢…”“别再给我推这些”“多推点……”会形成针对该 UID 的兴趣观察。若只说“这些”，只有在 B 站实际视频标题能明确确认类别时才记录对应主题；否则只阻止重复推荐同一 BV。仅保存精简主题、证据编号与拒绝重复推荐的 BV，不保存整条原话。非白名单用户不建立画像。<strong>这些观察只影响对这位好友的后续 @ 邀请与获授权的主动分享，不改变大肥鱼自己的兴趣、全局选片或其他好友的推荐，也不会对外展示好友画像。</strong></p>
 <div class="toolbar"><button id="friend-learning-refresh" type="button">刷新兴趣观察</button><span id="friend-learning-status" class="muted">尚未读取</span></div>
-<div id="friend-learning-list" class="records records-scroll"></div></div>
+<div id="friend-learning-list" class="records records-scroll"></div></details>
 <div class="toolbar" style="margin-top:12px"><button id="friend-save-all" class="primary">保存名册、权限及画像</button></div>
 </div>
 <div id="social-outreach-section" class="card"><h4>主动回访 · 真正看过后才考虑联系</h4>
@@ -681,7 +704,9 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p id="owner-comment-agent-status" class="muted">Agent 状态尚未读取。</p>
 <div class="toolbar"><button type="button" class="primary" id="owner-comment-settings-save">保存主人公开评论权限</button><button type="button" id="owner-comment-settings-reload">重新读取</button></div>
 </div>
-<div id="social-emotion-authorization" class="card"><h3>💗 情绪驱动的自主分享权限</h3><p class="muted">发送私信与主动发起主 Session 消息都需要独立授权，默认关闭。角色心情详情仍在「人生记忆」中查看。</p><details class="life-subdetails emotion-options"><summary>💌 自主回忆与主动分享设置（默认关闭）</summary><div class="inset" style="margin-top:18px"><h4>💌 情绪驱动的自主回忆与分享 · 让过去自然浮现</h4>
+<div id="social-emotion-authorization" class="card"><h3>💗 情绪驱动的自主分享权限</h3><p class="muted">发送私信与主动发起主 Session 消息都需要独立授权，默认关闭。角色心情详情仍在「人生记忆」中查看。</p>
+<p id="emotion-recall-status" class="muted" role="status">尚未读取自主回忆状态</p><div class="inset"><h4>🫧 最近回忆评估 · 为什么想起或保持安静</h4><p class="muted">看看大肥鱼最近是在等待情绪、寻找有证据的回忆，还是决定主动分享。不会展示私信正文或私人聊天。</p><div id="emotion-recall-flow" class="recall-flow" role="group" aria-label="情绪触发回忆的进展"></div><div id="emotion-recall-overview" class="recall-overview" aria-live="polite"></div><div id="emotion-recall-diagnostics" class="records records-scroll recall-diagnostics" aria-label="最近回忆评估记录，可滚动"><p class="muted">尚无诊断记录。</p></div></div>
+<details class="life-subdetails emotion-options"><summary>💌 自主回忆与主动分享设置（默认关闭）</summary><div class="inset" style="margin-top:18px"><h4>💌 情绪驱动的自主回忆与分享 · 让过去自然浮现</h4>
 <p class="muted">例如今天再次刷到一个以前看过的系列，开心或怀念的模拟情绪变化，让大肥鱼想起有真实 BV 证据的旧经历；它可以决定沉默，也可以在已授权的渠道主动找主人聊聊。不是每次情绪波动都会分享。<strong>总开关与两个渠道默认全部关闭。</strong></p>
 <label class="checkline"><input type="checkbox" id="emotion-recall-enabled">允许情绪触发自主回忆（需同时开启长期记忆）</label>
 <div class="fields"><div><label class="checkline"><input id="emotion-recall-main" type="checkbox">允许在指定 DSH 主 Session 主动开口</label><p class="muted">需要先在「告诉主 Session」选好会话，并保持目标会话在线。</p></div>
@@ -699,7 +724,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label for="emotion-recall-end">每日最晚结束（1–24 时）</label><input id="emotion-recall-end" type="number" min="1" max="24" value="22"></div></div>
 <p class="muted">模型只能从核验的旧记忆 ID 中决定是否分享；正文根据真实新旧经历模板生成，不接受模型编造的事实。默认每天最多一次、24 小时内不重复评估，夜间免打扰。B站消息为真实对外发送行为。</p>
 <div class="toolbar"><button id="emotion-recall-save" class="life-action life-green">保存自主回忆权限</button><button id="emotion-recall-preview" class="life-action life-sky">只预览评估（不发送）</button></div>
-<p id="emotion-recall-status" class="muted" role="status">尚未读取自主回忆状态</p><div class="inset"><h4>🫧 最近回忆评估 · 为什么想起或保持安静</h4><p class="muted">看看大肥鱼最近是在等待情绪、寻找有证据的回忆，还是决定主动分享。不会展示私信正文或私人聊天。</p><div id="emotion-recall-flow" class="recall-flow" role="group" aria-label="情绪触发回忆的进展"></div><div id="emotion-recall-overview" class="recall-overview" aria-live="polite"></div><div id="emotion-recall-diagnostics" class="records records-scroll recall-diagnostics" aria-label="最近回忆评估记录，可滚动"><p class="muted">尚无诊断记录。</p></div></div></div></details></div>
+</div></details></div>
 </div>
 </section>
 <section id="panel-reports" hidden>
