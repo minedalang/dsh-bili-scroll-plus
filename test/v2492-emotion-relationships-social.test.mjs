@@ -75,8 +75,31 @@ test('生活时间线只包含真实公开经历、心情类别和关系阶段�
   comments:[{bvid:BV,time:'2026-10-27T12:00:00Z',kind:'top',snippet:'我说了句公开评论',rpid:'123456'}],
   emotionHistory:[{at:'2026-10-27T13:00:00Z',mood:'curious',label:'好奇',source:'dm'}],
   relationshipRows:[{uid:'11111',name:'小A',history:[{at:Date.parse('2026-10-27T14:00:00Z'),stage:'known'}]}]})
- assert.equal(rows.length,4);assert.ok(rows.some(x=>x.type==='video'));assert.ok(rows.some(x=>x.type==='comment'));assert.ok(rows.some(x=>x.type==='emotion'));assert.ok(rows.some(x=>x.type==='relationship'))
- assert.ok(!rows.some(x=>x.title.includes('跳过的视频')));assert.ok(!JSON.stringify(rows).includes('私信正文'))
+ assert.equal(rows.length,5);assert.ok(rows.some(x=>x.type==='video'&&x.label==='入选视频'));assert.ok(rows.some(x=>x.type==='comment'));assert.ok(rows.some(x=>x.type==='emotion'));assert.ok(rows.some(x=>x.type==='relationship'))
+ assert.ok(rows.some(x=>x.title.includes('跳过的视频')&&x.label.includes('未标记入选')));assert.ok(!JSON.stringify(rows).includes('私信正文'))
+})
+
+test('生活时间线即使关闭公开评论也能展示已归档的视频探索，明确区分未入选和主人指定查看',()=>{
+ const now=Date.parse('2026-10-30T12:00:00Z')
+ const rows=buildLifeTimeline({now,days:7,comments:[],emotionHistory:[],watched:[
+  {day:'2026-10-29',bvid:BV,title:'入选的猫咪视频',picked:true,status:'挑中·值得看'},
+  {day:'2026-10-29',bvid:'BV19SJi6VEj2',title:'路过的生活视频',picked:false,status:'跳过（视频归档）'},
+  {day:'2026-10-30',bvid:'BV1c8nK6zEGV',title:'主人指定查看',picked:false,status:'主 Session 指定观看'},
+  {day:'2026-10-29',bvid:'INVALID',title:'无效记录',picked:true},
+ ]})
+ assert.equal(rows.length,3)
+ assert.ok(rows.some(x=>x.type==='video'&&x.label==='入选视频'))
+ assert.ok(rows.some(x=>x.type==='video'&&x.label==='探索视频 · 未入选'))
+ assert.ok(rows.some(x=>x.type==='video'&&x.label==='主人指定查看视频'))
+ assert.ok(rows.every(x=>x.url?.startsWith('https://www.bilibili.com/video/')))
+})
+
+test('评论比视频多时，生活时间线仍给有来源的视频记录保留展示位置',()=>{
+ const day='2026-10-29',now=Date.parse('2026-10-30T12:00:00Z')
+ const comments=Array.from({length:80},(_,i)=>({bvid:BV,time:`2026-10-29T18:${String(Math.floor(i/60)).padStart(2,'0')}:${String(i%60).padStart(2,'0')}Z`,kind:'top',rpid:String(100000+i),snippet:'已公开评论'}))
+ const rows=buildLifeTimeline({now,days:7,limit:30,watched:[{day,bvid:'BV1c8nK6zEGV',title:'真实入选视频',picked:true}],comments})
+ assert.equal(rows.length,30)
+ assert.ok(rows.some(row=>row.type==='video'&&row.title==='真实入选视频'))
 })
 
 test('自主分享只在单独开关开启、视频真实入选且匹配白名单好友兴趣时生成草稿',async()=>{
