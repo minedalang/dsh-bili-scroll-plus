@@ -3532,7 +3532,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
   // 决策模型没有写入工具；实际发送只能通过这里固定的主人目标和宿主 Session。
   emotionRecall=createEmotionRecall({
     dataDir:stateDir,getConfig:()=>{refreshCfg();return cfg},getEmotion:()=>emotionalState.snapshot(),
-    getRecentEvents:()=>lifeMemory?.recall({query:'',maxItems:12,maxChars:2400,domain:'main-session'}).map(x=>({kind:x.kind,time:x.at,summary:x.summary}))||[],
+    getRecentEvents:()=>lifeMemory?.recentEmotionEvents(120)||[],
     getMemories:()=>longTermMemory.activeMemories(),
     getEvidenceRows:(rows)=>lifeMemory?.emotionEvidence(rows)||[],
     invokeModel:(prompt,maxChars)=>invokeInteractionPrompt(prompt,maxChars,{modelRoute:'interaction'}),
@@ -3568,11 +3568,13 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
   ownerTodoReviewTimer.unref?.()
   ctx.effect(()=>()=>clearInterval(ownerTodoReviewTimer),'bili-duty: 可选自主待办择机检查')
 
-  // v2.4.86: 生活动态是独立内容，不从评论自动复制；只使用公开已选视频的真实证据。
+  // 生活动态仅使用可衰减的公开经历证据：视频和鱼鱼本人已确认发表的公开文字。
   // 公开发布与模型生成严格分离：生成模型不挂 B站发送工具，实际发布由受限 Python 路径执行。
   dailyDynamic=createDailyDynamic({
     dataDir:stateDir,getConfig:()=>{refreshCfg();return cfg},
-    getPublicVideos:()=>lifeMemory?.publicVideoEvidence(20)||[],
+    getPublicVideos:()=>lifeMemory?.publicVideoEvidence(40)||[],
+    getPublicSocial:()=>lifeMemory?.publicSocialEvidence(24)||[],
+    getEmotion:()=>emotionalState.snapshot(),
     getInterests:()=>lifeReflection?.interests?.()||[],
     invokeModel:(prompt,maxChars)=>invokeInteractionPrompt(prompt,maxChars,{modelRoute:'dailyDynamic'}),
     publish:(text,limit)=>new Promise((resolve,reject)=>{

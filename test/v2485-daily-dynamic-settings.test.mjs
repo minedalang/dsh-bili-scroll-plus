@@ -25,7 +25,7 @@ test('管理中心集中配置全部 AI 模型、辅助开关、B站互动与每
   const html=read('lib/management-console.html'),js=read('lib/management-console.js'), host=read('index.js')
   for(const x of ['panel-models','models-video','models-interaction','models-vision','models-memory','models-vision-mode','models-vision-enabled','panel-bili','bili-dm-mode','bili-dm-uid','bili-report-level','bili-transcribe','bili-comment-memes','bili-asr-model','meme-auto-enabled','quota-daily-dynamic','quota-like-daily']) assert.ok(html.includes('id="'+x+'"'),x)
   for(const x of ['visionMode','visionEnabled','dmMode','dmUid','reportLevel','asrModel','commentMemesEnabled','mainSessionMemoryModelId','dailyDynamicDailyLimit','autoVideoLikeDailyLimit']) assert.ok(js.includes(x)||host.includes(x),x)
-  assert.match(host,/"?2\.4\.86"?/)
+  assert.match(host,/createDailyDynamic/)
 })
 test('生活动态不接受未在真实选片记录中的 BV 或不安全链接',()=>{
   assert.deepEqual(validateDailyDraft({should_post:false},[{bvid:BV}]).skip,true)
