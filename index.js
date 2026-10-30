@@ -2781,7 +2781,9 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     // episodes. Do not give DMs, owner-private memory, or another UID's history
     // to the shared model. The batcher isolates users before assembling prompts.
     prepareMemoryContexts: async(batch)=>batch.map(item=>{
-      if(item.kind!=='comment'||!/^[1-9]\d{0,19}$/.test(String(item.uid||'')))return ''
+      // A DM can remember this same sender's PUBLIC comment encounters too;
+      // never load private DM transcripts or a different UID from the archive.
+      if(!['comment','dm'].includes(item.kind)||!/^[1-9]\d{0,19}$/.test(String(item.uid||'')))return ''
       return safeSocialMemoryContext([item.text,item.context].filter(Boolean).join(' '),item.uid,
         socialTier(item.uid,cfg.dmOwnerUid,cfg.friendDirectory),
         item.incomingRpid&&item.bvid?`social:${item.uid}:${item.bvid}:${item.incomingRpid}`:'')
@@ -3430,10 +3432,11 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     logger: {warn:(m)=>log('⚠️ '+m),info:(m)=>log(m)},
   })
   lifeMemory=createLifeMemoryGateway({dataDir:stateDir,getConfig:()=>cfg,logger:{warn:m=>log('人生记忆：'+m)}})
+  ctx.effect(()=>()=>lifeMemory?.close(),'bili-duty: 只读内存 FTS 关闭')
   memoryRetriever=createMemoryRetriever({
     getMemories:()=>[...longTermMemory.activeMemories(),...listLegacyLifeFacts(stateDir),...interestMemoryRows(stateDir)],getConfig:()=>cfg,
     invokeModel:(prompt,maxChars)=>invokeMemoryPrompt(prompt,maxChars),
-    getEpisodes:(query,options)=>lifeMemory?.recall({query,domain:options?.domain||'main-session',role:options?.role||'owner',actorUid:options?.actorUid||'',maxItems:options?.maxItems||6,maxChars:options?.maxChars||800})||[],
+    getEpisodes:(query,options)=>lifeMemory?.recall({query,domain:options?.domain||'main-session',role:options?.role||'owner',actorUid:options?.actorUid||'',excludeEventKey:options?.excludeEventKey||'',kinds:options?.kinds||null,maxItems:options?.maxItems||6,maxChars:options?.maxChars||800})||[],
     getEpisodeCandidates:(options)=>lifeMemory?.semanticCandidates(options)||[],
     getDailyUsage:()=>{const usage=readModelTaskUsage(stateDir);return {day:usage.day,used:usage.tasks.memory.today}},
     logger:{warn:m=>log('⚠️ '+m)},

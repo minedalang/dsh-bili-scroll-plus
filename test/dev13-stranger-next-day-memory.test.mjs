@@ -98,7 +98,7 @@ test('真实社交记忆注入普通评论生成器：不额外调用记忆模�
  const index=readFileSync(new URL('../index.js',import.meta.url),'utf8')
  const interact=readFileSync(new URL('../lib/comment-interact.mjs',import.meta.url),'utf8')
  assert.match(index,/prepareMemoryContexts: async\(batch\)=>batch\.map\(item=>/)
- assert.match(index,/if\(item\.kind!=='comment'\|\|!\/\^\[1-9\]/)
+ assert.match(index,/if\(!\['comment','dm'\]\.includes\(item\.kind\)\|\|!\/\^\[1-9\]/)
  assert.match(index,/item\.incomingRpid&&item\.bvid/)
  assert.match(index,/recordSocialReply\(\{actorUid:req\.uid,bvid:req\.bvid,incomingRpid:req\.rpid,text:req\.text\}\)/)
  assert.match(interact,/rpid:x\.rpid,memeSourceText/)
