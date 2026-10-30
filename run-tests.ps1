@@ -107,6 +107,25 @@ if (-not $pythonPath) {
     }
 }
 
+# Make the resolved interpreter available to Node.js SQLite tests.
+# Those tests use process.env.PYTHON || 'python3'.
+if (-not $pythonPath -and $env:PYTHON -and (Test-Path -LiteralPath $env:PYTHON -PathType Leaf)) {
+    $pythonPath = $env:PYTHON
+}
+if ($pythonPath) {
+    $env:PYTHON = $pythonPath
+    Write-Host "Node.js 测试使用 Python：$env:PYTHON" -ForegroundColor Cyan
+} else {
+    Write-Host "警告：未找到 Python，Node.js SQLite 测试可能失败。" -ForegroundColor Yellow
+}
+
+# Force UTF-8 for every Python subprocess in both Node.js and Python tests.
+# Windows would otherwise use the local ANSI code page (often GBK), while
+# Node.js decodes child stdout as UTF-8 and some Python tests read UTF-8 files.
+$env:PYTHONUTF8 = "1"
+$env:PYTHONIOENCODING = "utf-8"
+Write-Host "Python 测试编码：UTF-8 (PYTHONUTF8=1, PYTHONIOENCODING=utf-8)" -ForegroundColor Cyan
+
 # 1. Focused regression test.
 Invoke-NativeStep -Name "白名单好友推荐偏好专项测试" `
     -FilePath $nodePath `
