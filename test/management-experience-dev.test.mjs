@@ -10,7 +10,7 @@ const text='今天重新看到一段有趣的烹饪视频，才发现自己依�
 const src=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8')
 const make=dir=>createDailyDynamic({dataDir:dir,getConfig:()=>({masterEnabled:true,dailyDynamicEnabled:true,dailyDynamicDailyLimit:2,dailyDynamicDraftOnly:true}),
   getPublicVideos:()=>[{bvid:BV,title:'料理记录'}],
-  invokeModel:async()=>JSON.stringify({should_post:true,text,source_bvids:[BV]}),
+  invokeModel:async()=>JSON.stringify({should_post:true,text,source_bvids:[BV],evidence_claims:[{type:'selected_video',bvid:BV}]}),
   publish:async()=>({status:'api_accepted_unverified'})})
 
 test('未发布草稿可删除、可重新生成；已发布记录不可删除且保留事实账本',async()=>{

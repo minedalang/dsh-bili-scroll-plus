@@ -48,9 +48,9 @@ test('拒绝目录穿越、符号链接、伪造备份',()=>{
   assert.equal(allowedPath('persona-growth/v1.json'),true)
   assert.equal(allowedPath('session-watch-history.json'),true)
   const b={format:'dsh-bili-scroll-plus-backup',schema:1,config:{a:'b'},files:{'../../pw':'invalid'},sqlite:{}}
-  assert.throws(()=>validateBackup(b),/不允许/)
+  assert.throws(()=>validateBackup(b),/格式版本不支持/)
   delete b.files['../../pw'];b.sqlite={'bili_credential.json':'AAAA'}
-  assert.throws(()=>validateBackup(b),/不合法/)
+  assert.throws(()=>validateBackup(b),/格式版本不支持/)
 })
 test('SQLite 快照保存待审核和已批准梗，恢复后数据完整',()=>{
   const root=dir();try{

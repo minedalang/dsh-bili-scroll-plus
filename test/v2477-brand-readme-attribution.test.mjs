@@ -35,9 +35,9 @@ test('DSH 设置页直接展示开源来源和关系类型',()=>{
   assert.match(client,/架构思路给了重要启发/)
 })
 
-test('新备份格式写新品牌，同时接受旧备份格式用于迁移',async()=>{
+test('新备份格式写新品牌，无老用户时拒绝旧版无校验备份',async()=>{
   const mod=await import('../lib/data-backup.mjs')
   assert.equal(mod.FORMAT,'dsh-dafeiyu-life-backup')
   const bad={format:'dsh-bili-scroll-plus-backup',schema:1,config:{a:1},files:{'../../x':'bad'},sqlite:{}}
-  assert.throws(()=>mod.validateBackup(bad),/不允许恢复的路径/)
+  assert.throws(()=>mod.validateBackup(bad),/格式版本不支持/)
 })

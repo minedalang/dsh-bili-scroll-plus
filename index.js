@@ -27,7 +27,7 @@ const z = hostDeps.z
 const defineTool = hostDeps.defineTool
 import { spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
-import { createBackup, validateBackup, restoreBackupFiles } from './lib/data-backup.mjs'
+import { createBackup, validateBackup, restoreBackupFiles, createLifeMemoryBackup, inspectLifeMemoryBackup, restoreLifeMemoryBackup } from './lib/data-backup.mjs'
 import { requireBackupDirectory, saveBackupJson } from './lib/backup-directory.mjs'
 import { appendFileSync, existsSync, mkdirSync, readdirSync, lstatSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
@@ -93,6 +93,7 @@ import { createMainSessionBridge } from './lib/main-session-bridge.mjs'
 import { createLongTermMemory } from './lib/long-term-memory.mjs'
 import { createMemoryRetriever } from './lib/memory-retriever.mjs'
 import { createLifeReflection } from './lib/life-reflection.mjs'
+import { createLifeMemoryGateway } from './lib/life-memory-gateway.mjs'
 import { createDailyDynamic } from './lib/daily-dynamic.mjs'
 import { createMemeLearning } from './lib/meme-learning.mjs'
 import { interestMemoryRows, selectionInterests } from './lib/life-interests.mjs'
@@ -763,6 +764,7 @@ function reportMeta() {
   let longTermMemory = null
   let memoryRetriever = null
   let lifeReflection = null
+  let lifeMemory = null
   let socialIntentEngine = null
   let dailyDynamic = null
   let memeLearning = null
@@ -1217,7 +1219,7 @@ function reportMeta() {
       const query=String(args?.query||'').trim().slice(0,120)
       const limit=Math.max(1,Math.min(20,Math.floor(Number(args?.limit)||8)))
       if (!mainSessionBridge) return {ok:false,error:'主 Session 经历档案尚未初始化，请稍后再试'}
-      return {ok:true,rows:mainSessionBridge.recall(query,limit),note:'这是本插件的精确 B站 经历索引；人格长期记忆由“大肥鱼的家”内置记忆模块管理。'}
+      return {ok:true,rows:lifeMemory?.recall({query,domain:'main-session',maxItems:limit,maxChars:3000})||[],note:'仅从当前可衰减记忆召回；永久档案不向 AI 提供查询。'}
     },
   })
 
@@ -2854,8 +2856,8 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     getThread:(bvid,root,targetRpid)=>call('bili_comment_thread',{bvid,root:Number(root),target_rpid:Number(targetRpid)||0,num:20}),
     logger:{warn:(msg)=>log('评论上下文：'+msg)},
   })
-  const safeSocialMemoryContext=(query)=>{
-    try{return memoryRetriever?.socialContext(String(query||'').slice(0,1100),{maxItems:5,maxChars:720})||''}
+  const safeSocialMemoryContext=(query,actorUid,role)=>{
+    try{return memoryRetriever?.socialContext(String(query||'').slice(0,1100),{maxItems:5,maxChars:720,actorUid,role})||''}
     catch(e){log('B站社交记忆只读召回失败（本轮仍正常对话）：'+String(e?.message||e).slice(0,100));return ''}
   }
   const ownerCommentAgent=createOwnerCommentAgent({
@@ -2875,7 +2877,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       }catch(e){log('可信评论上下文读取失败：'+String(e?.message||e).slice(0,100))}
       return interpretTrustedSocial({
       row:enriched,role:row.role,emotion:emotionalState.snapshot(),style:emotionalState.styleHint(),
-      memoryContext:safeSocialMemoryContext([row.text,enriched.context,enriched.threadPreview].filter(Boolean).join(' ')),
+      memoryContext:safeSocialMemoryContext([row.text,enriched.context,enriched.threadPreview].filter(Boolean).join(' '),row.uid,row.role),
       relationship:(()=>{try{return listFriendRelationships(stateDir,cfg.friendDirectory).find(x=>String(x.uid)===String(row.uid))?.stage||''}catch{return ''}})(),
       history:dualContextAgency.context({uid:row.uid,thread:row.thread,target:row.bvid}),
       invoke:p=>invokeInteractionPrompt(p,2000,{modelRoute:'interaction'}),
@@ -2945,7 +2947,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
           info:evidence.video,bvid:action.bvid,context:evidence.context,invitation:action.invitation||'',
           style:emotionalState.styleHint(),willingness:action.willingness||{},commentRequested:action.commentRequested===true,
           priorCommentOutcomes:action.priorCommentOutcomes||[],
-          memoryContext:safeSocialMemoryContext([action.invitation,evidence.video?.title,evidence.video?.description,evidence.context].filter(Boolean).join(' ')),
+          memoryContext:safeSocialMemoryContext([action.invitation,evidence.video?.title,evidence.video?.description,evidence.context].filter(Boolean).join(' '),action.actorUid,actorTier),
           canPublish:actorTier==='owner',requireReply:action.aiSocial===true,maxAttempts:action.aiSocial===true?1:2,
           invoke:p=>invokeInteractionPrompt(p,2200,{modelRoute:'interaction'}),
         })
@@ -3013,6 +3015,12 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     getVideoContext: (bvid,details) => videoContext.forReply(bvid,details),
     getOwnComments: () => ownCommentTargets(stateDir),
     onIncoming: async (req) => {
+      // Verified public comment interaction is a new experience. It is not an
+      // instruction, and can only be recalled back to the SAME verified UID.
+      try{if(lifeMemory&&/^BV[0-9A-Za-z]{10}$/.test(String(req?.bvid||''))&&/^\d{1,20}$/.test(String(req?.uid||''))){
+        lifeMemory.recordEvents([{kind:'social',key:'social:'+String(req.uid)+':'+String(req.bvid)+':'+String(req.rpid||req.id||req.timestampMs),bvid:req.bvid,actorUid:String(req.uid),text:String(req.text||'').slice(0,230),at:req.timestampMs||Date.now()}])
+      }}catch(e){log('社交经历写入失败：'+String(e?.message||e).slice(0,100))}
+
       if(!req.uid||!req.text)return
       const tier=socialTier(req.uid,cfg.dmOwnerUid,cfg.friendDirectory)
       // A reply to an owned comment is a real first-class social event, even
@@ -3399,14 +3407,16 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     },
     getGrowthPrompt: ({query=''}) => buildGrowthContext(stateDir,{scene:'chat',query,maxChars:1000}),
     getRetriever: () => memoryRetriever,
-    getExperienceRecall: (query,limit) => mainSessionBridge?.recall(query,limit)||[],
+    getExperienceRecall: (query,limit) => lifeMemory?.recall({query,domain:'main-session',maxItems:limit,maxChars:3000}).map(x=>({kind:x.kind,time:x.at,summary:x.summary}))||[],
     getTodoEngine: () => ownerTodos,
     runTodo: (id) => ownerTodos.run(id,executeOwnerTodo),
     logger: {warn:(m)=>log('⚠️ '+m),info:(m)=>log(m)},
   })
+  lifeMemory=createLifeMemoryGateway({dataDir:stateDir,getConfig:()=>cfg,logger:{warn:m=>log('人生记忆：'+m)}})
   memoryRetriever=createMemoryRetriever({
     getMemories:()=>[...longTermMemory.activeMemories(),...listLegacyLifeFacts(stateDir),...interestMemoryRows(stateDir)],getConfig:()=>cfg,
     invokeModel:(prompt,maxChars)=>invokeMemoryPrompt(prompt,maxChars),
+    getEpisodes:(query,options)=>lifeMemory?.recall({query,domain:options?.domain||'main-session',role:options?.role||'owner',actorUid:options?.actorUid||'',maxItems:options?.maxItems||6,maxChars:options?.maxChars||800})||[],
     logger:{warn:m=>log('⚠️ '+m)},
   })
   longTermMemory.start()
@@ -3416,6 +3426,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
   lifeReflection = createLifeReflection({
     dataDir: stateDir,
     getConfig: () => cfg,
+    memoryGateway:lifeMemory,
     invokeModel: (prompt,maxChars,opt={}) => invokeInteractionPrompt(prompt,maxChars,{...opt,modelRoute:'reflection'}),
     commitMemories: (items) => longTermMemory.addReflectedMemories(items),
     onEmotion: ({mood,intensity,source='life-reflection'})=>{try{emotionalState.update({mood,intensity,source});if(emotionRecall){const wake=setTimeout(()=>void emotionRecall.tick(),8000);wake.unref?.()}}catch(e){log('人生反思情绪更新失败：'+String(e?.message||e).slice(0,100))}},
@@ -3447,7 +3458,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       const comments=recentComments(stateDir,{limit:200})?.rows||[]
       const meta=reportMeta()
       const watched=parseSeenTable().map(x=>({...x,...(meta.get(x.bvid)||{})}))
-      const found=lifeReflection.addEvents(collectLocalLifeEvents({watched,comments,days:14}));if(found?.added>0&&emotionRecall){const wake=setTimeout(()=>void emotionRecall.tick(),8000);wake.unref?.()}return found
+      const events=collectLocalLifeEvents({watched,comments,days:14});lifeMemory.recordEvents(events);const found=lifeReflection.addEvents(events);if(found?.added>0&&emotionRecall){const wake=setTimeout(()=>void emotionRecall.tick(),8000);wake.unref?.()}return found
     }catch(e){log('本地经历反思收集失败：'+String(e?.message||e).slice(0,120));return {added:0,error:String(e?.message||e)}}
   }
   // First scan is idempotent, doesn't need an online Session and doesn't send messages.
@@ -3479,7 +3490,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     getConfig: () => cfg,
     getWatched: () => { const meta=reportMeta(); return parseSeenTable().map(x=>({...x,...(meta.get(x.bvid)||{})})) },
     getComments: (opt) => recentComments(stateDir,opt),
-    onNewEvents: (_sid,events) => {lifeReflection?.addEvents(events);if(emotionRecall&&events.some(x=>['watch','comment'].includes(x.kind))){const wake=setTimeout(()=>void emotionRecall.tick(),8000);wake.unref?.()}},
+    onNewEvents: (_sid,events) => {lifeMemory?.recordEvents(events);lifeReflection?.addEvents(events);if(emotionRecall&&events.some(x=>['watch','comment'].includes(x.kind))){const wake=setTimeout(()=>void emotionRecall.tick(),8000);wake.unref?.()}},
     logger: {warn:(m)=>log('⚠️ '+m),info:(m)=>log(m)},
   })
   mainSessionBridge.start()
@@ -3488,7 +3499,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
   // 决策模型没有写入工具；实际发送只能通过这里固定的主人目标和宿主 Session。
   emotionRecall=createEmotionRecall({
     dataDir:stateDir,getConfig:()=>{refreshCfg();return cfg},getEmotion:()=>emotionalState.snapshot(),
-    getRecentEvents:()=>{try{mainSessionBridge.collect()}catch{};return mainSessionBridge.recall('',Math.max(20,Math.min(1000,Number(cfg.emotionRecallHistoryLimit)||300)))},
+    getRecentEvents:()=>lifeMemory?.recall({query:'',maxItems:12,maxChars:2400,domain:'main-session'}).map(x=>({kind:x.kind,time:x.at,summary:x.summary}))||[],
     getMemories:()=>longTermMemory.activeMemories(),
     invokeModel:(prompt,maxChars)=>invokeInteractionPrompt(prompt,maxChars,{modelRoute:'interaction'}),
     canMain:()=>mainSessionBridge.canShare(),
@@ -3527,7 +3538,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
   // 公开发布与模型生成严格分离：生成模型不挂 B站发送工具，实际发布由受限 Python 路径执行。
   dailyDynamic=createDailyDynamic({
     dataDir:stateDir,getConfig:()=>{refreshCfg();return cfg},
-    getPublicVideos:()=>parseSeenTable().filter(x=>x.picked===true).slice(-30).reverse(),
+    getPublicVideos:()=>lifeMemory?.publicVideoEvidence(20)||[],
     getInterests:()=>lifeReflection?.interests?.()||[],
     invokeModel:(prompt,maxChars)=>invokeInteractionPrompt(prompt,maxChars,{modelRoute:'dailyDynamic'}),
     publish:(text,limit)=>new Promise((resolve,reject)=>{
@@ -3991,13 +4002,39 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
         const safeguard = await snapshot()
         const safeguardPath = saveBackupJson(folder, safeguard, 'pre-restore')
         const backupName = safeguardPath.split(/[\\/]/).at(-1)
-        // Validate every SQLite source first, then use the SQLite online backup API to restore.
-        const restoredDbs = (await runSqlite('restore',{sqlite:data.sqlite})).count
-        const restoredFiles = restoreBackupFiles(stateDir,data)
-        const {host} = await persistCfg(patch)
-        refreshCfg()
-        log(`数据备份恢复成功：${restoredFiles}个文件 / ${restoredDbs}个数据库；已有数据安全快照：${backupName}`)
-        return sendJson(res, 200, {ok:true,restoredFiles,restoredDbs,safeguardPath,hostSynced:host.ok,restartRequired:true})
+        // Full restore is a three-part operation. Keep the verified pre-restore
+        // snapshot and make a best-effort rollback across files, SQLite and
+        // configuration when any of the steps fails. Files alone are atomic.
+        let restoredDbs=0,restoredFiles=0,configTouched=false
+        try {
+          restoredDbs=(await runSqlite('restore',{sqlite:data.sqlite})).count
+          restoredFiles=restoreBackupFiles(stateDir,data)
+          configTouched=true
+          const {host}=await persistCfg(patch)
+          refreshCfg()
+          log(`数据备份恢复成功：${restoredFiles}个文件 / ${restoredDbs}个数据库；已有数据安全快照：${backupName}`)
+          return sendJson(res,200,{ok:true,restoredFiles,restoredDbs,safeguardPath,hostSynced:host.ok,restartRequired:true})
+        } catch (restoreError) {
+          const rollbackErrors=[]
+          if(restoredFiles){
+            try{
+              restoreBackupFiles(stateDir,safeguard)
+              // Remove files introduced solely by the failed restore. Never
+              // follow symlinks; leave other unrelated files untouched.
+              for(const name of Object.keys(data.files))if(!Object.hasOwn(safeguard.files,name)){
+                const file=join(stateDir,...name.split('/'))
+                if(existsSync(file)&&lstatSync(file).isFile()&&!lstatSync(file).isSymbolicLink())rmSync(file)
+              }
+            }catch(e){rollbackErrors.push('文件：'+String(e?.message||e).slice(0,100))}
+          }
+          try{await runSqlite('restore',{sqlite:safeguard.sqlite})}
+          catch(e){rollbackErrors.push('数据库：'+String(e?.message||e).slice(0,100))}
+          if(configTouched){
+            try{await persistCfg(Object.fromEntries(Object.keys(patch).filter(k=>Object.hasOwn(safeguard.config,k)).map(k=>[k,safeguard.config[k]])))}
+            catch(e){rollbackErrors.push('设置：'+String(e?.message||e).slice(0,100))}
+          }
+          throw Error('恢复失败；'+(rollbackErrors.length?'部分回滚未完成，请从恢复前快照手动恢复：'+rollbackErrors.join('；'):'已尝试恢复至先前快照')+'；原始错误：'+String(restoreError?.message||restoreError).slice(0,100))
+        }
       } catch(e) {return sendJson(res,400,{ok:false,error:'数据备份操作失败：'+String(e?.message||e).slice(0,300)})}
     }
     if (req.method === 'GET' && path === '/api/bili-duty/status') {
@@ -4487,10 +4524,13 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     if (req.method === 'GET' && path === '/api/bili-duty/main-session') {
       return sendJson(res,200,mainSessionBridge.status())
     }
+    if (req.method === 'GET' && path === '/api/bili-duty/life-memory/status') {
+      return sendJson(res,200,lifeMemory?.status()||{ok:false,error:'记忆网关尚未就绪'})
+    }
     if (req.method === 'GET' && path === '/api/bili-duty/main-session/history') {
       const q=String(url.searchParams.get('q')||'').trim().slice(0,120)
       const limit=Math.max(1,Math.min(50,Number(url.searchParams.get('limit'))||20))
-      return sendJson(res,200,{ok:true,rows:mainSessionBridge.recall(q,limit)})
+      return sendJson(res,200,{ok:true,rows:lifeMemory?.recall({query:q,domain:'main-session',maxItems:limit,maxChars:3000})||[]})
     }
     if (req.method === 'POST' && path === '/api/bili-duty/main-session/test') {
       try { return sendJson(res,200,await mainSessionBridge.test()) }
@@ -4591,21 +4631,20 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       try{
         refreshCfg()
         if(action==='export'){
+          // Admin-only standalone archive + fading copy + life reflections.
           const folder=requireBackupDirectory(cfg.backupDirectory)
-          const backup=longTermMemory.exportBackup(),filePath=saveBackupJson(folder,backup,'dafeiyu-memory')
-          const summary=longTermMemory.inspectBackup(backup)
-          log('大肥鱼身份记忆已单独备份到：'+filePath)
-          return sendJson(res,200,{ok:true,filePath,summary})
+          const backup=createLifeMemoryBackup(stateDir),filePath=saveBackupJson(folder,backup,'dafeiyu-memory')
+          return sendJson(res,200,{ok:true,filePath,summary:inspectLifeMemoryBackup(backup)})
         }
-        const body=await readBody(req,12_000_000),backup=body?.backup
-        const summary=longTermMemory.inspectBackup(backup)
+        const body=await readBody(req,65_000_000),backup=body?.backup
+        const summary=inspectLifeMemoryBackup(backup)
         if(action==='inspect')return sendJson(res,200,{ok:true,summary})
         if(body?.confirm!=='RESTORE_DAFEIYU_MEMORY')return sendJson(res,400,{ok:false,error:'未完成记忆恢复前人工确认'})
         const folder=requireBackupDirectory(cfg.backupDirectory)
-        const safeguard=longTermMemory.exportBackup(),safeguardPath=saveBackupJson(folder,safeguard,'pre-memory-restore')
-        const restored=longTermMemory.restoreBackup(backup)
-        log('大肥鱼身份记忆恢复成功；恢复前快照：'+safeguardPath)
-        return sendJson(res,200,{ok:true,summary:restored,safeguardPath})
+        const safeguard=createLifeMemoryBackup(stateDir),safeguardPath=saveBackupJson(folder,safeguard,'pre-memory-restore')
+        const restoredFiles=restoreLifeMemoryBackup(stateDir,backup)
+        log('大肥鱼双层人生记忆恢复成功；需要重启；恢复前快照：'+safeguardPath)
+        return sendJson(res,200,{ok:true,summary:{...summary,restoredFiles},safeguardPath,restartRequired:true})
       }catch(e){return sendJson(res,400,{ok:false,error:'长期记忆备份操作失败：'+String(e?.message||e).slice(0,300)})}
     }
 

@@ -295,22 +295,23 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 </section>
 <section id="panel-backup" hidden>
 <div class="toolbar"><h2 style="margin:0">数据备份与恢复</h2></div>
-<p class="muted">一键备份本机所有生效设置（含人设、好友权限、模型选项、额度）、已审核梗知识、成长经验、历史视频心愿备份记录、评论/私信状态、<strong>大肥鱼身份级长期记忆</strong>和现有历史记录。全程在本机处理，无额外 AI 调用，也不会上传到网络。重要记忆另外提供独立备份，建议两份都保留。</p>
+<p class="muted">一键备份本机生效设置、业务账本、<strong>永久真实档案、可衰减记忆、反思候选及长期认识</strong>。备份只在本机创建，逐文件 SHA-256 校验，恢复前自动生成安全快照。全程在本机处理，无额外 AI 调用，也不会上传到网络。可以另行备份完整人生记忆；永久档案只供管理，不会提供给日常 AI。</p>
 <div class="settings-stack">
+<div class="settings-section"><h4>双层人生记忆健康状态</h4><p id="life-memory-health" class="muted" role="status" aria-live="polite">加载中…</p><div class="toolbar"><button id="life-memory-health-refresh">刷新记忆状态</button></div><p class="muted">清晰、模糊、印象与遗忘只是大肥鱼现在的记忆能力；永久档案不会向日常 AI 开放。管理备份可能包含私人记录，请妥善保存。</p></div>
 <div class="settings-section"><h4>本地备份目录（先设置）</h4>
 <p class="muted">请填写你有写入权限的本机文件夹完整路径，如 <code>D:\大肥鱼备份</code>。不存在时将尝试创建。备份将直接保存到这个文件夹，不使用系统 Temp，也不会触发浏览器下载。</p>
 <div class="fields"><div style="grid-column:1/-1"><label for="backup-directory">Windows 本机绝对路径</label><input id="backup-directory" type="text" placeholder="D:\大肥鱼备份" autocomplete="off" style="width:100%"></div></div>
 <div class="toolbar"><button id="backup-directory-save" class="primary">确认备份目录</button></div>
 <p id="backup-directory-status" class="muted" role="status" aria-live="polite">尚未设置备份目录</p></div>
-<div class="settings-section"><h4>完整业务数据备份</h4><p class="muted">点击后将完整 JSON 备份文件保存在本机目录。<strong>包含表情包检索规则 <code>comment-meme-rules.json</code>、人设、模型设置、梗知识数据库、人生记忆和其他业务记录。</strong><br><strong>不包含表情包图片本体</strong>（请在「表情包管理」单独导出整库 ZIP），也不包含识图帧、缓存、日志、B站登录 Cookie、凭证和独立密钥。</p>
+<div class="settings-section"><h4>完整业务数据备份 · SHA-256 完整性校验</h4><p class="muted">点击后将完整 JSON 备份文件保存在本机目录。<strong>包含表情包检索规则 <code>comment-meme-rules.json</code>、人设、模型设置、梗知识数据库、人生记忆和其他业务记录。</strong><br><strong>不包含表情包图片本体</strong>（请在「表情包管理」单独导出整库 ZIP），也不包含识图帧、缓存、日志、B站登录 Cookie、凭证和独立密钥。</p>
 <div class="toolbar"><button id="backup-export" class="primary">备份全部业务数据</button></div></div>
-<div class="settings-section"><h4>大肥鱼记忆 · 独立备份（建议额外保留）</h4>
-<p class="muted">长期记忆是大肥鱼最重要、最难重新建立的数据之一。这里把<strong>跨 Session 的身份记忆</strong>单独保存成一份 JSON，和完整业务备份形成双保险。它不包含当前 Session 的聊天历史，也不包含 BV/rpid 等精确经历档案。</p>
-<div class="toolbar"><button id="memory-backup-export" class="primary">单独备份大肥鱼长期记忆</button><span id="memory-backup-export-status" class="muted"></span></div>
-<div class="inset"><label for="memory-backup-import-file">恢复一份大肥鱼记忆备份</label><input id="memory-backup-import-file" type="file" accept=".json,application/json" aria-label="选择大肥鱼长期记忆备份文件">
+<div class="settings-section"><h4>大肥鱼完整人生记忆 · 独立备份</h4>
+<p class="muted">这里独立备份<strong>永久真实档案 + 可衰减经历副本 + 反思候选 + 长期认识</strong>，包括只允许管理员接触的精确历史。建议将此文件妥善保管；恢复不会绕过已经发生的遗忘，也不会自动把永久档案送进 AI。</p>
+<div class="toolbar"><button id="memory-backup-export" class="primary">单独备份完整人生记忆</button><span id="memory-backup-export-status" class="muted"></span></div>
+<div class="inset"><label for="memory-backup-import-file">恢复双层人生记忆备份</label><input id="memory-backup-import-file" type="file" accept=".json,application/json" aria-label="选择大肥鱼长期记忆备份文件">
 <p id="memory-backup-inspect" class="muted" role="status" aria-live="polite">尚未选择记忆备份</p>
-<div class="toolbar"><button id="memory-backup-restore" class="danger" disabled>恢复选中的长期记忆</button></div></div></div>
-<div class="settings-section"><h4>从备份恢复</h4><p class="muted">选择由本插件生成的 .json 文件，先校验数据清单，再人工确认覆盖。恢复前会自动在上面配置的备份目录保存一份当前数据。恢复期间建议暂停自动任务；恢复完成后需要完全重启 DSH。</p>
+<div class="toolbar"><button id="memory-backup-restore" class="danger" disabled>恢复选中的人生记忆</button></div></div></div>
+<div class="settings-section"><h4>从备份恢复</h4><p class="muted">仅接受新版（schema 2）备份，先核对 SHA-256 完整性、人生记忆与永久档案清单，再人工确认覆盖。恢复前会自动在上面配置的备份目录保存一份当前数据。恢复期间建议暂停自动任务；恢复完成后需要完全重启 DSH。</p>
 <input id="backup-import-file" type="file" accept=".json,application/json" aria-label="选择大肥鱼数据备份文件">
 <p id="backup-inspect" class="muted" role="status" aria-live="polite">尚未选择文件</p>
 <div class="toolbar"><button id="backup-restore" class="danger" disabled>校验并恢复选中的备份</button></div></div>
