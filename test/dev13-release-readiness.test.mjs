@@ -28,11 +28,16 @@ test('Host schema 与运行时默认值逐字段保持一致（不只核对记�
  assert.match(host,/personaPrompt: z\.string\(\)\.default\(DEFAULT_PERSONA_PROMPT\)/)
 })
 
-test('新安装默认不启用跨 Session 身份记忆、低成本语义模型或危险公开写入',()=>{
- for(const name of ['mainSessionMemoryEnabled','mainSessionMemorySemanticEnabled','socialAutoSend','ownerCommentSocialPublishEnabled','dailyDynamicEnabled','ownerDmCommentPublishEnabled','ownerDmDynamicPublishEnabled','autonomousPlannerEnabled']){
+test('dev.15 全新安装默认启用有限生活体验，但保持外部写入和额外检索模型关闭',()=>{
+ for(const name of ['mainSessionMemorySemanticEnabled','socialAutoSend','ownerCommentSocialPublishEnabled','ownerDmCommentPublishEnabled','ownerDmDynamicPublishEnabled']){
   assert.match(host,new RegExp(`${name}: z\\.boolean\\(\\)\\.default\\(false\\)`),name+' schema must default off')
   assert.match(host,new RegExp(`${name}:\\s*false`),name+' runtime fallback must default off')
  }
+ for(const name of ['mainSessionMemoryEnabled','dailyDynamicEnabled','autonomousPlannerEnabled']){
+  assert.match(host,new RegExp(`${name}: z\\.boolean\\(\\)\\.default\\(true\\)`),name+' schema must default on for fresh installs')
+  assert.match(host,new RegExp(`${name}:\\s*true`),name+' runtime fallback must default on')
+ }
+ assert.match(host,/legacyInstall/)
  assert.match(host,/dailyDynamicDraftOnly: z\.boolean\(\)\.default\(true\)/)
  assert.match(host,/mainSessionMemoryCandidates: z\.natural\(\)\.default\(48\)/)
  assert.match(host,/mainSessionMemorySearchDailyLimit: z\.natural\(\)\.default\(80\)/)

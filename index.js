@@ -275,7 +275,7 @@ export const Config = !z ? undefined : z.object({
   mainSessionBatchSize: z.natural().default(8).extra('volatile', true),
   mainSessionIncludeComments: z.boolean().default(true).extra('volatile', true),
   /** 内置长期人格记忆：基于 MIT 上游 dsh-fish-memory 的核心设计，仅绑定主人明确选择的主 Session。 */
-  mainSessionMemoryEnabled: z.boolean().default(false).extra('volatile', true),
+  mainSessionMemoryEnabled: z.boolean().default(true).extra('volatile', true),
   mainSessionMemoryAutoBili: z.boolean().default(true).extra('volatile', true),
   mainSessionMemorySemanticEnabled: z.boolean().default(false).extra('volatile', true),
   mainSessionMemoryModelProvider: z.string().default('').extra('volatile', true),
@@ -294,7 +294,7 @@ export const Config = !z ? undefined : z.object({
   ownerTodoAutoReviewEnabled: z.boolean().default(false).extra('volatile', true),
   ownerTodoReviewMinutes: z.natural().default(60).extra('volatile', true),
   /** 独立自主调度：默认关闭，只从已有只读任务中挑选，或请求既有反思。 */
-  autonomousPlannerEnabled: z.boolean().default(false).extra('volatile',true),
+  autonomousPlannerEnabled: z.boolean().default(true).extra('volatile',true),
   emotionRecallEnabled: z.boolean().default(false).extra('volatile',true),
   emotionRecallMainEnabled: z.boolean().default(false).extra('volatile',true),
   emotionRecallDmEnabled: z.boolean().default(false).extra('volatile',true),
@@ -331,8 +331,8 @@ export const Config = !z ? undefined : z.object({
   emotionRecallMinAgeDays: z.natural().default(2).extra('volatile',true),
   emotionRecallEmotionMinIntensity: z.natural().default(30).extra('volatile',true),
   emotionRecallEmotionMaxAgeHours: z.natural().default(12).extra('volatile',true),
-  autonomousPlannerMinutes: z.natural().default(30).extra('volatile',true),
-  autonomousPlannerDailyLimit: z.natural().default(24).extra('volatile',true),
+  autonomousPlannerMinutes: z.natural().default(180).extra('volatile',true),
+  autonomousPlannerDailyLimit: z.natural().default(4).extra('volatile',true),
   autonomousPlannerStartHour: z.natural().default(9).extra('volatile',true),
   autonomousPlannerEndHour: z.natural().default(23).extra('volatile',true),
   mainSessionReflectionModelProvider: z.string().default('').extra('volatile', true),
@@ -344,8 +344,8 @@ export const Config = !z ? undefined : z.object({
   mainSessionReflectionDailyBatches: z.natural().default(2).extra('volatile', true),
   mainSessionMemoryHalfLifeDays: z.number().default(30).extra('volatile', true),
   mainSessionMemoryThreshold: z.number().default(0.35).extra('volatile', true),
-  mainSessionMemoryMaxItems: z.natural().default(6).extra('volatile', true),
-  mainSessionMemoryMaxChars: z.natural().default(800).extra('volatile', true),
+  mainSessionMemoryMaxItems: z.natural().default(8).extra('volatile', true),
+  mainSessionMemoryMaxChars: z.natural().default(1200).extra('volatile', true),
   mainSessionMemoryDailyQuota: z.natural().default(8).extra('volatile', true),
   mainSessionMemoryFactsMax: z.natural().default(2).extra('volatile', true),
   workspace: z.string().default('').extra('volatile', true),
@@ -355,7 +355,7 @@ export const Config = !z ? undefined : z.object({
   favFolderId: z.number().default(0).extra('volatile', true), // 历史设置只读保留，不再批量收藏
   autoVideoLike: z.boolean().default(false).extra('volatile', true),
   autoVideoLikeDailyLimit: z.natural().default(10).extra('volatile', true),
-  dailyDynamicEnabled: z.boolean().default(false).extra('volatile', true),
+  dailyDynamicEnabled: z.boolean().default(true).extra('volatile', true),
   dailyDynamicDailyLimit: z.natural().default(1).extra('volatile', true),
   dailyDynamicDraftOnly: z.boolean().default(true).extra('volatile', true),
   autoVideoCollect: z.boolean().default(false).extra('volatile', true),
@@ -425,6 +425,16 @@ export function apply(ctx, config) {
   const venvReadyNow = () => existsSync(venvPython()) && missingVenvDeps().length === 0
   const asrReadyNow = () => existsSync(asrPython()) && hasPkg(asrDir, 'faster_whisper')
   const cfgFile = join(stateDir, 'config.json')
+  // dev.15 新安装采用更有生活感的默认值；已有用户即使旧 config.json 缺少这些键，
+  // 也必须延续旧版默认值，绝不因为插件升级自动开始后台模型任务。
+  // 在 ensureHomeFiles 写任何运行文件之前判定，防止把新安装误认成升级。
+  const legacyInstall = existsSync(cfgFile) || readdirSync(stateDir).length > 0
+  const legacyExperienceDefaults = {
+    mainSessionMemoryEnabled: false, autonomousPlannerEnabled: false,
+    autonomousPlannerMinutes: 30, autonomousPlannerDailyLimit: 24,
+    dailyDynamicEnabled: false, mainSessionMemoryMaxItems: 6,
+    mainSessionMemoryMaxChars: 800,
+  }
   /**
    * 本地优先（2026-10-18，两个用户实证）：DSH 0.2.1 某些启动方式下 ctx.settings.update 会抛
    *   profile reload requires the root Include entry（dsh-app-boot 的 reconcileProfilePatches）
@@ -502,12 +512,12 @@ function reportMeta() {
     commentWatchReplies: false, commentWatchTop: false, commentAtEnabled: false, friendAtFeedbackEnabled:false, strangerInspirationEnabled:false, socialInvitationEnabled:false, socialInvitationAutoInspectEnabled:false, ownerCommentAgentEnabled:false, ownerCommentLikeEnabled:false, ownerCommentDraftEnabled:false, ownerCommentPublishEnabled:false, ownerCommentSocialPublishEnabled:false, ownerCommentNaturalAckEnabled:false, commentAtMode:'whitelist', commentAtWhitelist:'', commentTopCount: 5, commentTopVideoCount: 3, commentReplyHotCount: 12, backupDirectory: '',
     commentAllowGeneralTop: false, commentReplyPerPoll: 1, commentReplyPerDay: 5, commentOwnTopPerUser: 5, commentOwnNestedPerUser: 3,
     mainSessionBridgeEnabled: false, mainSessionId: '', mainSessionAutoSync: true, mainSessionSyncMinutes: 60, mainSessionDailyBatches: 4, mainSessionBatchSize: 8, mainSessionIncludeComments: true,
-    mainSessionMemoryEnabled: false, mainSessionMemoryAutoBili: true, mainSessionMemorySemanticEnabled: false, mainSessionMemoryModelProvider: '', mainSessionMemoryModelId: '', mainSessionMemoryReasoningEffort: '', mainSessionMemoryCandidates: 48, mainSessionMemorySearchDailyLimit: 80, socialOutreachEnabled:false, socialLifeIntentEnabled:false, emotionSystemEnabled:true, socialAutoSend:false, socialOutreachDailyLimit:1, ownerTodoAutoReviewEnabled:false, ownerTodoReviewMinutes:60, autonomousPlannerEnabled:false, emotionRecallEnabled:false, emotionRecallMainEnabled:false, emotionRecallDmEnabled:false, emotionRecallUnlimited:false, emotionRecallDailyLimit:1, emotionRecallCooldownHours:24, emotionRecallStartHour:9, emotionRecallEndHour:22, ownerDmAgentEnabled:false, ownerDmAgentReadMainContext:false, ownerDmAgentSyncMain:false, ownerDmAgentContextTurns:6, ownerDmAgentContextChars:1500, ownerDmAgentModelProvider:'', ownerDmAgentModelId:'', ownerDmAgentReasoningEffort:'', ownerDmReadCommandsEnabled:false, ownerDmActionsEnabled:false, ownerDmLikeEnabled:false, ownerDmCollectEnabled:false, ownerDmFollowEnabled:false, ownerDmCommentDraftEnabled:false, ownerDmCommentPublishEnabled:false, ownerDmDynamicDraftEnabled:false, ownerDmDynamicPublishEnabled:false, ownerDmFriendMessageEnabled:false, emotionRecallCandidateLimit:12, emotionRecallHistoryLimit:300, emotionRecallRecentDays:3, emotionRecallMinAgeDays:2, emotionRecallEmotionMinIntensity:30, emotionRecallEmotionMaxAgeHours:12, autonomousPlannerMinutes:30, autonomousPlannerDailyLimit:24, autonomousPlannerStartHour:9, autonomousPlannerEndHour:23, mainSessionReflectionAuto: true, mainSessionReflectionModelProvider: '', mainSessionReflectionModelId: '', mainSessionReflectionReasoningEffort: '', mainSessionReflectionMinCandidates: 6, mainSessionReflectionBatchSize: 16, mainSessionReflectionIntervalHours: 6, mainSessionReflectionDailyBatches: 2, mainSessionMemoryHalfLifeDays: 30, mainSessionMemoryThreshold: 0.35, mainSessionMemoryMaxItems: 6, mainSessionMemoryMaxChars: 800, mainSessionMemoryDailyQuota: 8, mainSessionMemoryFactsMax: 2,
+    mainSessionMemoryEnabled: true, mainSessionMemoryAutoBili: true, mainSessionMemorySemanticEnabled: false, mainSessionMemoryModelProvider: '', mainSessionMemoryModelId: '', mainSessionMemoryReasoningEffort: '', mainSessionMemoryCandidates: 48, mainSessionMemorySearchDailyLimit: 80, socialOutreachEnabled:false, socialLifeIntentEnabled:false, emotionSystemEnabled:true, socialAutoSend:false, socialOutreachDailyLimit:1, ownerTodoAutoReviewEnabled:false, ownerTodoReviewMinutes:60, autonomousPlannerEnabled:true, emotionRecallEnabled:false, emotionRecallMainEnabled:false, emotionRecallDmEnabled:false, emotionRecallUnlimited:false, emotionRecallDailyLimit:1, emotionRecallCooldownHours:24, emotionRecallStartHour:9, emotionRecallEndHour:22, ownerDmAgentEnabled:false, ownerDmAgentReadMainContext:false, ownerDmAgentSyncMain:false, ownerDmAgentContextTurns:6, ownerDmAgentContextChars:1500, ownerDmAgentModelProvider:'', ownerDmAgentModelId:'', ownerDmAgentReasoningEffort:'', ownerDmReadCommandsEnabled:false, ownerDmActionsEnabled:false, ownerDmLikeEnabled:false, ownerDmCollectEnabled:false, ownerDmFollowEnabled:false, ownerDmCommentDraftEnabled:false, ownerDmCommentPublishEnabled:false, ownerDmDynamicDraftEnabled:false, ownerDmDynamicPublishEnabled:false, ownerDmFriendMessageEnabled:false, emotionRecallCandidateLimit:12, emotionRecallHistoryLimit:300, emotionRecallRecentDays:3, emotionRecallMinAgeDays:2, emotionRecallEmotionMinIntensity:30, emotionRecallEmotionMaxAgeHours:12, autonomousPlannerMinutes:180, autonomousPlannerDailyLimit:4, autonomousPlannerStartHour:9, autonomousPlannerEndHour:23, mainSessionReflectionAuto: true, mainSessionReflectionModelProvider: '', mainSessionReflectionModelId: '', mainSessionReflectionReasoningEffort: '', mainSessionReflectionMinCandidates: 6, mainSessionReflectionBatchSize: 16, mainSessionReflectionIntervalHours: 6, mainSessionReflectionDailyBatches: 2, mainSessionMemoryHalfLifeDays: 30, mainSessionMemoryThreshold: 0.35, mainSessionMemoryMaxItems: 8, mainSessionMemoryMaxChars: 1200, mainSessionMemoryDailyQuota: 8, mainSessionMemoryFactsMax: 2,
     dmStrangerText: '你好，我是这个账号的 AI 助手，已收到你的私信。陌生用户暂时只能收到这一条自动回复；请不要发送密码、验证码等敏感信息。',
     personaPrompt: DEFAULT_PERSONA_PROMPT, characterLore: '',
     perDay: 50, pickPerRound: 5, peakValley: false, peakWindows: '[]', peakIntervalMinutes: 30, autoComment: false, transcribe: false, asrModel: 'small',
     dmMode: 'only', dmUid: 0, commentSyncDynamic: false, dynamicDailyLimit: 3, commentDailyLimit: 10, memeMemoryEnabled: true, memeMemoryMaxEntries: 300, visionEnabled: false, diagMentionEnabled: true, diagDynamicEnabled: true, diagVisionEnabled: true, diagMemeEnabled: true, diagAtInviteEnabled: true, diagReplyInboxEnabled: true, visionMode: 'reuse_video_model', visionDebug: false, visionModelProvider: '', visionReasoningEffort: '', visionModelId: '', visionEndpoint: '', visionFrames: 2, visionDailyLimit: 30, visionPrompt: '', commentMemesEnabled: false, commentMemesDebug: false, commentMemesPerDay: 2, commentMemesPerRound: 1, commentMemePrompt: '',
-    homeRecommendationsEnabled: true, keywords: [], coreInterestTopics:'[]', minVideoViews: 1000, minVideoLikes: 10, minVideoReplies: 3, commentPerRound: 5, mentionName: '', mentionTargets: '', mentionProfiles: '{}', friendDirectory: '[]', mentionMode: 'ai', pythonPath: 'python', dshBin: '', headlessProfile: 'headless', overlayMcp: true, workspace: '', reportLevel: 'full', favFolderId: 0, autoVideoLike: false, autoVideoLikeDailyLimit: 10, autoVideoCollect: false, agentFollowEnabled: false, dailyDynamicEnabled: false, dailyDynamicDailyLimit: 1, dailyDynamicDraftOnly: true, dailyDynamicModelProvider:'',dailyDynamicModelId:'',dailyDynamicReasoningEffort:'',
+    homeRecommendationsEnabled: true, keywords: [], coreInterestTopics:'[]', minVideoViews: 1000, minVideoLikes: 10, minVideoReplies: 3, commentPerRound: 5, mentionName: '', mentionTargets: '', mentionProfiles: '{}', friendDirectory: '[]', mentionMode: 'ai', pythonPath: 'python', dshBin: '', headlessProfile: 'headless', overlayMcp: true, workspace: '', reportLevel: 'full', favFolderId: 0, autoVideoLike: false, autoVideoLikeDailyLimit: 10, autoVideoCollect: false, agentFollowEnabled: false, dailyDynamicEnabled: true, dailyDynamicDailyLimit: 1, dailyDynamicDraftOnly: true, dailyDynamicModelProvider:'',dailyDynamicModelId:'',dailyDynamicReasoningEffort:'',
   }
   const normalize = (src, base) => {
     const out = { ...base }
@@ -660,7 +670,8 @@ function reportMeta() {
   }
 
   const hostCfg = () => normalize(config, { ...DEFAULTS })       // 宿主那份（schema 校验过、默认值已填）
-  const savedCfg = () => normalize(readJson(cfgFile, {}), { ...DEFAULTS })
+  const savedCfg = () => normalize(readJson(cfgFile, {}), legacyInstall
+    ? { ...DEFAULTS, ...legacyExperienceDefaults } : { ...DEFAULTS })
   /**
    * ⭐⭐ 0.1.11（2026-10-19 · 第三批用户报"开关还是回弹"之后改的）
    *   0.1.9 / 0.1.10 一直想"跟宿主对账"：宿主那边有值就以宿主为准 —— 但 DSH 0.2.1 的某些启动方式下

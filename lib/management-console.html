@@ -308,28 +308,56 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 #panel-social #friend-directory-editor{display:grid;grid-template-columns:1fr;gap:10px}
 @media(max-width:550px){#panel-social .friend-directory-card{padding:13px}#panel-social .friend-directory-heading{align-items:center}}
 @media(prefers-color-scheme:dark){#panel-social .friend-directory-card.is-owner .friend-role-tag{background:#46305e;border-color:#9477d9;color:#f0dcff}}
+/* 将 B站生活视为领域导航（视频、社交、评论、私信、动态），而非一个与它们并列的设置页。 */
+.tabs{gap:11px}
+.tab-cluster{min-width:0}
+.tab-cluster-label{white-space:nowrap}
+#panel-bili>.settings-stack{margin-top:14px}
+#panel-bili #bili-video-advanced>.settings-section,
+#panel-dynamic #dynamic-publishing-settings>.settings-section{margin:12px 14px;background:var(--panel)}
+#panel-dynamic #dynamic-publishing-settings>.settings-section h4{margin-top:0}
+.contextual-footer{margin:12px 14px 15px}
+@media(max-width:580px){.tabs{gap:8px}.tab-cluster{width:100%}}
+/* 就地设置：生活内容优先，所有参数在所属板块按需展开。 */
+.contextual-settings{margin:12px 0;border:1px solid var(--stroke);border-radius:12px;background:color-mix(in srgb,var(--panel) 92%,var(--tint) 8%);overflow:hidden}
+.contextual-settings>summary{padding:11px 15px;font-weight:700;font-size:13px;cursor:pointer;color:var(--action);list-style-position:inside}
+.contextual-settings>summary:hover{background:var(--tint)}
+.contextual-settings[open]>summary{border-bottom:1px solid var(--stroke)}
+.contextual-settings>.muted{margin:12px 16px 5px}
+.contextual-settings>.settings-section,.contextual-settings>#settings-memory,.contextual-settings>#settings-sync{margin:12px 14px 15px}
+.contextual-settings #settings-memory>.settings-section,.contextual-settings #settings-sync>.settings-section{border:0;padding:0;background:transparent}
+.contextual-settings #settings-model-link{margin:12px 14px 15px}
+.contextual-hint{font-weight:400;font-size:11px;color:var(--muted);margin-left:5px}
+.contextual-memory-groups{display:grid;gap:9px;margin-top:12px}
+.contextual-memory-group{padding:12px;border:1px solid var(--stroke);border-radius:10px;background:var(--panel);min-width:0}
+.contextual-memory-group h5{margin:0 0 10px;font-size:13px}
+.contextual-subdetails>summary{font-size:13px;color:var(--ink);font-weight:650;cursor:pointer}
+.contextual-subdetails[open]>summary{margin-bottom:12px}
+#life-todo-section>details.contextual-settings{margin-top:14px}
+#life-todo-section>details.contextual-settings>.inset{padding:0 14px 14px;border:0}
+@media(max-width:580px){.contextual-settings>.muted{margin:10px 12px 5px}.contextual-settings>#settings-memory,.contextual-settings>#settings-sync{margin:10px 12px 12px}.contextual-hint{display:block;margin:2px 0 0 18px}}
 </style>
 <script defer src="/api/bili-duty/manage.js"></script>
 </head>
 <body><main class="wrap">
-<header class="top"><div><h1>🐳 大肥鱼 · DSH 生活系统</h1><p class="muted">管理中心 · 她的家、记忆、好友、B站生活、互动边界与持久化档案</p></div><button id="refresh">刷新当前页</button></header>
+<header class="top"><div><h1>🐳 大肥鱼 · DSH 生活系统</h1><p class="muted">管理中心 · 生活成长、B站探索与社交、角色设置及数据维护</p></div><button id="refresh">刷新当前页</button></header>
 <nav class="tabs" aria-label="管理分类">
-<div class="tab-cluster"><span class="tab-cluster-label">生活与成长</span>
+<div class="tab-cluster"><span class="tab-cluster-label">🏠 生活与成长</span>
 <button data-tab="home" aria-selected="false">大肥鱼的家</button>
-<button data-tab="life" aria-selected="false">人生记忆</button>
+<button data-tab="life" aria-selected="false">人生记忆</button></div>
+<div class="tab-cluster"><span class="tab-cluster-label">📺 B站生活</span>
+<button data-tab="bili" aria-selected="false">视频探索</button>
 <button data-tab="social" aria-selected="false">社交互动</button>
-<button data-tab="dynamic" aria-selected="false">B站动态创作</button>
 <button data-tab="comments" aria-selected="false">最近评论</button>
-<button data-tab="dm" aria-selected="false">后台私信 <span id="dm-count" class="queue-badge" hidden></span></button></div>
-<div class="tab-cluster"><span class="tab-cluster-label">角色与系统配置</span>
+<button data-tab="dm" aria-selected="false">后台私信 <span id="dm-count" class="queue-badge" hidden></span></button>
+<button data-tab="dynamic" aria-selected="false">动态创作</button></div>
+<div class="tab-cluster"><span class="tab-cluster-label">🎭 角色与系统</span>
 <button data-tab="persona" aria-selected="true">角色人设</button>
 <button data-tab="growth" aria-selected="false">行为与表达改进 <span id="growth-count" class="queue-badge" hidden></span></button>
-<button data-tab="bili" aria-selected="false">B站生活</button>
 <button data-tab="models" aria-selected="false">AI 模型</button>
-<button data-tab="settings" aria-selected="false">插件设置</button>
 <button data-tab="quotas" aria-selected="false">次数与额度</button>
 <button data-tab="polling" aria-selected="false">后台轮询</button></div>
-<div class="tab-cluster"><span class="tab-cluster-label">知识与维护</span>
+<div class="tab-cluster"><span class="tab-cluster-label">🗂️ 知识与维护</span>
 <button data-tab="meme" aria-selected="false">梗与网络文化 <span id="meme-count" class="queue-badge" hidden></span></button>
 <button data-tab="stickers" aria-selected="false">表情包管理</button>
 <button data-tab="reports" aria-selected="false">每日报告</button>
@@ -351,11 +379,11 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label class="checkline"><input id="models-vision-debug" type="checkbox">开启视觉识图调试日志（排障用）</label></div></div>
 </div>
 <div class="settings-section"><h4>表情包检索规则优化</h4><div class="model-activity"><span id="models-memeRules-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-memeRules-test" class="model-test-button">测试连接</button><span id="models-memeRules-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">仅在「表情包管理」点击 AI 更新时调用；不参与每次评论。留空时继承 DSH 当前默认模型。建议使用低成本模型与 low 思考深度；提示词只包含真实表情包名称/分类与现有规则；不会读取或发送大肥鱼的当前兴趣、评论、私信、好友画像或图片。兴趣由本地检索在每次查询时动态读取。</p><div class="fields" id="models-memeRules"></div></div>
-<div class="settings-section"><h4>低成本人生记忆检索</h4><div class="model-activity"><span id="models-memory-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-memory-test" class="model-test-button">测试连接</button><span id="models-memory-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">从当前可用的经历与长期认识候选中只选择真实 ID，不会读取封存档案，也不能发送 B站消息或修改记忆。是否启用和额度在「插件设置」管理。</p><div class="fields" id="models-memory"></div></div>
+<div class="settings-section"><h4>低成本人生记忆检索</h4><div class="model-activity"><span id="models-memory-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-memory-test" class="model-test-button">测试连接</button><span id="models-memory-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">从当前可用的经历与长期认识候选中只选择真实 ID，不会读取封存档案，也不能发送 B站消息或修改记忆。是否启用和额度在「人生记忆 → 记忆流程」下方设置。</p><div class="fields" id="models-memory"></div></div>
 <div class="toolbar"><button id="models-save" class="primary">保存全部模型配置</button><button id="models-refresh">重新读取</button></div>
 </div></section>
 <section id="panel-bili" hidden>
-<div class="feature-intro"><div><h2>🎬 B站生活与互动</h2><p>选片方向、互动开关与生活动态集中设置。每天最多执行多少次，请到「次数与额度」。</p></div></div>
+<div class="feature-intro"><div><h2>🎬 视频探索与自主行动</h2><p>这里是鱼鱼怎样挑选视频、观看理解，以及观看后自主点赞、收藏和评论的设置。好友、私信、评论记录和动态创作都在上方「B站生活」分组中各自管理。</p></div></div>
 <div class="settings-stack">
 <div class="settings-section"><h4>选片方向</h4><p class="muted">大肥鱼的兴趣档案主导搜索；主人额外关键词只是补充关注，不会覆盖已形成的兴趣。</p>
 <label class="checkline"><input id="bili-home-recommend" type="checkbox">混合 B站首页推荐</label>
@@ -366,8 +394,9 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <label class="checkline"><input id="bili-auto-collect" type="checkbox">允许自主创建主题收藏夹并选择性收藏</label>
 <label class="checkline"><input id="bili-agent-follow" type="checkbox">允许 B站 Agent 自主关注／取关 UP 主（默认关闭，严格限额）</label>
 <p class="muted">仅可关注当天真正入选的视频 UP；仅可取关由大肥鱼自己关注、至少 7 天前关注的人。每日最多关注 3 人、取关 1 人。未开放关注列表、批量关注、拉黑或其他账号管理权限。</p>
-<label class="checkline"><input id="bili-sync-comment" type="checkbox">仅将大肥鱼真正想分享的评论同步为动态</label>
-<p class="muted">不会把所有评论自动同步。同步动态与独立生活动态有各自的每日额度。</p></div>
+</div>
+<details id="bili-video-advanced" class="contextual-settings">
+<summary>⚙️ 视频探索的报告与高级设置 <span class="contextual-hint">字幕转写 · 报告投递 · 表情包</span></summary>
 <div class="settings-section"><h4>刷视频报告与私信投递</h4>
 <div class="fields"><div><label for="bili-dm-mode">本轮视频报告发送方式</label><select id="bili-dm-mode"><option value="only">只发报告私信，不公开评论</option><option value="off">只发公开评论（不发送报告私信）</option><option value="both">报告私信 + 公开评论</option></select></div><div><label for="bili-dm-uid">报告私信接收人 UID</label><input id="bili-dm-uid" type="number" min="0" placeholder="B站数字 UID（不填则不发送报告私信）"></div><div><label for="bili-report-level">本地日报内容</label><select id="bili-report-level"><option value="full">详细</option><option value="brief">简短</option><option value="off">不写日报</option></select></div></div>
 <p class="muted">报告私信收件人不同于自动回复私信的白名单；公开评论仍受独立开关与额度控制。</p></div>
@@ -376,14 +405,25 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="fields"><div><label for="bili-asr-model">Whisper 转写模型</label><select id="bili-asr-model"><option value="tiny">tiny</option><option value="base">base</option><option value="small">small</option><option value="medium">medium</option><option value="large-v3">large-v3</option></select></div></div>
 <label class="checkline"><input id="bili-comment-memes" type="checkbox">评论时允许自主搭配本地表情包</label>
 <label class="checkline"><input id="bili-comment-memes-debug" type="checkbox">记录表情包选择原因（调试用）</label></div>
-<div class="settings-section"><h4>B站生活动态创作</h4>
-<label class="checkline"><input id="bili-daily-enabled" type="checkbox">允许大肥鱼生成自己的生活动态</label>
-<label class="checkline"><input id="bili-daily-draft" type="checkbox">仅生成草稿，不自动发布（建议先开启）</label>
-<p class="muted">仅根据公开、真实的已选视频经历创作。持续情绪状态可在「人生记忆 → 情绪与心情」查看；它只影响表达节奏，不会成为公开发布私人聊天的理由。</p></div>
-<div class="toolbar"><button id="bili-save" class="primary">保存 B站生活设置</button><button id="bili-refresh">重新读取</button></div>
+
+</details>
+<div class="toolbar"><button id="bili-save" class="primary">保存视频探索设置</button><button id="bili-refresh">重新读取</button></div>
 </div></section>
 <section id="panel-dynamic" hidden>
 <div class="feature-intro"><div><h2>📝 B站生活动态创作</h2><p>这里是准备发布到 B站的公开动态草稿；「人生记忆 → 大肥鱼的一天」是内部生活时间线，两者不同。使用 AI 模型页的「生活动态文案」模型（未配置时继承互动模型），先生成草稿再决定是否公开；自动发布默认关闭。</p></div></div>
+<details id="dynamic-publishing-settings" class="contextual-settings">
+<summary>⚙️ 动态构思与发布设置 <span class="contextual-hint">按需展开 · 自动公开需单独授权</span></summary>
+<p class="muted">在这里控制动态构思、草稿及评论同步，不用再回到视频探索页面。不会擅自开启公开发布。</p>
+<div class="settings-section"><h4>生活动态构思</h4>
+<label class="checkline"><input id="bili-daily-enabled" type="checkbox" checked>允许大肥鱼生成自己的生活动态</label>
+<p class="muted">新安装默认只生成可核验证据的草稿，每天最多尝试一次，不会自动公开发布；满足真实素材条件时可能产生一次 AI 调用。</p>
+<label class="checkline"><input id="bili-daily-draft" type="checkbox">仅生成草稿，不自动发布（建议先开启）</label>
+<p class="muted">仅根据公开、真实的已选视频经历创作。持续情绪状态可在「人生记忆 → 情绪与心情」查看；它只影响表达节奏，不会成为公开发布私人聊天的理由。</p></div>
+<div class="settings-section"><h4>评论同步为动态</h4>
+<label class="checkline"><input id="bili-sync-comment" type="checkbox">仅将大肥鱼真正想分享的评论同步为动态</label>
+<p class="muted">不会把所有评论自动同步。同步动态与独立生活动态有各自的每日额度。</p></div>
+<div class="toolbar contextual-footer"><button type="button" id="bili-dynamic-save" class="primary">保存动态创作设置</button></div>
+</details>
 <div class="toolbar"><button id="daily-dynamic-refresh">刷新动态草稿</button><button id="daily-dynamic-generate" class="primary">让大肥鱼构思一条动态</button></div>
 <p id="daily-dynamic-status" class="muted" role="status" aria-live="polite"></p>
 <p id="daily-dynamic-action-status" class="action-feedback" role="status" aria-live="polite">点击“构思一条动态”后，页面会显示模型处理状态；没有真实视频、模型选择沉默或生成失败，也会解释原因。</p>
@@ -415,14 +455,14 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 </div><p id="backup-progress" role="status" aria-live="polite" class="muted"></p>
 </section>
 <section id="panel-home" hidden>
-<div class="feature-intro"><div><h2>🏠 大肥鱼的家 · 生活总览</h2><p>这里看到鱼鱼此刻的生活、记忆与社交近况。回忆详情在「人生记忆」，行为授权在「社交互动」，算法参数在「插件设置」。以下状态来自本地真实记录，不会自动触发对外发送。</p></div></div>
+<div class="feature-intro"><div><h2>🏠 大肥鱼的家 · 生活总览</h2><p>这里看到鱼鱼此刻的生活、记忆与社交近况。回忆详情在「人生记忆」，行为授权在「社交互动」，相关设置在对应功能下方的折叠区。以下状态来自本地真实记录，不会自动触发对外发送。</p></div></div>
 <div class="home-overview grid" aria-label="生活概览">
 <a class="card home-summary" href="?tab=life" data-open-tab="life"><strong>🧠 鱼鱼的记忆</strong><span id="home-overview-memory" class="muted">正在读取记忆概况…</span><small>进入人生记忆 →</small></a>
 <a class="card home-summary" href="?tab=life#life-emotion-section" data-open-tab="life" data-open-anchor="life-emotion-section"><strong>💗 最近的心情</strong><span id="home-overview-mood" class="muted">正在读取心情…</span><small>查看情绪变化 →</small></a>
 <a class="card home-summary" href="?tab=social" data-open-tab="social"><strong>👥 熟悉的朋友</strong><span id="home-overview-social" class="muted">正在读取社交近况…</span><small>查看好友与社交授权 →</small></a>
 </div>
 <div class="toolbar"><h2 style="margin:0">🐟 当前聊天房间 · 主 Session</h2><button id="main-session-refresh">刷新在线会话</button></div>
-<p class="muted"><strong>主 Session 是鱼鱼当前使用的聊天房间，不等于鱼鱼本人。</strong> 切换房间不会清空她已经形成的身份记忆，也不会让主 Session 自动获得后台任务权限；这里仅配置当前连接。同步间隔与每日额度请到「插件设置」。</p>
+<p class="muted"><strong>主 Session 是鱼鱼当前使用的聊天房间，不等于鱼鱼本人。</strong> 切换房间不会清空她已经形成的身份记忆，也不会让主 Session 自动获得后台任务权限；这里仅配置当前连接。同步间隔可在本板块下方展开设置；每日总额度仍在「次数与额度」。</p>
 <div class="settings-stack">
 <div class="settings-section"><h4>1. 选择大肥鱼当前的聊天房间（主 Session）</h4>
 <div class="fields"><div><label for="main-session-enabled">启用当前房间的经历同步桥</label><input id="main-session-enabled" type="checkbox"></div>
@@ -432,35 +472,9 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="toolbar"><button id="main-session-save" class="primary">保存主 Session 设置</button><button id="main-session-test">发送连接测试</button></div>
 <p id="main-session-target-status" class="muted" role="status">尚未读取</p></div>
 </div>
-<div class="home-quicklinks" aria-label="其他生活入口"><button type="button" data-open-tab="life">查看人生记忆</button><button type="button" data-open-tab="social">管理社交与授权</button><button type="button" data-open-tab="settings">调整插件参数</button></div>
-</section>
-<section id="panel-settings" hidden>
-<div class="feature-intro"><div><h2>⚙️ 插件设置 · 记忆与调度</h2><p>这里只调整系统的保存、遗忘、检索、反思和任务调度参数。生活观察在「人生记忆」，对外发信授权在「社交互动」。这些操作沿用原有配置字段与后端 API。</p></div></div>
-<nav class="context-jump" aria-label="插件设置分区"><a href="#settings-memory">记忆与检索</a><a href="#settings-sync">经历同步</a><a href="#settings-todo">自主待办调度</a><a href="#settings-model-link">AI 模型</a></nav>
-<div class="settings-stack">
-<div id="settings-memory"><div class="settings-section"><h4>人生记忆与检索设置</h4>
-<p class="muted">这里只放记忆开关和用量设置；所有模型统一在「AI 模型配置」页设置。真实回忆、兴趣与人物关系在「人生记忆」查看；模型 Provider 和 ID 统一在「AI 模型」页修改。</p>
-<div class="fields"><div><label for="main-memory-enabled">启用大肥鱼跨 Session 长期记忆（身份级）</label><input id="main-memory-enabled" type="checkbox"><small class="setting-note">开启后跨聊天会话记住重要经历；关闭后不注入长期记忆，已保存的内容不会删除。</small></div>
-<div><label for="main-memory-auto-bili">把新经历加入「待反思经历」列表</label><input id="main-memory-auto-bili" type="checkbox" checked><small class="setting-note">开启后把真实入选视频等经历放进待反思池；关闭不会删除已有经历。</small></div>
-<div><label for="main-reflection-auto">自动进行人生反思</label><input id="main-reflection-auto" type="checkbox" checked><small class="setting-note">开启后满足条件时自动使用反思模型筛选记忆；关闭后仍可手动反思。</small></div>
-<div><label for="main-reflection-min">至少积累多少候选再自动反思（2–30）</label><input id="main-reflection-min" type="number" min="2" max="30" value="6"><small class="setting-note">数字越小，积累较少经历就会启动反思；越大则更耐心地等待足够素材。</small></div>
-<div><label for="main-reflection-batch">每批最多反思候选（4–30）</label><input id="main-reflection-batch" type="number" min="4" max="30" value="16"><small class="setting-note">每轮交给反思模型的候选上限；越大一次看得越多，通常消耗更多 Token。</small></div>
-<div><label for="main-reflection-hours">两次自动反思至少间隔（1–48 小时）</label><input id="main-reflection-hours" type="number" min="1" max="48" step="0.5" value="6"><small class="setting-note">两轮自动反思间的最短时间；调小可能增加模型调用和记忆更新频率。</small></div>
-<div><label for="main-reflection-daily">每天最多自动反思（1–8 批）</label><input id="main-reflection-daily" type="number" min="1" max="8" value="2"><small class="setting-note">限制每天自动反思批数；调大可能更勤快，也可能增加模型费用。</small></div>
-<div><label for="main-memory-semantic">启用独立低成本模型进行语义检索（默认关闭）</label><input id="main-memory-semantic" type="checkbox"><small class="setting-note">打开后含糊的主动回忆可由现有低成本模型同时检索仍可使用的经历与长期认识；普通 B站评论仍走本地 UID 记忆，不额外请求模型。</small></div>
-<div><label for="main-memory-model-provider">检索模型 Provider（必填，例如 DSH 已配置的提供方 ID）</label><input id="main-memory-model-provider" type="text" maxlength="160" placeholder="对应 DSH Provider ID"><small class="setting-note">指定用于记忆检索的 DSH 模型服务提供方；填错会导致模型检索失败并回退本地。</small></div>
-<div><label for="main-memory-model-id">检索模型 ID（必填）</label><input id="main-memory-model-id" type="text" maxlength="160" placeholder="模型 ID"><small class="setting-note">指定检索使用的模型；建议选便宜、稳定的模型，填错会回退本地检索。</small></div>
-   <div><label for="main-memory-model-effort">检索模型思考深度（可留空）</label><input id="main-memory-model-effort" type="text" maxlength="160" placeholder="如 low / medium / high，或该模型支持的 JSON"><small class="setting-note">控制检索模型的推理预算；留空用默认，值越高通常更慢也可能更贵。</small></div>
-<div><label for="main-memory-candidates">低成本模型最多看到的候选记忆（12–80）</label><input id="main-memory-candidates" type="number" min="12" max="80" value="48"><small class="setting-note">让检索模型最多从多少段真实记忆中挑选；越大覆盖越广、提示词越长。</small></div>
-<div><label for="main-memory-search-daily">每日低成本检索调用上限（0–500，0=禁止）</label><input id="main-memory-search-daily" type="number" min="0" max="500" value="80"><small class="setting-note">语义检索的每日模型任务启动上限；优先沿用本地持久化统计，重启不会正常清零。统计文件丢失或不可写时不保证跨重启硬限额；设为 0 禁止调用。</small></div>
-<div><label for="main-memory-half-life">普通记忆半衰期（15–120 天）</label><input id="main-memory-half-life" type="number" min="15" max="120" value="30"><small class="setting-note">影响普通旧记忆的排序衰减速度；天数越大，旧经历越不容易被新内容挤下去。</small></div>
-<div><label for="main-memory-threshold">召回证据门槛（0.10–0.80）</label><input id="main-memory-threshold" type="number" min="0.1" max="0.8" step="0.05" value="0.35"><small class="setting-note">控制记忆与当前话题必须有多相关才会被召回；越高越严格、误召回更少。</small></div>
-<div><label for="main-memory-max-items">每轮最多召回（1–12 条）</label><input id="main-memory-max-items" type="number" min="1" max="12" value="6"><small class="setting-note">主 Session 本轮可用记忆的统一上限：长期事实、反思认识与可衰减经历合计，不包含单独配置的人设提示词。默认本地检索，启用后可选 AI 重排。</small></div>
-<div><label for="main-memory-max-chars">每轮记忆字数上限（200–3000）</label><input id="main-memory-max-chars" type="number" min="200" max="3000" value="800"><small class="setting-note">每轮检索记忆可占的总字数；越大保留更多细节，也占更多上下文。</small></div>
-<div><label for="main-memory-daily">主人聊天语义记忆每日最多（1–30 条）</label><input id="main-memory-daily" type="number" min="1" max="30" value="8"><small class="setting-note">限制从主人聊天中每天新增的语义记忆数量，避免把普通聊天全记下。</small></div>
-<div><label for="main-memory-facts">长期事实最多占召回（0–6 条）</label><input id="main-memory-facts" type="number" min="0" max="6" value="2"><small class="setting-note">限制每轮召回中长期稳定事实最多占多少条（包括常驻身份事实）；设为 0 则不注入长期事实，其他回忆仍可使用。</small></div></div>
-<p class="muted">主 Session 的基础角色人设独立配置；存储的长期身份事实也遵守本轮统一召回数量、字数及长期事实上限。其他记忆先本地搜索，必要时由专用低成本模型挑选真实 ID，再读取正文。检索模型使用不带文件、Shell、B站 MCP 或浏览器工具的独立安全 headless 会话，必须已在 DSH 配好 Provider/模型。未配置或请求失败会回退本地记忆；不会用模型生成的文字充当过去的事实。</p>
-<div class="toolbar"><button id="main-memory-save" class="primary">保存记忆与反思设置</button></div><p id="main-memory-status" class="muted" role="status">正在读取…</p></div></div>
+<details id="home-sync-settings" class="contextual-settings">
+<summary>⚙️ 经历同步频率 <span class="contextual-hint">按需展开 · 独立保存</span></summary>
+<p class="muted">调整鱼鱼向当前主 Session 汇报新经历的节奏，不改变聊天房间连接。</p>
 <div id="settings-sync"><div class="settings-section"><h4>2. 把新经历告诉大肥鱼的频率</h4><div class="fields">
 <div><label for="main-session-minutes">两次提醒主 Session 至少间隔多久（15–720 分钟）</label><input id="main-session-minutes" type="number" min="15" max="720" value="60"></div>
 <div><label for="main-session-daily">每天最多给主 Session 汇报几次（1–24 次）</label><input id="main-session-daily" type="number" min="1" max="24" value="4"></div>
@@ -469,19 +483,9 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p class="muted">同步本身不额外调用“总结 AI”：视频经历和评论正文直接从插件现有账本整理。但投递到主 Session 后，那个 Session 会产生一次很短的模型回复，所以默认最多每天 4 批，避免浪费调用。跳过的视频仍保存在任务日志/视频归档供管理员核对；它们不会仅凭被记录就自动变成大肥鱼的可用记忆。</p></div>
 
 <div class="toolbar"><button id="main-session-sync-save" class="primary" type="button">保存主 Session 同步频率</button></div></div>
-<div id="settings-todo"><div class="settings-section"><h4>📝 自主待办调度</h4><p class="muted">待办清单与手动添加仍位于「人生记忆」。这里仅管理后台如何择机检查待办，默认关闭，不赋予公开写入权限。</p><details class="life-subdetails todo-settings"><summary>⚙️ 自动择机与独立调度（默认关闭）</summary><p class="muted">两种自动检查是独立功能。开启前请确认调用频率和模型费用；不会因此获得公开写入权限。</p><div class="fields"><div><label for="owner-todo-auto-review">自主待办自动择机检查</label><select id="owner-todo-auto-review"><option value="false">关闭（默认，只在聊天或手动操作时考虑）</option><option value="true">开启（定时提醒主 Session 评估待办）</option></select></div><div><label for="owner-todo-review-minutes">检查间隔（分钟）</label><input id="owner-todo-review-minutes" type="number" min="15" max="1440" step="15" value="60"></div></div>
-<div class="inset"><h4>🤖 独立自主调度 · 真正由后台择机决定</h4>
-<p class="muted">与旧版「提醒主 Session」不同：开启后，后台可调用 AI 从已存在的只读待办中选择执行、延期、忽略或跳过，也可以按现有证据条件请求人生反思。不会自动点赞、关注、收藏、发评论或发私信；独立于自动刷视频。默认关闭。</p>
-<div class="fields"><div><label for="autonomous-planner-enabled">独立自主调度</label><select id="autonomous-planner-enabled"><option value="false">关闭（默认）</option><option value="true">开启 · 只读任务和反思</option></select></div>
-<div><label for="autonomous-planner-minutes">至少间隔（分钟，5–1440）</label><input id="autonomous-planner-minutes" type="number" min="5" max="1440" value="30"></div>
-<div><label for="autonomous-planner-limit">每日最多 AI 自主决策（0–288，0 表示关闭）</label><input id="autonomous-planner-limit" type="number" min="0" max="288" value="24"><small class="setting-note">只限制独立 AI 调度的模型调用；频率和活跃时段也会限制实际次数。提高额度可能增加模型费用，已有配置不会自动覆盖。</small></div>
-<div><label for="autonomous-planner-start">每日开始时（宿主当地小时）</label><input id="autonomous-planner-start" type="number" min="0" max="23" value="9"></div>
-<div><label for="autonomous-planner-end">每日结束时（宿主当地小时，24=午夜）</label><input id="autonomous-planner-end" type="number" min="1" max="24" value="23"></div></div>
-<p id="autonomous-planner-status" class="muted" role="status">尚未读取自主调度状态</p></div>
-<div class="toolbar"><button id="owner-todo-settings-save" class="life-action life-indigo">保存待办与自主调度设置</button></div>
-</details></div></div>
-<div id="settings-model-link" class="settings-section"><h4>🤖 模型配置独立管理</h4><p class="muted">记忆语义检索、人生反思等模型的 Provider、模型 ID 和思考深度统一在「AI 模型」页设置。默认关闭的能力不会因为调整界面而被启用。</p><button type="button" data-open-tab="models">前往 AI 模型</button></div>
-</div></section>
+</details>
+<div class="home-quicklinks" aria-label="其他生活入口"><button type="button" data-open-tab="life">查看人生记忆</button><button type="button" data-open-tab="social">管理社交与授权</button><button type="button" data-open-settings="life-memory-settings" data-target-tab="life">调整记忆与检索</button></div>
+</section>
 <section id="panel-life" hidden>
 <div class="life-hero"><div><div class="status-line"><span id="life-learning-status" class="live-badge">● 正在整理真实经历</span></div><h2>🐟 鱼鱼的记忆</h2><p class="muted">她经历了什么、现在还记得什么，又从中留下了什么体会，都可以在这里看到。</p></div><button id="main-life-refresh" class="life-action life-indigo">↻ 刷新记忆</button></div>
 <nav class="life-jump" aria-label="人生记忆分区快捷跳转"><a href="#life-recall-section">🧠 现在记得什么</a><a href="#life-lessons">✨ 留下了什么体会</a><a href="#life-emotion-section">💗 现在的心情</a><a href="#life-todo-section">📝 自主待办</a><a href="#life-interest-section">🌱 兴趣</a><a href="#life-timeline-section">📅 真实生活</a><a href="#unified-friends" data-nav-tab="social">👥 社交互动</a><a href="#life-others">⚙️ 更多操作</a></nav>
@@ -496,6 +500,17 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
   </div>
   <div class="memory-flow-footer"><span>⏳ 记忆会从清晰变模糊，最后可能想不起来。<strong id="memory-flow-fading">正在读取…</strong></span><span>🔒 原始记录独立封存，仅用于管理、审计和备份；鱼鱼不会用它偷偷想起忘掉的细节。「行为与表达改进」是独立的表达规则，不是经历记忆。</span></div>
 </section>
+<details id="life-memory-settings" class="contextual-settings">
+<summary>⚙️ 记忆与检索设置 <span class="contextual-hint">按需展开 · 不影响现有记忆</span></summary>
+<p class="muted">需要修改半衰期、反思频率、召回数量或 AI 检索时，在这里设置就好。</p>
+<div id="settings-memory"><div class="settings-section"><h4>记忆与检索设置</h4>
+<p class="muted">这里调整鱼鱼怎样记住、反思和找回仍可回忆的经历。默认只展示常用开关；细节按需展开，模型账号与 ID 在「AI 模型」页集中管理。</p>
+<p class="muted">新安装默认开启本地记忆与有限反思；主 Session 需由主人自行绑定。记录可能包含聊天信息，数据保存在插件家目录。已有配置的关闭选择不会因升级被覆盖。</p>
+<div class="contextual-memory-groups"><div class="contextual-memory-group"><h5>基础开关</h5><div class="fields"><div><label for="main-memory-enabled">启用大肥鱼跨 Session 长期记忆（身份级）</label><input id="main-memory-enabled" type="checkbox" checked/><small class="setting-note">开启后跨聊天会话记住重要经历；关闭后不注入长期记忆，已保存的内容不会删除。</small></div><div><label for="main-memory-auto-bili">把新经历加入「待反思经历」列表</label><input checked="" id="main-memory-auto-bili" type="checkbox"/><small class="setting-note">开启后把真实入选视频等经历放进待反思池；关闭不会删除已有经历。</small></div><div><label for="main-reflection-auto">自动进行人生反思</label><input checked="" id="main-reflection-auto" type="checkbox"/><small class="setting-note">开启后满足条件时自动使用反思模型筛选记忆；关闭后仍可手动反思。</small></div></div></div><details class="contextual-memory-group contextual-subdetails"><summary>🌿 人生反思调度</summary><div class="fields"><div><label for="main-reflection-min">至少积累多少候选再自动反思（2–30）</label><input id="main-reflection-min" max="30" min="2" type="number" value="6"/><small class="setting-note">数字越小，积累较少经历就会启动反思；越大则更耐心地等待足够素材。</small></div><div><label for="main-reflection-batch">每批最多反思候选（4–30）</label><input id="main-reflection-batch" max="30" min="4" type="number" value="16"/><small class="setting-note">每轮交给反思模型的候选上限；越大一次看得越多，通常消耗更多 Token。</small></div><div><label for="main-reflection-hours">两次自动反思至少间隔（1–48 小时）</label><input id="main-reflection-hours" max="48" min="1" step="0.5" type="number" value="6"/><small class="setting-note">两轮自动反思间的最短时间；调小可能增加模型调用和记忆更新频率。</small></div><div><label for="main-reflection-daily">每天最多自动反思（1–8 批）</label><input id="main-reflection-daily" max="8" min="1" type="number" value="2"/><small class="setting-note">限制每天自动反思批数；调大可能更勤快，也可能增加模型费用。</small></div></div></details><details class="contextual-memory-group contextual-subdetails"><summary>🕰️ 遗忘与召回质量</summary><div class="fields"><div><label for="main-memory-half-life">普通记忆半衰期（15–120 天）</label><input id="main-memory-half-life" max="120" min="15" type="number" value="30"/><small class="setting-note">影响普通旧记忆的排序衰减速度；天数越大，旧经历越不容易被新内容挤下去。</small></div><div><label for="main-memory-threshold">召回证据门槛（0.10–0.80）</label><input id="main-memory-threshold" max="0.8" min="0.1" step="0.05" type="number" value="0.35"/><small class="setting-note">控制记忆与当前话题必须有多相关才会被召回；越高越严格、误召回更少。</small></div><div><label for="main-memory-max-items">每轮最多召回（1–12 条）</label><input id="main-memory-max-items" max="12" min="1" type="number" value="8"/><small class="setting-note">主 Session 本轮可用记忆的统一上限：长期事实、反思认识与可衰减经历合计，不包含单独配置的人设提示词。默认本地检索，启用后可选 AI 重排。</small></div><div><label for="main-memory-max-chars">每轮记忆字数上限（200–3000）</label><input id="main-memory-max-chars" max="3000" min="200" type="number" value="1200"/><small class="setting-note">每轮检索记忆可占的总字数；越大保留更多细节，也占更多上下文。</small></div><div><label for="main-memory-daily">主人聊天语义记忆每日最多（1–30 条）</label><input id="main-memory-daily" max="30" min="1" type="number" value="8"/><small class="setting-note">限制从主人聊天中每天新增的语义记忆数量，避免把普通聊天全记下。</small></div><div><label for="main-memory-facts">长期事实最多占召回（0–6 条）</label><input id="main-memory-facts" max="6" min="0" type="number" value="2"/><small class="setting-note">限制每轮召回中长期稳定事实最多占多少条（包括常驻身份事实）；设为 0 则不注入长期事实，其他回忆仍可使用。</small></div></div></details><details class="contextual-memory-group contextual-subdetails"><summary>🤖 可选 AI 检索与用量</summary><div class="fields"><div><label for="main-memory-semantic">启用独立低成本模型进行语义检索（默认关闭）</label><input id="main-memory-semantic" type="checkbox"/><small class="setting-note">打开后含糊的主动回忆可由现有低成本模型同时检索仍可使用的经历与长期认识；普通 B站评论仍走本地 UID 记忆，不额外请求模型。</small></div><div><label for="main-memory-candidates">低成本模型最多看到的候选记忆（12–80）</label><input id="main-memory-candidates" max="80" min="12" type="number" value="48"/><small class="setting-note">让检索模型最多从多少段真实记忆中挑选；越大覆盖越广、提示词越长。</small></div><div><label for="main-memory-search-daily">每日低成本检索调用上限（0–500，0=禁止）</label><input id="main-memory-search-daily" max="500" min="0" type="number" value="80"/><small class="setting-note">语义检索的每日模型任务启动上限；优先沿用本地持久化统计，重启不会正常清零。统计文件丢失或不可写时不保证跨重启硬限额；设为 0 禁止调用。</small></div><div><label for="main-memory-model-provider">检索模型 Provider（必填，例如 DSH 已配置的提供方 ID）</label><input id="main-memory-model-provider" maxlength="160" placeholder="对应 DSH Provider ID" type="text"/><small class="setting-note">指定用于记忆检索的 DSH 模型服务提供方；填错会导致模型检索失败并回退本地。</small></div><div><label for="main-memory-model-id">检索模型 ID（必填）</label><input id="main-memory-model-id" maxlength="160" placeholder="模型 ID" type="text"/><small class="setting-note">指定检索使用的模型；建议选便宜、稳定的模型，填错会回退本地检索。</small></div><div><label for="main-memory-model-effort">检索模型思考深度（可留空）</label><input id="main-memory-model-effort" maxlength="160" placeholder="如 low / medium / high，或该模型支持的 JSON" type="text"/><small class="setting-note">控制检索模型的推理预算；留空用默认，值越高通常更慢也可能更贵。</small></div></div></details></div>
+<p class="muted">主 Session 的基础角色人设独立配置；存储的长期身份事实也遵守本轮统一召回数量、字数及长期事实上限。其他记忆先本地搜索，必要时由专用低成本模型挑选真实 ID，再读取正文。检索模型使用不带文件、Shell、B站 MCP 或浏览器工具的独立安全 headless 会话，必须已在 DSH 配好 Provider/模型。未配置或请求失败会回退本地记忆；不会用模型生成的文字充当过去的事实。</p>
+<div class="toolbar"><button class="primary" id="main-memory-save">保存记忆与反思设置</button></div><p class="muted" id="main-memory-status" role="status">正在读取…</p></div></div>
+<div id="settings-model-link" class="settings-section"><h4>🤖 模型配置独立管理</h4><p class="muted">记忆语义检索、人生反思等模型的 Provider、模型 ID 和思考深度统一在「AI 模型」页设置。默认关闭的能力不会因为调整界面而被启用。</p><button type="button" data-open-tab="models">前往 AI 模型</button></div>
+</details>
 <div id="life-emotion-section" class="settings-section life-section"><div class="toolbar"><h4 style="margin:0">💗 鱼鱼现在的心情</h4><span id="emotion-status" class="live-badge">● 正在读取情绪状态</span></div>
 <p class="muted">情绪驱动的自主回忆与主动分享权限请到「社交互动」开启：当近期真实视频再次触及过去有证据的人生记忆时，大肥鱼可以决定保持沉默、在主 Session 主动开口或给主人发送 B站私信。原始经历始终是证据；整理回忆、反思或产生念头均不能自行改写原始事实。 这是大肥鱼的角色模拟状态，不是生理测量或真实意识证明。它只保存情绪类别、强度和粗粒度来源，不保存触发心情的私信正文、UID 或具体聊天原因。情绪会随时间衰减，不能成为泄露隐私、迁怒或强行社交的理由。</p>
 <label class="checkline"><input id="emotion-enabled" type="checkbox" checked>持续记录心情</label>
@@ -535,6 +550,17 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="todo-filter" role="group" aria-label="查看待办状态"><button id="owner-todo-filter-active" type="button" aria-pressed="true" class="is-selected">进行中</button><button id="owner-todo-filter-all" type="button" aria-pressed="false">全部</button><button id="owner-todo-filter-finished" type="button" aria-pressed="false">已结束</button></div>
 <style>.todo-origin-quote{margin:8px 0;padding:10px 12px;border-left:3px solid #7b8ef9;background:var(--surface-2,rgba(107,129,228,.09));border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.92em}</style><div id="owner-todo-list" class="records records-scroll tall"></div>
 <details class="life-subdetails todo-create"><summary>＋ 手动添加一件事</summary><div class="inset"><h4>新增只读待办</h4><div class="fields"><div><label for="owner-todo-type">要做什么</label><select id="owner-todo-type"><option value="watch_video">看看指定视频</option><option value="inspect_my_space">看看我自己的空间投稿</option><option value="inspect_creator_videos">看看某位 UP 主的投稿</option><option value="search_videos">搜索视频主题</option><option value="check_notifications">检查 B站通知</option></select></div><div><label for="owner-todo-target">目标（BV 号 / UID / 关键词）</label><input id="owner-todo-target" maxlength="120" placeholder="根据任务类型填写"></div><div><label for="owner-todo-title">待办名称（可留空）</label><input id="owner-todo-title" maxlength="120" placeholder="例如：有空看看这个推荐"></div></div><div class="toolbar" style="margin-top:10px"><button id="owner-todo-add" class="life-action life-green">加入待办</button><span class="muted">点赞、收藏、关注等写入任务建议直接在主 Session 明确提出，由大肥鱼绑定准确目标与授权。</span></div></div>
+</details>
+<details class="life-subdetails todo-settings contextual-settings" id="settings-todo"><summary>⚙️ 自主待办调度设置（默认关闭）</summary><p class="muted">调整后台检查待办的节奏；不会因此获得公开发送权限。</p><p class="muted">两种自动检查是独立功能。开启前请确认调用频率和模型费用；不会因此获得公开写入权限。</p><div class="fields"><div><label for="owner-todo-auto-review">自主待办自动择机检查</label><select id="owner-todo-auto-review"><option value="false">关闭（默认，只在聊天或手动操作时考虑）</option><option value="true">开启（定时提醒主 Session 评估待办）</option></select></div><div><label for="owner-todo-review-minutes">检查间隔（分钟）</label><input id="owner-todo-review-minutes" max="1440" min="15" step="15" type="number" value="60"/></div></div>
+<div class="inset"><h4>🤖 独立自主调度 · 真正由后台择机决定</h4>
+<p class="muted">与旧版「提醒主 Session」不同：开启后，后台可调用 AI 从已存在的只读待办中选择执行、延期、忽略或跳过，也可以按现有证据条件请求人生反思。不会自动点赞、关注、收藏、发评论或发私信；独立于自动刷视频。默认关闭。</p>
+<div class="fields"><div><label for="autonomous-planner-enabled">独立自主调度</label><select id="autonomous-planner-enabled"><option value="false">关闭（省调用）</option><option value="true">开启 · 只读任务和反思（新安装推荐）</option></select></div>
+<div><label for="autonomous-planner-minutes">至少间隔（分钟，5–1440）</label><input id="autonomous-planner-minutes" max="1440" min="5" type="number" value="180"/></div>
+<div><label for="autonomous-planner-limit">每日最多 AI 自主决策（0–288，0 表示关闭）</label><input id="autonomous-planner-limit" max="288" min="0" type="number" value="4"/><small class="setting-note">只限制独立 AI 调度的模型调用；频率和活跃时段也会限制实际次数。提高额度可能增加模型费用，已有配置不会自动覆盖。</small></div>
+<div><label for="autonomous-planner-start">每日开始时（宿主当地小时）</label><input id="autonomous-planner-start" max="23" min="0" type="number" value="9"/></div>
+<div><label for="autonomous-planner-end">每日结束时（宿主当地小时，24=午夜）</label><input id="autonomous-planner-end" max="24" min="1" type="number" value="23"/></div></div>
+<p class="muted" id="autonomous-planner-status" role="status">尚未读取自主调度状态</p></div>
+<div class="toolbar"><button class="life-action life-indigo" id="owner-todo-settings-save">保存待办与自主调度设置</button></div>
 </details>
 </div>
 <div id="life-relationship-section" class="settings-section life-section"><h4>👥 逐渐熟悉的人</h4>

@@ -85,7 +85,7 @@ test('新增动态开关与每日上限可通过管理中心接口保存，默�
    let code=0,data;const res={writeHead(n){code=n},end(x){data=JSON.parse(x)}}
    await handler(req,res);assert.equal(code,200);return data.config
   }
-  const before=await call('GET');assert.equal(before.dailyDynamicEnabled,false);assert.equal(before.dailyDynamicDraftOnly,true)
+  const before=await call('GET');assert.equal(before.dailyDynamicEnabled,true);assert.equal(before.dailyDynamicDraftOnly,true)
   const after=await call('POST',{autoVideoLikeDailyLimit:17,dailyDynamicEnabled:true,dailyDynamicDraftOnly:false,dailyDynamicDailyLimit:3})
   assert.equal(after.autoVideoLikeDailyLimit,17);assert.equal(after.dailyDynamicEnabled,true)
   assert.equal(after.dailyDynamicDraftOnly,false);assert.equal(after.dailyDynamicDailyLimit,3)

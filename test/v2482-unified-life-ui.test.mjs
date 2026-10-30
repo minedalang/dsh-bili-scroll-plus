@@ -10,14 +10,15 @@ const j=readFileSync(new URL('../lib/management-console.js',import.meta.url),'ut
 const client=readFileSync(new URL('../client.js',import.meta.url),'utf8')
 const pkg=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'))
 
-test('升级后保留人生记忆独立页；记忆配置已从家页移到插件设置',()=>{
+test('升级后保留人生记忆独立页；记忆配置在流程图下面折叠，主 Session 同步设置随房间',()=>{
  assert.match(pkg.version,/^2\.(?:[5-9]|[1-9]\d+)\.\d+(?:-dev\.\d+)?$/)
  assert.match(h,/data-tab="life"/)
- const house=h.split('<section id="panel-home"')[1].split('<section id="panel-settings"')[0]
- const settings=h.split('<section id="panel-settings"')[1].split('<section id="panel-life"')[0]
+ const house=h.split('<section id="panel-home"')[1].split('<section id="panel-life"')[0]
  const life=h.split('<section id="panel-life"')[1].split('<section id="panel-diagnostics"')[0]
- assert.match(settings,/人生记忆与检索设置/)
- assert.doesNotMatch(house,/人生记忆与检索设置/)
+ assert.match(life,/一段经历，怎样变成鱼鱼的记忆？[\s\S]*id="life-memory-settings"/)
+ assert.match(life,/id="main-memory-half-life"/)
+ assert.match(house,/id="home-sync-settings"/)
+ assert.doesNotMatch(house,/id="main-memory-half-life"/)
  assert.doesNotMatch(house,/id="main-interests-list"/)
  for (const id of ['main-interests-list','main-legacy-growth-list','main-memory-list','main-reflection-list'])assert.ok(life.includes('id="'+id+'"'))
  assert.match(life,/行为与表达改进/)

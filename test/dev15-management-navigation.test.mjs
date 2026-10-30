@@ -6,28 +6,34 @@ const html=readFileSync(new URL('../lib/management-console.html',import.meta.url
 const js=readFileSync(new URL('../lib/management-console.js',import.meta.url),'utf8');
 const panel=(name)=>html.split(`<section id="panel-${name}" hidden>`)[1]?.split(/<section id="panel-[a-z]+" hidden>/)[0]||'';
 
-test('dev.15 家 / 人生记忆 / 插件设置区分生活与技术管理，全部配置 ID 唯一',()=>{
-  for(const name of ['home','life','settings','social','models','comments','dm'])assert.match(html,new RegExp(`data-tab="${name}"`));
-  const home=panel('home'),settings=panel('settings'),life=panel('life');
+test('dev.15 家 / 人生记忆就地设置，B站各功能归同一领域，全部配置 ID 唯一',()=>{
+  for(const name of ['home','life','bili','dynamic','social','models','comments','dm'])assert.match(html,new RegExp(`data-tab="${name}"`));
+  const home=panel('home'),life=panel('life');
+  assert.ok(!html.includes('id="panel-settings"'),'no separate plugin settings page');
   for(const id of ['main-session-id','main-session-save','home-overview-memory','home-overview-mood','home-overview-social'])assert.ok(home.includes(`id="${id}"`),id);
-  for(const id of ['main-memory-enabled','main-memory-semantic','main-memory-half-life','main-reflection-daily','main-session-minutes','main-session-sync-save','owner-todo-settings-save']){
-    assert.ok(settings.includes(`id="${id}"`),id);
-    assert.ok(!home.includes(`id="${id}"`),`technical control ${id} was left in house`);
+  for(const id of ['main-memory-enabled','main-memory-semantic','main-memory-half-life','main-reflection-daily']){
+    assert.ok(life.includes(`id="${id}"`),id);
+    assert.ok(!home.includes(`id="${id}"`),`memory control ${id} was left in house`);
   }
+  for(const id of ['main-session-minutes','main-session-sync-save'])assert.ok(home.includes(`id="${id}"`),id);
+  assert.ok(life.includes('id="owner-todo-settings-save"'));
+  assert.match(life,/id="life-memory-settings" class="contextual-settings"/);
+  assert.match(home,/id="home-sync-settings" class="contextual-settings"/);
+  assert.match(life,/id="settings-todo"/);
   for(const id of ['main-session-history','main-memory-list','emotion-current','owner-todo-list','life-timeline-list'])assert.ok(life.includes(`id="${id}"`),id);
   const ids=[...html.matchAll(/\bid="([\w-]+)"/g)].map(m=>m[1]);
   assert.equal(new Set(ids).size,ids.length,'do not duplicate original DOM settings or access controls');
-  assert.match(html,/tab-cluster-label">生活与成长/);
-  assert.match(html,/tab-cluster-label">角色与系统配置/);
-  assert.match(html,/tab-cluster-label">知识与维护/);
+  assert.match(html,/tab-cluster-label">🏠 生活与成长/);
+  assert.match(html,/tab-cluster-label">📺 B站生活/);
+  assert.match(html,/tab-cluster-label">🎭 角色与系统/);
+  assert.match(html,/tab-cluster-label">🗂️ 知识与维护/);
 });
 
 test('高风险权限移动到社交页但默认禁用且保存控件独立',()=>{
-  const social=panel('social'),life=panel('life'),settings=panel('settings');
+  const social=panel('social'),life=panel('life');
   for(const id of ['emotion-recall-enabled','emotion-recall-main','emotion-recall-dm','emotion-recall-save','owner-dm-agent-enabled','owner-comment-publish']){
     assert.ok(social.includes(`id="${id}"`),id);
     assert.ok(!life.includes(`id="${id}"`),`outbound capability ${id} remains in life view`);
-    assert.ok(!settings.includes(`id="${id}"`),`outbound capability ${id} was put with benign system settings`);
   }
   for(const id of ['emotion-recall-enabled','emotion-recall-main','emotion-recall-dm'])assert.match(social,new RegExp(`id="${id}" type="checkbox"|type="checkbox" id="${id}"`));
   assert.match(js,/const loadSocial=async\(\)=>\{await Promise\.all\(\[loadSocialFriends\(\),loadSocialIntents\(\),loadOwnerDmAgentSettings\(\),loadCommentSettings\(\),renderEmotion\(\)\]\)\}/);
@@ -42,7 +48,8 @@ test('保存当前房间时不会越过页面边界覆盖同步频率；同步�
   const syncSave=js.split("$('main-session-sync-save').addEventListener('click'")[1].split("$('main-session-test').addEventListener")[0];
   for(const field of ['mainSessionSyncMinutes','mainSessionDailyBatches','mainSessionBatchSize','mainSessionIncludeComments'])assert.ok(syncSave.includes(field),field);
   assert.doesNotMatch(syncSave,/mainSessionId|mainSessionBridgeEnabled|mainSessionAutoSync/);
-  assert.match(js,/settings:loadPluginSettings/);
+  assert.doesNotMatch(js,/settings:loadPluginSettings/);
+  assert.match(js,/home:loadHome,life:loadLifeMemory/);
   assert.match(js,/home:loadHome/);
 });
 
