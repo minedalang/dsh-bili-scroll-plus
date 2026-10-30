@@ -76,7 +76,7 @@ test('v2.4.78 的多个 Session 记忆文件首次升级自动合并，旧文件
 
 test('README 与管理中心展示特色功能和双层人生记忆，不再堆积版本路线图',()=>{
   const html=readFileSync(new URL('../lib/management-console.html',import.meta.url),'utf8'),js=readFileSync(new URL('../lib/management-console.js',import.meta.url),'utf8'),readme=readFileSync(new URL('../README.md',import.meta.url),'utf8'),pkg=readFileSync(new URL('../package.json',import.meta.url),'utf8')
-  assert.match(html,/大肥鱼的家 · 配置与连接/);assert.doesNotMatch(html,/把一个长期 DSH 会话当作“大肥鱼本人”/);assert.match(html,/一段经历，怎样变成鱼鱼的记忆/);assert.match(html,/id="memory-flow-recorded"/);assert.match(html,/id="memory-flow-remembered"/);assert.match(html,/id="memory-flow-learned"/);assert.match(html,/鱼鱼现在记得什么/);assert.match(html,/这些经历给她留下了什么/);assert.match(html,/原始记录独立封存/);assert.match(html,/<details class="memory-reflection-details"/)
+  assert.match(html,/大肥鱼的家 · 生活总览/);assert.doesNotMatch(html,/把一个长期 DSH 会话当作“大肥鱼本人”/);assert.match(html,/一段经历，怎样变成鱼鱼的记忆/);assert.match(html,/id="memory-flow-recorded"/);assert.match(html,/id="memory-flow-remembered"/);assert.match(html,/id="memory-flow-learned"/);assert.match(html,/鱼鱼现在记得什么/);assert.match(html,/这些经历给她留下了什么/);assert.match(html,/原始记录独立封存/);assert.match(html,/<details class="memory-reflection-details"/)
   assert.match(html,/导出最新表情包名称 TXT/);assert.match(html,/导出当前规则 JSON/);assert.match(html,/一起交给 AI/)
   assert.match(js,/sticker-workflow-export-names/);assert.match(js,/sticker-workflow-export-rules/);assert.match(js,/renderLifeReflection/);assert.match(js,/main-session\/memory\/import-fish/)
   assert.match(readme,/双层人生记忆/);assert.match(readme,/dafeiyu\.json/);assert.match(readme,/当前全部表情包名称 TXT \+ 当前规则 JSON/);assert.match(readme,/双域意愿/);assert.match(readme,/社交互动/);assert.doesNotMatch(readme,/2\.5\.0-dev\.|版本流水账|未来路线图/)

@@ -34,7 +34,7 @@ test('manage HTML and JS are served from same DSH route without extra port or pr
    assert.match(h.text,/梗知识库/)
    assert.match(h.text,/限额聊天申请/)
    assert.match(h.text,/manage\.js/)
-   assert.match(h.text,/今日诊断/)
+   assert.match(h.text,/运行诊断/)
    assert.match(h.text,/每日报告/)
    assert.match(h.text,/后台私信/)
    assert.match(h.text,/最近评论/)

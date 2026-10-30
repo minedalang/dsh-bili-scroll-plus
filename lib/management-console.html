@@ -271,31 +271,46 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 #panel-life #life-interest-section .interest-grid{margin:12px 0}
 #panel-life #life-relationship-section #friend-relationships-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:10px}
 @media(prefers-reduced-motion:reduce){#panel-life .todo-item,#panel-life .life-subdetails{animation:none!important}}
+
+/* dev.15：生活概览与系统设置分开，所有旧控件仍保留原 ID / API。 */
+.home-overview{margin:15px 0}.home-summary{display:flex;flex-direction:column;gap:7px;color:var(--ink);text-decoration:none;min-height:126px}
+.home-summary:hover,.home-summary:focus-visible{border-color:var(--action);background:var(--tint)}
+.home-summary strong{font-size:16px}.home-summary span{flex:1}.home-summary small{color:var(--action)}
+.home-quicklinks{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+.context-jump{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 18px}
+.context-jump a{color:var(--ink);background:var(--panel);border:1px solid var(--stroke);border-radius:99px;padding:8px 12px;font-size:13px;text-decoration:none}
+.context-jump a:hover,.context-jump a:focus-visible{background:var(--tint);border-color:var(--action)}
+#settings-memory,#settings-sync,#settings-todo,#settings-model-link,#unified-friends,#social-outreach-section,#social-owner-comment,#owner-dm-control-section,#social-emotion-authorization,#comments-records,#comments-configuration,#dm-requests,#dm-settings-section,#dm-recent-conversations{scroll-margin-top:160px}
+#settings-memory>.settings-section,#settings-sync>.settings-section,#settings-todo>.settings-section{margin:0}
+#panel-social #social-emotion-authorization{margin:14px 0}
+#panel-social .emotion-options{padding-top:8px}
+@media(max-width:620px){.home-overview{grid-template-columns:1fr}.context-jump a{flex:1;text-align:center}}
 </style>
 <script defer src="/api/bili-duty/manage.js"></script>
 </head>
 <body><main class="wrap">
 <header class="top"><div><h1>🐳 大肥鱼 · DSH 生活系统</h1><p class="muted">管理中心 · 她的家、记忆、好友、B站生活、互动边界与持久化档案</p></div><button id="refresh">刷新当前页</button></header>
 <nav class="tabs" aria-label="管理分类">
-<div class="tab-cluster"><span class="tab-cluster-label">日常与配置</span>
+<div class="tab-cluster"><span class="tab-cluster-label">生活与成长</span>
 <button data-tab="home" aria-selected="false">大肥鱼的家</button>
-<button data-tab="models" aria-selected="false">AI 模型</button>
-<button data-tab="bili" aria-selected="false">B站生活</button>
+<button data-tab="life" aria-selected="false">人生记忆</button>
+<button data-tab="social" aria-selected="false">社交互动</button>
 <button data-tab="dynamic" aria-selected="false">B站动态创作</button>
+<button data-tab="comments" aria-selected="false">最近评论</button>
+<button data-tab="dm" aria-selected="false">后台私信 <span id="dm-count" class="queue-badge" hidden></span></button></div>
+<div class="tab-cluster"><span class="tab-cluster-label">角色与系统配置</span>
+<button data-tab="persona" aria-selected="true">角色人设</button>
+<button data-tab="growth" aria-selected="false">行为与表达改进 <span id="growth-count" class="queue-badge" hidden></span></button>
+<button data-tab="bili" aria-selected="false">B站生活</button>
+<button data-tab="models" aria-selected="false">AI 模型</button>
+<button data-tab="settings" aria-selected="false">插件设置</button>
 <button data-tab="quotas" aria-selected="false">次数与额度</button>
 <button data-tab="polling" aria-selected="false">后台轮询</button></div>
-<div class="tab-cluster"><span class="tab-cluster-label">身份与记忆</span>
-<button data-tab="persona" aria-selected="true">角色人设</button>
-<button data-tab="social" aria-selected="false">社交互动</button>
-<button data-tab="life" aria-selected="false">人生记忆</button>
-<button data-tab="growth" aria-selected="false">行为与表达改进 <span id="growth-count" class="queue-badge" hidden></span></button>
+<div class="tab-cluster"><span class="tab-cluster-label">知识与维护</span>
 <button data-tab="meme" aria-selected="false">梗与网络文化 <span id="meme-count" class="queue-badge" hidden></span></button>
-<button data-tab="stickers" aria-selected="false">表情包管理</button></div>
-<div class="tab-cluster"><span class="tab-cluster-label">记录与维护</span>
-<button data-tab="comments" aria-selected="false">最近评论</button>
-<button data-tab="dm" aria-selected="false">后台私信 <span id="dm-count" class="queue-badge" hidden></span></button>
+<button data-tab="stickers" aria-selected="false">表情包管理</button>
 <button data-tab="reports" aria-selected="false">每日报告</button>
-<button data-tab="diagnostics" aria-selected="false">每日诊断</button>
+<button data-tab="diagnostics" aria-selected="false">运行诊断</button>
 <button data-tab="backup" aria-selected="false">数据备份</button></div>
 </nav>
 <p id="message" role="status" aria-live="polite"></p>
@@ -313,7 +328,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label class="checkline"><input id="models-vision-debug" type="checkbox">开启视觉识图调试日志（排障用）</label></div></div>
 </div>
 <div class="settings-section"><h4>表情包检索规则优化</h4><div class="model-activity"><span id="models-memeRules-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-memeRules-test" class="model-test-button">测试连接</button><span id="models-memeRules-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">仅在「表情包管理」点击 AI 更新时调用；不参与每次评论。留空时继承 DSH 当前默认模型。建议使用低成本模型与 low 思考深度；提示词只包含真实表情包名称/分类与现有规则；不会读取或发送大肥鱼的当前兴趣、评论、私信、好友画像或图片。兴趣由本地检索在每次查询时动态读取。</p><div class="fields" id="models-memeRules"></div></div>
-<div class="settings-section"><h4>低成本人生记忆检索</h4><div class="model-activity"><span id="models-memory-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-memory-test" class="model-test-button">测试连接</button><span id="models-memory-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">从当前可用的经历与长期认识候选中只选择真实 ID，不会读取封存档案，也不能发送 B站消息或修改记忆。是否启用和额度仍在「大肥鱼的家」设置。</p><div class="fields" id="models-memory"></div></div>
+<div class="settings-section"><h4>低成本人生记忆检索</h4><div class="model-activity"><span id="models-memory-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-memory-test" class="model-test-button">测试连接</button><span id="models-memory-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">从当前可用的经历与长期认识候选中只选择真实 ID，不会读取封存档案，也不能发送 B站消息或修改记忆。是否启用和额度在「插件设置」管理。</p><div class="fields" id="models-memory"></div></div>
 <div class="toolbar"><button id="models-save" class="primary">保存全部模型配置</button><button id="models-refresh">重新读取</button></div>
 </div></section>
 <section id="panel-bili" hidden>
@@ -377,8 +392,14 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 </div><p id="backup-progress" role="status" aria-live="polite" class="muted"></p>
 </section>
 <section id="panel-home" hidden>
-<div class="toolbar"><h2 style="margin:0">🏠 大肥鱼的家 · 配置与连接</h2><button id="main-session-refresh">刷新在线会话</button></div>
-<p class="muted"><strong>主 Session 只是大肥鱼当前住的聊天房间，不等于大肥鱼本人。</strong> 人设、经主人审核的成长经验和身份级长期记忆属于大肥鱼本人；切换主 Session 只会更换当前聊天上下文。插件继续负责安全地自动刷 B站、精确账本和发送权限，并把<strong>已发生的重要经历</strong>同步到当前房间；不会让主 Session 接管后台任务，也不会扫描 <code>~/.dsh/sessions</code> 或读取其它会话记录。</p>
+<div class="feature-intro"><div><h2>🏠 大肥鱼的家 · 生活总览</h2><p>这里看到鱼鱼此刻的生活、记忆与社交近况。回忆详情在「人生记忆」，行为授权在「社交互动」，算法参数在「插件设置」。以下状态来自本地真实记录，不会自动触发对外发送。</p></div></div>
+<div class="home-overview grid" aria-label="生活概览">
+<a class="card home-summary" href="?tab=life" data-open-tab="life"><strong>🧠 鱼鱼的记忆</strong><span id="home-overview-memory" class="muted">正在读取记忆概况…</span><small>进入人生记忆 →</small></a>
+<a class="card home-summary" href="?tab=life#life-emotion-section" data-open-tab="life" data-open-anchor="life-emotion-section"><strong>💗 最近的心情</strong><span id="home-overview-mood" class="muted">正在读取心情…</span><small>查看情绪变化 →</small></a>
+<a class="card home-summary" href="?tab=social" data-open-tab="social"><strong>👥 熟悉的朋友</strong><span id="home-overview-social" class="muted">正在读取社交近况…</span><small>查看好友与社交授权 →</small></a>
+</div>
+<div class="toolbar"><h2 style="margin:0">🐟 当前聊天房间 · 主 Session</h2><button id="main-session-refresh">刷新在线会话</button></div>
+<p class="muted"><strong>主 Session 是鱼鱼当前使用的聊天房间，不等于鱼鱼本人。</strong> 切换房间不会清空她已经形成的身份记忆，也不会让主 Session 自动获得后台任务权限；这里仅配置当前连接。同步间隔与每日额度请到「插件设置」。</p>
 <div class="settings-stack">
 <div class="settings-section"><h4>1. 选择大肥鱼当前的聊天房间（主 Session）</h4>
 <div class="fields"><div><label for="main-session-enabled">启用当前房间的经历同步桥</label><input id="main-session-enabled" type="checkbox"></div>
@@ -387,15 +408,15 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p class="muted">这里只列出当前 DSH 中活着的会话，不从硬盘猜“最近会话”。请先在 DSH 里打开你准备作为当前聊天房间的会话，再回来刷新选择。以后换房间不会清空大肥鱼的身份级长期记忆。</p>
 <div class="toolbar"><button id="main-session-save" class="primary">保存主 Session 设置</button><button id="main-session-test">发送连接测试</button></div>
 <p id="main-session-target-status" class="muted" role="status">尚未读取</p></div>
-<div class="settings-section"><h4>2. 把新经历告诉大肥鱼的频率</h4><div class="fields">
-<div><label for="main-session-minutes">两次提醒主 Session 至少间隔多久（15–720 分钟）</label><input id="main-session-minutes" type="number" min="15" max="720" value="60"></div>
-<div><label for="main-session-daily">每天最多给主 Session 汇报几次（1–24 次）</label><input id="main-session-daily" type="number" min="1" max="24" value="4"></div>
-<div><label for="main-session-batch">每次最多汇报多少条经历（1–20 条）</label><input id="main-session-batch" type="number" min="1" max="20" value="8"></div>
-<div><label for="main-session-comments">汇报时也告诉主 Session 我发过的评论/回复</label><input id="main-session-comments" type="checkbox" checked></div></div>
-<p class="muted">同步本身不额外调用“总结 AI”：视频经历和评论正文直接从插件现有账本整理。但投递到主 Session 后，那个 Session 会产生一次很短的模型回复，所以默认最多每天 4 批，避免浪费调用。跳过的视频仍保存在任务日志/视频归档供管理员核对；它们不会仅凭被记录就自动变成大肥鱼的可用记忆。</p></div>
-
-<div class="settings-section"><h4>3. 人生记忆与检索设置</h4>
-<p class="muted">这里只放记忆开关和用量设置；所有模型统一在「AI 模型配置」页设置。兴趣变化、真实回忆、人物关系、待反思经历和检索测试，请切换到独立的「人生记忆」页。</p>
+</div>
+<div class="home-quicklinks" aria-label="其他生活入口"><button type="button" data-open-tab="life">查看人生记忆</button><button type="button" data-open-tab="social">管理社交与授权</button><button type="button" data-open-tab="settings">调整插件参数</button></div>
+</section>
+<section id="panel-settings" hidden>
+<div class="feature-intro"><div><h2>⚙️ 插件设置 · 记忆与调度</h2><p>这里只调整系统的保存、遗忘、检索、反思和任务调度参数。生活观察在「人生记忆」，对外发信授权在「社交互动」。这些操作沿用原有配置字段与后端 API。</p></div></div>
+<nav class="context-jump" aria-label="插件设置分区"><a href="#settings-memory">记忆与检索</a><a href="#settings-sync">经历同步</a><a href="#settings-todo">自主待办调度</a><a href="#settings-model-link">AI 模型</a></nav>
+<div class="settings-stack">
+<div id="settings-memory"><div class="settings-section"><h4>人生记忆与检索设置</h4>
+<p class="muted">这里只放记忆开关和用量设置；所有模型统一在「AI 模型配置」页设置。真实回忆、兴趣与人物关系在「人生记忆」查看；模型 Provider 和 ID 统一在「AI 模型」页修改。</p>
 <div class="fields"><div><label for="main-memory-enabled">启用大肥鱼跨 Session 长期记忆（身份级）</label><input id="main-memory-enabled" type="checkbox"><small class="setting-note">开启后跨聊天会话记住重要经历；关闭后不注入长期记忆，已保存的内容不会删除。</small></div>
 <div><label for="main-memory-auto-bili">把新经历加入「待反思经历」列表</label><input id="main-memory-auto-bili" type="checkbox" checked><small class="setting-note">开启后把真实入选视频等经历放进待反思池；关闭不会删除已有经历。</small></div>
 <div><label for="main-reflection-auto">自动进行人生反思</label><input id="main-reflection-auto" type="checkbox" checked><small class="setting-note">开启后满足条件时自动使用反思模型筛选记忆；关闭后仍可手动反思。</small></div>
@@ -416,7 +437,28 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label for="main-memory-daily">主人聊天语义记忆每日最多（1–30 条）</label><input id="main-memory-daily" type="number" min="1" max="30" value="8"><small class="setting-note">限制从主人聊天中每天新增的语义记忆数量，避免把普通聊天全记下。</small></div>
 <div><label for="main-memory-facts">长期事实最多占召回（0–6 条）</label><input id="main-memory-facts" type="number" min="0" max="6" value="2"><small class="setting-note">限制每轮召回中长期稳定事实占多少条，为具体经历留出位置。</small></div></div>
 <p class="muted">主 Session 始终携带少量真实的身份记忆；其他记忆先本地搜索，必要时由专用低成本模型挑选真实 ID，再读取正文。检索模型使用不带文件、Shell、B站 MCP 或浏览器工具的独立安全 headless 会话，必须已在 DSH 配好 Provider/模型。未配置或请求失败会回退本地记忆；不会用模型生成的文字充当过去的事实。</p>
-<div class="toolbar"><button id="main-memory-save" class="primary">保存记忆与反思设置</button></div><p id="main-memory-status" class="muted" role="status">正在读取…</p></div></div></section>
+<div class="toolbar"><button id="main-memory-save" class="primary">保存记忆与反思设置</button></div><p id="main-memory-status" class="muted" role="status">正在读取…</p></div></div>
+<div id="settings-sync"><div class="settings-section"><h4>2. 把新经历告诉大肥鱼的频率</h4><div class="fields">
+<div><label for="main-session-minutes">两次提醒主 Session 至少间隔多久（15–720 分钟）</label><input id="main-session-minutes" type="number" min="15" max="720" value="60"></div>
+<div><label for="main-session-daily">每天最多给主 Session 汇报几次（1–24 次）</label><input id="main-session-daily" type="number" min="1" max="24" value="4"></div>
+<div><label for="main-session-batch">每次最多汇报多少条经历（1–20 条）</label><input id="main-session-batch" type="number" min="1" max="20" value="8"></div>
+<div><label for="main-session-comments">汇报时也告诉主 Session 我发过的评论/回复</label><input id="main-session-comments" type="checkbox" checked></div></div>
+<p class="muted">同步本身不额外调用“总结 AI”：视频经历和评论正文直接从插件现有账本整理。但投递到主 Session 后，那个 Session 会产生一次很短的模型回复，所以默认最多每天 4 批，避免浪费调用。跳过的视频仍保存在任务日志/视频归档供管理员核对；它们不会仅凭被记录就自动变成大肥鱼的可用记忆。</p></div>
+
+<div class="toolbar"><button id="main-session-sync-save" class="primary" type="button">保存主 Session 同步频率</button></div></div>
+<div id="settings-todo"><div class="settings-section"><h4>📝 自主待办调度</h4><p class="muted">待办清单与手动添加仍位于「人生记忆」。这里仅管理后台如何择机检查待办，默认关闭，不赋予公开写入权限。</p><details class="life-subdetails todo-settings"><summary>⚙️ 自动择机与独立调度（默认关闭）</summary><p class="muted">两种自动检查是独立功能。开启前请确认调用频率和模型费用；不会因此获得公开写入权限。</p><div class="fields"><div><label for="owner-todo-auto-review">自主待办自动择机检查</label><select id="owner-todo-auto-review"><option value="false">关闭（默认，只在聊天或手动操作时考虑）</option><option value="true">开启（定时提醒主 Session 评估待办）</option></select></div><div><label for="owner-todo-review-minutes">检查间隔（分钟）</label><input id="owner-todo-review-minutes" type="number" min="15" max="1440" step="15" value="60"></div></div>
+<div class="inset"><h4>🤖 独立自主调度 · 真正由后台择机决定</h4>
+<p class="muted">与旧版「提醒主 Session」不同：开启后，后台可调用 AI 从已存在的只读待办中选择执行、延期、忽略或跳过，也可以按现有证据条件请求人生反思。不会自动点赞、关注、收藏、发评论或发私信；独立于自动刷视频。默认关闭。</p>
+<div class="fields"><div><label for="autonomous-planner-enabled">独立自主调度</label><select id="autonomous-planner-enabled"><option value="false">关闭（默认）</option><option value="true">开启 · 只读任务和反思</option></select></div>
+<div><label for="autonomous-planner-minutes">至少间隔（分钟，5–1440）</label><input id="autonomous-planner-minutes" type="number" min="5" max="1440" value="30"></div>
+<div><label for="autonomous-planner-limit">每日最多 AI 自主决策（0–288，0 表示关闭）</label><input id="autonomous-planner-limit" type="number" min="0" max="288" value="24"><small class="setting-note">只限制独立 AI 调度的模型调用；频率和活跃时段也会限制实际次数。提高额度可能增加模型费用，已有配置不会自动覆盖。</small></div>
+<div><label for="autonomous-planner-start">每日开始时（宿主当地小时）</label><input id="autonomous-planner-start" type="number" min="0" max="23" value="9"></div>
+<div><label for="autonomous-planner-end">每日结束时（宿主当地小时，24=午夜）</label><input id="autonomous-planner-end" type="number" min="1" max="24" value="23"></div></div>
+<p id="autonomous-planner-status" class="muted" role="status">尚未读取自主调度状态</p></div>
+<div class="toolbar"><button id="owner-todo-settings-save" class="life-action life-indigo">保存待办与自主调度设置</button></div>
+</details></div></div>
+<div id="settings-model-link" class="settings-section"><h4>🤖 模型配置独立管理</h4><p class="muted">记忆语义检索、人生反思等模型的 Provider、模型 ID 和思考深度统一在「AI 模型」页设置。默认关闭的能力不会因为调整界面而被启用。</p><button type="button" data-open-tab="models">前往 AI 模型</button></div>
+</div></section>
 <section id="panel-life" hidden>
 <div class="life-hero"><div><div class="status-line"><span id="life-learning-status" class="live-badge">● 正在整理真实经历</span></div><h2>🐟 鱼鱼的记忆</h2><p class="muted">她经历了什么、现在还记得什么，又从中留下了什么体会，都可以在这里看到。</p></div><button id="main-life-refresh" class="life-action life-indigo">↻ 刷新记忆</button></div>
 <nav class="life-jump" aria-label="人生记忆分区快捷跳转"><a href="#life-recall-section">🧠 现在记得什么</a><a href="#life-lessons">✨ 留下了什么体会</a><a href="#life-emotion-section">💗 现在的心情</a><a href="#life-todo-section">📝 自主待办</a><a href="#life-interest-section">🌱 兴趣</a><a href="#life-timeline-section">📅 真实生活</a><a href="#unified-friends" data-nav-tab="social">👥 社交互动</a><a href="#life-others">⚙️ 更多操作</a></nav>
@@ -432,30 +474,12 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
   <div class="memory-flow-footer"><span>⏳ 记忆会从清晰变模糊，最后可能想不起来。<strong id="memory-flow-fading">正在读取…</strong></span><span>🔒 原始记录独立封存，仅用于管理、审计和备份；鱼鱼不会用它偷偷想起忘掉的细节。「行为与表达改进」是独立的表达规则，不是经历记忆。</span></div>
 </section>
 <div id="life-emotion-section" class="settings-section life-section"><div class="toolbar"><h4 style="margin:0">💗 鱼鱼现在的心情</h4><span id="emotion-status" class="live-badge">● 正在读取情绪状态</span></div>
-<p class="muted">情绪驱动的自主回忆与主动分享可以选择开启：当近期真实视频再次触及过去有证据的人生记忆时，大肥鱼可以决定保持沉默、在主 Session 主动开口或给主人发送 B站私信。原始经历始终是证据；整理回忆、反思或产生念头均不能自行改写原始事实。 这是大肥鱼的角色模拟状态，不是生理测量或真实意识证明。它只保存情绪类别、强度和粗粒度来源，不保存触发心情的私信正文、UID 或具体聊天原因。情绪会随时间衰减，不能成为泄露隐私、迁怒或强行社交的理由。</p>
+<p class="muted">情绪驱动的自主回忆与主动分享权限请到「社交互动」开启：当近期真实视频再次触及过去有证据的人生记忆时，大肥鱼可以决定保持沉默、在主 Session 主动开口或给主人发送 B站私信。原始经历始终是证据；整理回忆、反思或产生念头均不能自行改写原始事实。 这是大肥鱼的角色模拟状态，不是生理测量或真实意识证明。它只保存情绪类别、强度和粗粒度来源，不保存触发心情的私信正文、UID 或具体聊天原因。情绪会随时间衰减，不能成为泄露隐私、迁怒或强行社交的理由。</p>
 <label class="checkline"><input id="emotion-enabled" type="checkbox" checked>持续记录心情</label>
 <div id="emotion-current" class="grid emotion-grid" aria-live="polite"></div>
 <div class="toolbar"><button id="emotion-save" class="life-action life-green">保存情绪设置</button><button id="emotion-reset" class="life-action life-amber">重置为平稳</button></div>
 <h4 style="margin-top:15px">近几次心情变化</h4><div id="emotion-trend" class="emotion-trend" role="img" aria-label="近期情绪变化趋势"></div><details class="life-subdetails"><summary>查看完整情绪记录</summary><div id="emotion-history" class="records records-scroll"></div></details>
-<details class="life-subdetails emotion-options"><summary>💌 自主回忆与主动分享设置（默认关闭）</summary><div class="inset" style="margin-top:18px"><h4>💌 情绪驱动的自主回忆与分享 · 让过去自然浮现</h4>
-<p class="muted">例如今天再次刷到一个以前看过的系列，开心或怀念的模拟情绪变化，让大肥鱼想起有真实 BV 证据的旧经历；它可以决定沉默，也可以在已授权的渠道主动找主人聊聊。不是每次情绪波动都会分享。<strong>总开关与两个渠道默认全部关闭。</strong></p>
-<label class="checkline"><input type="checkbox" id="emotion-recall-enabled">允许情绪触发自主回忆（需同时开启长期记忆）</label>
-<div class="fields"><div><label class="checkline"><input id="emotion-recall-main" type="checkbox">允许在指定 DSH 主 Session 主动开口</label><p class="muted">需要先在「告诉主 Session」选好会话，并保持目标会话在线。</p></div>
-<div><label class="checkline"><input id="emotion-recall-dm" type="checkbox">允许给主人发送 B站回忆私信</label><p class="muted">只会发送到「社交互动 → 好友关系与互动」中勾选并保存的唯一授权主人 UID（dmOwnerUid）；不会发送给其他人。</p></div>
-<div><label for="emotion-recall-daily">每天最多发送（0=禁止，可填任意正整数）</label><input id="emotion-recall-daily" type="number" min="0" step="1" value="1"><small class="setting-note">只限制实际主动发出的消息；设为 0 表示禁止。可填任意非负安全整数，两个渠道合计。</small></div>
-<div><label class="checkline"><input id="emotion-recall-unlimited" type="checkbox">不限制每天的发送次数</label><small class="setting-note">仅在每日上限大于 0 时忽略次数上限；0 始终禁止发送。仍必须符合时间窗口、独立授权、评估间隔、记忆证据和去重条件；可能增加模型开销和打扰。</small></div>
-<div><label for="emotion-recall-cooldown">两次评估间隔（小时，1–48）</label><input id="emotion-recall-cooldown" type="number" min="1" max="48" value="24"><small class="setting-note">至少隔这么久才重新让模型考虑是否分享；评估不是发送，调小可能增加模型调用。</small></div>
-<div><label for="emotion-recall-candidates">每次最多考虑的相关记忆（1–100）</label><input id="emotion-recall-candidates" type="number" min="1" max="100" value="12"><small class="setting-note">候选越多可能发现更多相关旧事，但会增加决策模型的输入长度。只从有原始证据的经历中取。</small></div>
-<div><label for="emotion-recall-history">历史经历检索条数（20–1000）</label><input id="emotion-recall-history" type="number" min="20" max="1000" value="300"><small class="setting-note">从较大范围的本地历史里寻找线索，不再隐式锁在前 20 条。</small></div>
-<div><label for="emotion-recall-recent-days">新事件回看天数（1–30）</label><input id="emotion-recall-recent-days" type="number" min="1" max="30" value="3"><small class="setting-note">决定最近多久内的新观看/评论可能触发回忆；不会自动读取私人消息正文。</small></div>
-<div><label for="emotion-recall-old-days">旧记忆至少相隔天数（1–365）</label><input id="emotion-recall-old-days" type="number" min="1" max="365" value="2"><small class="setting-note">把旧事与新事件拉开一定时间，降低普通重复观看被当成重要回忆的概率。</small></div>
-<div><label for="emotion-recall-min-intensity">触发情绪最低强度（1–100）</label><input id="emotion-recall-min-intensity" type="number" min="1" max="100" value="30"><small class="setting-note">越低越容易进入候选评估，但不会跳过真实证据和主人授权。</small></div>
-<div><label for="emotion-recall-emotion-hours">情绪有效期（1–72 小时）</label><input id="emotion-recall-emotion-hours" type="number" min="1" max="72" value="12"><small class="setting-note">近期模拟情绪在这段时间内可以影响回忆联想；过期后不再以旧情绪触发。</small></div>
-<div><label for="emotion-recall-start">每日最早开始（0–23 时）</label><input id="emotion-recall-start" type="number" min="0" max="23" value="9"></div>
-<div><label for="emotion-recall-end">每日最晚结束（1–24 时）</label><input id="emotion-recall-end" type="number" min="1" max="24" value="22"></div></div>
-<p class="muted">模型只能从核验的旧记忆 ID 中决定是否分享；正文根据真实新旧经历模板生成，不接受模型编造的事实。默认每天最多一次、24 小时内不重复评估，夜间免打扰。B站消息为真实对外发送行为。</p>
-<div class="toolbar"><button id="emotion-recall-save" class="life-action life-green">保存自主回忆权限</button><button id="emotion-recall-preview" class="life-action life-sky">只预览评估（不发送）</button></div>
-<p id="emotion-recall-status" class="muted" role="status">尚未读取自主回忆状态</p><div class="inset"><h4>🫧 最近回忆评估 · 为什么想起或保持安静</h4><p class="muted">看看大肥鱼最近是在等待情绪、寻找有证据的回忆，还是决定主动分享。不会展示私信正文或私人聊天。</p><div id="emotion-recall-flow" class="recall-flow" role="group" aria-label="情绪触发回忆的进展"></div><div id="emotion-recall-overview" class="recall-overview" aria-live="polite"></div><div id="emotion-recall-diagnostics" class="records records-scroll recall-diagnostics" aria-label="最近回忆评估记录，可滚动"><p class="muted">尚无诊断记录。</p></div></div></div></details></div>
+</div>
 
 <div class="settings-stack">
 <div id="life-recall-section" class="settings-section life-section memory-home">
@@ -489,17 +513,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <style>.todo-origin-quote{margin:8px 0;padding:10px 12px;border-left:3px solid #7b8ef9;background:var(--surface-2,rgba(107,129,228,.09));border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.92em}</style><div id="owner-todo-list" class="records records-scroll tall"></div>
 <details class="life-subdetails todo-create"><summary>＋ 手动添加一件事</summary><div class="inset"><h4>新增只读待办</h4><div class="fields"><div><label for="owner-todo-type">要做什么</label><select id="owner-todo-type"><option value="watch_video">看看指定视频</option><option value="inspect_my_space">看看我自己的空间投稿</option><option value="inspect_creator_videos">看看某位 UP 主的投稿</option><option value="search_videos">搜索视频主题</option><option value="check_notifications">检查 B站通知</option></select></div><div><label for="owner-todo-target">目标（BV 号 / UID / 关键词）</label><input id="owner-todo-target" maxlength="120" placeholder="根据任务类型填写"></div><div><label for="owner-todo-title">待办名称（可留空）</label><input id="owner-todo-title" maxlength="120" placeholder="例如：有空看看这个推荐"></div></div><div class="toolbar" style="margin-top:10px"><button id="owner-todo-add" class="life-action life-green">加入待办</button><span class="muted">点赞、收藏、关注等写入任务建议直接在主 Session 明确提出，由大肥鱼绑定准确目标与授权。</span></div></div>
 </details>
-<details class="life-subdetails todo-settings"><summary>⚙️ 自动择机与独立调度（默认关闭）</summary><p class="muted">两种自动检查是独立功能。开启前请确认调用频率和模型费用；不会因此获得公开写入权限。</p><div class="fields"><div><label for="owner-todo-auto-review">自主待办自动择机检查</label><select id="owner-todo-auto-review"><option value="false">关闭（默认，只在聊天或手动操作时考虑）</option><option value="true">开启（定时提醒主 Session 评估待办）</option></select></div><div><label for="owner-todo-review-minutes">检查间隔（分钟）</label><input id="owner-todo-review-minutes" type="number" min="15" max="1440" step="15" value="60"></div></div>
-<div class="inset"><h4>🤖 独立自主调度 · 真正由后台择机决定</h4>
-<p class="muted">与旧版「提醒主 Session」不同：开启后，后台可调用 AI 从已存在的只读待办中选择执行、延期、忽略或跳过，也可以按现有证据条件请求人生反思。不会自动点赞、关注、收藏、发评论或发私信；独立于自动刷视频。默认关闭。</p>
-<div class="fields"><div><label for="autonomous-planner-enabled">独立自主调度</label><select id="autonomous-planner-enabled"><option value="false">关闭（默认）</option><option value="true">开启 · 只读任务和反思</option></select></div>
-<div><label for="autonomous-planner-minutes">至少间隔（分钟，5–1440）</label><input id="autonomous-planner-minutes" type="number" min="5" max="1440" value="30"></div>
-<div><label for="autonomous-planner-limit">每日最多 AI 自主决策（0–288，0 表示关闭）</label><input id="autonomous-planner-limit" type="number" min="0" max="288" value="24"><small class="setting-note">只限制独立 AI 调度的模型调用；频率和活跃时段也会限制实际次数。提高额度可能增加模型费用，已有配置不会自动覆盖。</small></div>
-<div><label for="autonomous-planner-start">每日开始时（宿主当地小时）</label><input id="autonomous-planner-start" type="number" min="0" max="23" value="9"></div>
-<div><label for="autonomous-planner-end">每日结束时（宿主当地小时，24=午夜）</label><input id="autonomous-planner-end" type="number" min="1" max="24" value="23"></div></div>
-<p id="autonomous-planner-status" class="muted" role="status">尚未读取自主调度状态</p></div>
-<div class="toolbar"><button id="owner-todo-settings-save" class="life-action life-indigo">保存待办与自主调度设置</button></div>
-</details></div>
+</div>
 <div id="life-relationship-section" class="settings-section life-section"><h4>👥 逐渐熟悉的人</h4>
 <p class="muted">只展示已登记好友的互动熟悉度，不显示聊天正文。关系阶段只是互动频率的估计，不代表真实亲密程度。</p>
 <div class="toolbar"><button id="friend-relationships-refresh" class="life-action life-sky">刷新关系成长</button><span id="friend-relationships-status" class="muted">尚未读取</span></div><div id="friend-relationships-list" class="records"></div>
@@ -510,7 +524,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p class="muted">这里仅控制是否把近期生活摘要主动发送给选定的主 Session；不影响上方“鱼鱼现在记得什么”的记忆搜索。</p></div></div></details>
 </div></section>
 <section id="panel-diagnostics" hidden>
-<div class="toolbar"><h2 style="margin:0">今日诊断</h2><button id="diag-refresh" class="primary">刷新诊断</button><button id="diag-save">保存诊断开关</button></div>
+<div class="toolbar"><h2 style="margin:0">运行诊断</h2><button id="diag-refresh" class="primary">刷新诊断</button><button id="diag-save">保存诊断开关</button></div>
 <p class="muted">勾选后会记录后续诊断；关闭仅停止新日志，不影响评论、同步、取帧和选图的正常功能。已存在的历史诊断记录不会自动删除。诊断里的“要求 AI 回复这条”必须人工确认；不绕过回复额度、去重或上下文验证。</p>
 <div class="diag-grid">
 <article class="card diag-card"><div class="diag-heading"><h3>今日 @ 诊断</h3><label class="diag-switch"><input type="checkbox" id="diag-mention-enabled" checked> 记录诊断</label></div><p class="muted">记录顶层评论的 @ 决策原因。尝试 @ 不保证 B站 一定通知送达。</p><div id="mention-summary" class="muted">正在读取…</div><div id="mention-list" class="records records-scroll" role="status" aria-live="polite"></div></article>
@@ -585,6 +599,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <section id="panel-social" hidden>
 <div class="social-hero"><h2>🐳 社交互动</h2><p>好友关系、社交意愿、主动回访与主人远程授权在这里统一管理。读取、草稿与公开操作分别授权；关闭某个入口不会改变其他权限。</p>
 <p><strong>🐟 双域意愿系统（dev.9）</strong>：主 Session 是执行域；B站是生活域。即使是主人在 B站私信或 @ 提请求，大肥鱼也会先看自己的模拟情绪、活力、社交意愿与重复请求情况，可以答应、拖延或拒绝；温柔地再商量可能改变她的选择，但绝不能绕过权限、额度或安全检查。判定证据保存在本地 <code>dual-context-agency.json</code>，不保存私信正文。</p><nav class="social-jump" aria-label="社交功能导航"><a href="#unified-friends">好友与意愿</a><a href="#social-outreach-section">主动回访</a><a href="#owner-dm-control-section">主人私信 Agent</a><a href="#social-owner-comment">主人评论 Agent</a></nav></div>
+<nav class="context-jump" aria-label="社交互动分区"><a href="#unified-friends">好友关系</a><a href="#social-outreach-section">主动回访</a><a href="#owner-dm-control-section">主人私信授权</a><a href="#social-owner-comment">主人公开评论</a><a href="#social-emotion-authorization">情绪主动分享</a></nav>
 <div class="settings-stack">
 <div class="settings-section" id="unified-friends">
 <h4>🐳 好友关系与互动 · 统一名册</h4>
@@ -666,6 +681,25 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p id="owner-comment-agent-status" class="muted">Agent 状态尚未读取。</p>
 <div class="toolbar"><button type="button" class="primary" id="owner-comment-settings-save">保存主人公开评论权限</button><button type="button" id="owner-comment-settings-reload">重新读取</button></div>
 </div>
+<div id="social-emotion-authorization" class="card"><h3>💗 情绪驱动的自主分享权限</h3><p class="muted">发送私信与主动发起主 Session 消息都需要独立授权，默认关闭。角色心情详情仍在「人生记忆」中查看。</p><details class="life-subdetails emotion-options"><summary>💌 自主回忆与主动分享设置（默认关闭）</summary><div class="inset" style="margin-top:18px"><h4>💌 情绪驱动的自主回忆与分享 · 让过去自然浮现</h4>
+<p class="muted">例如今天再次刷到一个以前看过的系列，开心或怀念的模拟情绪变化，让大肥鱼想起有真实 BV 证据的旧经历；它可以决定沉默，也可以在已授权的渠道主动找主人聊聊。不是每次情绪波动都会分享。<strong>总开关与两个渠道默认全部关闭。</strong></p>
+<label class="checkline"><input type="checkbox" id="emotion-recall-enabled">允许情绪触发自主回忆（需同时开启长期记忆）</label>
+<div class="fields"><div><label class="checkline"><input id="emotion-recall-main" type="checkbox">允许在指定 DSH 主 Session 主动开口</label><p class="muted">需要先在「告诉主 Session」选好会话，并保持目标会话在线。</p></div>
+<div><label class="checkline"><input id="emotion-recall-dm" type="checkbox">允许给主人发送 B站回忆私信</label><p class="muted">只会发送到「社交互动 → 好友关系与互动」中勾选并保存的唯一授权主人 UID（dmOwnerUid）；不会发送给其他人。</p></div>
+<div><label for="emotion-recall-daily">每天最多发送（0=禁止，可填任意正整数）</label><input id="emotion-recall-daily" type="number" min="0" step="1" value="1"><small class="setting-note">只限制实际主动发出的消息；设为 0 表示禁止。可填任意非负安全整数，两个渠道合计。</small></div>
+<div><label class="checkline"><input id="emotion-recall-unlimited" type="checkbox">不限制每天的发送次数</label><small class="setting-note">仅在每日上限大于 0 时忽略次数上限；0 始终禁止发送。仍必须符合时间窗口、独立授权、评估间隔、记忆证据和去重条件；可能增加模型开销和打扰。</small></div>
+<div><label for="emotion-recall-cooldown">两次评估间隔（小时，1–48）</label><input id="emotion-recall-cooldown" type="number" min="1" max="48" value="24"><small class="setting-note">至少隔这么久才重新让模型考虑是否分享；评估不是发送，调小可能增加模型调用。</small></div>
+<div><label for="emotion-recall-candidates">每次最多考虑的相关记忆（1–100）</label><input id="emotion-recall-candidates" type="number" min="1" max="100" value="12"><small class="setting-note">候选越多可能发现更多相关旧事，但会增加决策模型的输入长度。只从有原始证据的经历中取。</small></div>
+<div><label for="emotion-recall-history">历史经历检索条数（20–1000）</label><input id="emotion-recall-history" type="number" min="20" max="1000" value="300"><small class="setting-note">从较大范围的本地历史里寻找线索，不再隐式锁在前 20 条。</small></div>
+<div><label for="emotion-recall-recent-days">新事件回看天数（1–30）</label><input id="emotion-recall-recent-days" type="number" min="1" max="30" value="3"><small class="setting-note">决定最近多久内的新观看/评论可能触发回忆；不会自动读取私人消息正文。</small></div>
+<div><label for="emotion-recall-old-days">旧记忆至少相隔天数（1–365）</label><input id="emotion-recall-old-days" type="number" min="1" max="365" value="2"><small class="setting-note">把旧事与新事件拉开一定时间，降低普通重复观看被当成重要回忆的概率。</small></div>
+<div><label for="emotion-recall-min-intensity">触发情绪最低强度（1–100）</label><input id="emotion-recall-min-intensity" type="number" min="1" max="100" value="30"><small class="setting-note">越低越容易进入候选评估，但不会跳过真实证据和主人授权。</small></div>
+<div><label for="emotion-recall-emotion-hours">情绪有效期（1–72 小时）</label><input id="emotion-recall-emotion-hours" type="number" min="1" max="72" value="12"><small class="setting-note">近期模拟情绪在这段时间内可以影响回忆联想；过期后不再以旧情绪触发。</small></div>
+<div><label for="emotion-recall-start">每日最早开始（0–23 时）</label><input id="emotion-recall-start" type="number" min="0" max="23" value="9"></div>
+<div><label for="emotion-recall-end">每日最晚结束（1–24 时）</label><input id="emotion-recall-end" type="number" min="1" max="24" value="22"></div></div>
+<p class="muted">模型只能从核验的旧记忆 ID 中决定是否分享；正文根据真实新旧经历模板生成，不接受模型编造的事实。默认每天最多一次、24 小时内不重复评估，夜间免打扰。B站消息为真实对外发送行为。</p>
+<div class="toolbar"><button id="emotion-recall-save" class="life-action life-green">保存自主回忆权限</button><button id="emotion-recall-preview" class="life-action life-sky">只预览评估（不发送）</button></div>
+<p id="emotion-recall-status" class="muted" role="status">尚未读取自主回忆状态</p><div class="inset"><h4>🫧 最近回忆评估 · 为什么想起或保持安静</h4><p class="muted">看看大肥鱼最近是在等待情绪、寻找有证据的回忆，还是决定主动分享。不会展示私信正文或私人聊天。</p><div id="emotion-recall-flow" class="recall-flow" role="group" aria-label="情绪触发回忆的进展"></div><div id="emotion-recall-overview" class="recall-overview" aria-live="polite"></div><div id="emotion-recall-diagnostics" class="records records-scroll recall-diagnostics" aria-label="最近回忆评估记录，可滚动"><p class="muted">尚无诊断记录。</p></div></div></div></details></div>
 </div>
 </section>
 <section id="panel-reports" hidden>
@@ -673,7 +707,14 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p id="report-meta" class="muted">报告只从本机 out 目录读取，不会重新调用模型。</p><pre id="report-content" class="output">选择日期后读取。</pre>
 </section>
 <section id="panel-comments" hidden>
-<div class="card" style="margin-bottom:14px"><div class="row" style="justify-content:space-between"><h3>后台评论互动设置</h3><button id="comments-refresh">刷新状态与记录</button></div><p id="comments-status" class="muted">正在读取状态…</p>
+<div class="feature-intro"><div><h2>💬 最近评论</h2><p>先看实际记录；自动回复授权与限额在下方单独分区。公开评论属于真实对外操作，设置不会自动开启。</p></div></div>
+<nav class="context-jump" aria-label="评论页分区"><a href="#comments-records">最近记录</a><a href="#comments-configuration">回复规则与授权</a></nav>
+<div id="comments-records" class="toolbar"><h2 style="margin:0">最近公开评论记录</h2><label for="comments-kind">评论分类</label><select id="comments-kind" aria-label="筛选主评论和回复别人评论"><option value="">全部评论</option><option value="top">主评论</option><option value="reply">回复别人评论</option></select><label for="comments-day">日期</label><input id="comments-day" type="date" title="留空显示全部日期"><button id="comments-day-clear">全部日期</button><select id="comments-limit"><option value="20">每页20条</option><option value="50" selected>每页50条</option><option value="100">每页100条</option><option value="200">每页200条</option></select><button id="comments-load">刷新记录</button></div>
+<p class="muted">这里只读取评论主判重表 seen.md 及月度归档，不从诊断日志实时拼接。成功回执不代表 B站 当前公开可见；正文摘要只显示原本实际保存的内容。</p>
+<p id="comments-summary" class="muted" role="status">读取中…</p><div id="recent-comments-list" class="records"></div>
+<div class="toolbar"><button id="comments-prev">上一页</button><span id="comments-page-info" class="muted"></span><button id="comments-next">下一页</button></div>
+
+<div id="comments-configuration" class="card" style="margin-bottom:14px"><div class="row" style="justify-content:space-between"><h3>后台评论互动设置</h3><button id="comments-refresh">刷新状态与记录</button></div><p id="comments-status" class="muted">正在读取状态…</p>
 <div class="grid" style="margin:12px 0">
 <div class="settings-section"><h4>后台互动回复额度（滚动24小时）</h4><p id="comments-usage" class="muted">近24小时回复计数读取中…</p><p id="comments-send-stats" class="muted">正在读取发送结果分类…</p><p id="comments-history-note" class="muted"></p></div>
 <div class="settings-section"><h4>公开评论全局硬上限（自然日）</h4><p id="global-comment-quota" class="muted">正在读取今日全局额度…</p><p id="global-comment-quota-note" class="muted">可在管理中心「次数与额度」里修改。</p></div>
@@ -684,7 +725,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="checkline"><input type="checkbox" id="comment-at-enabled"><label for="comment-at-enabled">开启被 @ 邀请监听</label></div>
 <div class="fields"><div><label for="comment-at-mode">回应范围</label><select id="comment-at-mode"><option value="whitelist">仅白名单用户（推荐）</option><option value="all">所有人</option></select></div>
 <div hidden><label for="comment-at-whitelist">被 @ 白名单（由可信好友名册同步）</label><textarea id="comment-at-whitelist" rows="4"></textarea></div></div>
-<p class="muted">可在「社交互动 → 好友关系与互动」统一管理允许邀请的 UID。<strong>通知是否被识别、为什么没有回复</strong>，请到「每日诊断 → @ 邀请处理诊断」查看。</p>
+<p class="muted">可在「社交互动 → 好友关系与互动」统一管理允许邀请的 UID。<strong>通知是否被识别、为什么没有回复</strong>，请到「运行诊断 → @ 邀请处理诊断」查看。</p>
 </div>
 <div class="settings-section"><h4>当前视频评论上下文（不再独立轮询热评）</h4><p class="muted">旧版持续扫描最近看过的视频热评已停用。只有收到相关评论/@ 通知、AI 先决定值得接话后，才读取该视频其他热门评论；原创视频评论按刷视频 Agent 当轮判断。</p><div class="fields">
 <div hidden><input id="comment-watch-top" type="checkbox" disabled></div>
@@ -701,10 +742,6 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label for="comment-own-nested-per-user">我的楼中楼回复下：同一人近24小时最多回复（1–1000）</label><input id="comment-own-nested-per-user" type="number" min="1" max="1000" value="3"></div>
 </div><p class="muted">同一 UID 在不同评论场景中的限额，已移至「次数与额度」。能确认属于大肥鱼本人评论的留言会优先处理；仍受每轮、近24小时总上限和公开评论全局自然日硬上限约束。广告、刷屏、恶意攻击等仍可跳过。</p></div>
 </div><div class="actions"><button id="comments-settings-save" class="primary">保存评论互动设置</button></div></div>
-<div class="toolbar"><h2 style="margin:0">最近公开评论记录</h2><label for="comments-kind">评论分类</label><select id="comments-kind" aria-label="筛选主评论和回复别人评论"><option value="">全部评论</option><option value="top">主评论</option><option value="reply">回复别人评论</option></select><label for="comments-day">日期</label><input id="comments-day" type="date" title="留空显示全部日期"><button id="comments-day-clear">全部日期</button><select id="comments-limit"><option value="20">每页20条</option><option value="50" selected>每页50条</option><option value="100">每页100条</option><option value="200">每页200条</option></select><button id="comments-load">刷新记录</button></div>
-<p class="muted">这里只读取评论主判重表 seen.md 及月度归档，不从诊断日志实时拼接。成功回执不代表 B站 当前公开可见；正文摘要只显示原本实际保存的内容。</p>
-<p id="comments-summary" class="muted" role="status">读取中…</p><div id="recent-comments-list" class="records"></div>
-<div class="toolbar"><button id="comments-prev">上一页</button><span id="comments-page-info" class="muted"></span><button id="comments-next">下一页</button></div>
 </section>
 <section id="panel-growth" hidden>
 <div class="card"><h3>行为与表达改进 · 直接附加到 AI 提示词</h3>
@@ -778,8 +815,14 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p class="muted">重命名后，AI 下次读取图库将使用新名称；已经发表的评论图片不受影响。删除后无法恢复，请先备份重要素材。</p>
 </section>
 <section id="panel-dm" hidden>
+<div class="feature-intro"><div><h2>✉️ 后台私信</h2><p>私信记录、陌生人申请、监听规则分别管理；默认不会自动回复陌生人。</p></div></div>
+<nav class="context-jump" aria-label="私信页分区"><a href="#dm-recent-conversations">最近会话</a><a href="#dm-requests">聊天申请</a><a href="#dm-settings-section">私信规则</a></nav>
 <div class="card" style="margin-bottom:14px"><div class="row" style="justify-content:space-between"><h3>后台私信状态</h3><button id="dm-network-test">测试私信接口连接</button><button id="dm-refresh">刷新状态与会话</button></div><p id="dm-status" class="muted">正在读取后台状态…</p><p id="dm-error" class="muted"></p><p class="muted">网络失败会显示接口主机与底层错误码；如果出现 ECONNRESET、ENETUNREACH、ETIMEDOUT 或 DNS 错误，需同时检查系统网络／代理与 B站连通性。</p></div>
-<div class="card" style="margin-bottom:14px"><h3>后台私信规则</h3><p class="muted">修改后保存到 DSH 本机配置。陌生人自动回复默认关闭；开启前请确认你接受自动回复行为。</p>
+<div id="dm-recent-conversations" class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3>最近私信会话</h3><button id="dm-recent-reload">刷新会话</button></div><p class="muted">只显示本插件已经保存的对话片段；不从 B站 额外拉取完整历史。旧版心愿已停止自动处理，历史资料只随本地备份保留；新的陌生人探索灵感与好友观看邀请在「社交互动」查看。记录仅在本机展示。</p><div id="dm-recent-list" class="records"></div></div>
+
+<div id="dm-requests" class="toolbar"><h2 style="margin:0">限额聊天申请</h2><select id="dm-filter"><option value="pending">只看待审批</option><option value="">全部申请</option><option value="approved">已通过</option><option value="rejected">已拒绝</option></select></div><p class="muted">这里只审核 B站 用户申请，不修改可信白名单。通过后仍受每日／累计额度控制。</p><div class="grid" id="dm-list"></div>
+
+<div id="dm-settings-section" class="card" style="margin-bottom:14px"><h3>后台私信规则</h3><p class="muted">修改后保存到 DSH 本机配置。陌生人自动回复默认关闭；开启前请确认你接受自动回复行为。</p>
 <div class="settings-stack">
 <div class="settings-section"><h4>监听与可回复对象</h4><div class="fields">
 <div class="checkline"><input id="dm-watch" type="checkbox"><label for="dm-watch">启用后台私信监听</label></div>
@@ -801,8 +844,6 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label for="dm-phrase">申请暗号</label><input id="dm-phrase" maxlength="60" placeholder="白饭🍚"></div>
 </div></div>
 </div><div class="actions"><button id="dm-settings-save" class="primary">保存私信规则</button><button id="dm-settings-reload">重新读取</button></div></div>
-<div class="toolbar"><h2 style="margin:0">限额聊天申请</h2><select id="dm-filter"><option value="pending">只看待审批</option><option value="">全部申请</option><option value="approved">已通过</option><option value="rejected">已拒绝</option></select></div><p class="muted">这里只审核 B站 用户申请，不修改可信白名单。通过后仍受每日／累计额度控制。</p><div class="grid" id="dm-list"></div>
-<div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3>最近私信会话</h3><button id="dm-recent-reload">刷新会话</button></div><p class="muted">只显示本插件已经保存的对话片段；不从 B站 额外拉取完整历史。旧版心愿已停止自动处理，历史资料只随本地备份保留；新的陌生人探索灵感与好友观看邀请在「社交互动」查看。记录仅在本机展示。</p><div id="dm-recent-list" class="records"></div></div>
 </section>
 <footer class="muted" style="margin-top:30px">数据只保存在本机 DSH 插件目录；此页面不从第三方加载脚本。若页面打不开，请先从 DSH 的「大肥鱼」设置点击管理中心入口。</footer>
 </main>

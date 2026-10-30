@@ -70,7 +70,7 @@ test('人生记忆页面突出心情、兴趣、待办与关系；复杂权限�
  for(const id of ['life-emotion-section','life-interest-section','life-todo-section','life-relationship-section','owner-todo-overview','owner-todo-filter-active','owner-todo-filter-all','owner-todo-filter-finished']){
   assert.equal((life.match(new RegExp(`id="${id}"`,'g'))||[]).length,1,id)
  }
- assert.match(life,/class="life-subdetails todo-settings"/)
+ assert.match(html.split('<section id="panel-settings"')[1].split('<section id="panel-life"')[0],/class="life-subdetails todo-settings"/)
  assert.match(life,/class="life-subdetails todo-create"/)
  assert.match(life,/class="life-subdetails life-sync-more"/)
  assert.match(life,/id="owner-todo-filter-active"[^>]*aria-pressed="true"/)

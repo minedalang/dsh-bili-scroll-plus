@@ -57,7 +57,7 @@ test('新通知可由 AI 自主停聊，诊断独立开关关闭不影响实际�
     assert.equal(engine.status().replyDiagnostics[0].id,'comment:20001');
   }finally{await rm(dir,{recursive:true,force:true})}
 });
-test('@ 邀请诊断与回复诊断位于每日诊断，最近评论不再嵌入事件列表',()=>{
+test('@ 邀请诊断与回复诊断位于运行诊断，最近评论不再嵌入事件列表',()=>{
   const html=readFileSync(new URL('../lib/management-console.html',import.meta.url),'utf8');
   const diag=html.split('<section id="panel-diagnostics" hidden>')[1].split('<section id="panel-quotas" hidden>')[0];
   const comment=html.split('<section id="panel-comments" hidden>')[1].split('<section id="panel-',2)[0];
@@ -65,7 +65,7 @@ test('@ 邀请诊断与回复诊断位于每日诊断，最近评论不再嵌入
   assert.match(diag,/收到评论回复处理诊断（最近 30 条）/);
   assert.match(diag,/id="comment-at-events"/);assert.match(diag,/id="comment-reply-events"/);
   assert.doesNotMatch(comment,/id="comment-at-events"/);
-  assert.match(comment,/「每日诊断 → @ 邀请处理诊断」/);
+  assert.match(comment,/「运行诊断 → @ 邀请处理诊断」/);
   const js=readFileSync(new URL('../lib/management-console.js',import.meta.url),'utf8');
   assert.match(js,/replyLastFetch/);assert.match(js,/diagReplyInboxEnabled/);
 });

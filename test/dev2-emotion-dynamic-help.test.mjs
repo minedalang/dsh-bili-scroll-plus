@@ -87,7 +87,7 @@ test('真实 HTTP 删除路由仅删除未发布草稿，拒绝无确认和已�
 test('人生记忆每项设置都有可阅读的浅色效果说明，旧版后端提示对用户可见',()=>{
  const html=readFileSync(new URL('../lib/management-console.html',import.meta.url),'utf8')
  const js=readFileSync(new URL('../lib/management-console.js',import.meta.url),'utf8')
- const home=html.split('<h4>3. 人生记忆与检索设置</h4>')[1].split('id="main-memory-save"')[0]
+ const home=html.split('<h4>人生记忆与检索设置</h4>')[1].split('id="main-memory-save"')[0]
  const controls=[...home.matchAll(/<input\b[^>]*\bid="(main-memory-[^"]+|main-reflection-[^"]+)"[^>]*>/g)]
  assert.ok(controls.length>=18)
  for(const m of controls){
