@@ -26,5 +26,5 @@ test('发布默认人设不覆盖定制，公开评论不涉政',()=>{
  assert.ok(html.indexOf('data-tab="persona"')<html.indexOf('data-tab="diagnostics"'))
  for(const id of ['friend-add','friend-save-all','friend-directory-editor','friend-new-uid'])assert.ok(html.includes('id="'+id+'"'))
  for(const id of ['peerRelationships','personalityInterests','friendDirectory','atInvite'])assert.ok(js.includes(id))
- assert.match(js,/switchTab\('persona'\)/)
+ assert.match(js,/switchTab\('home'\)/)
 })

@@ -10,16 +10,16 @@ const source=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
 const videos=[{bvid:'BV1234567890',title:'料理视频',day:'2026-10-27'},{bvid:'BV0987654321',title:'做饭视频',day:'2026-10-26'}]
 test('生活动态必须有真实 BV 来源、合格正文，不允许编造来源或泄露私密',()=>{
  const text='今天又看到一个认真做饭的视频，看着食材慢慢变成一顿饭，我真的很想试试这种感觉。'
- assert.deepEqual(validateDailyDraft({should_post:true,text,source_bvids:['BV1234567890']},videos).source_bvids,['BV1234567890'])
+ assert.deepEqual(validateDailyDraft({should_post:true,text,source_bvids:['BV1234567890'],evidence_claims:[{type:'selected_video',bvid:'BV1234567890'}]},videos).source_bvids,['BV1234567890'])
  assert.throws(()=>validateDailyDraft({should_post:true,text,source_bvids:['BV0000000000']},videos),/真实/)
- assert.throws(()=>validateDailyDraft({should_post:true,text:'我刚刚看到主人的密码 password，非常有趣值得分享。',source_bvids:['BV1234567890']},videos),/安全/)
+ assert.throws(()=>validateDailyDraft({should_post:true,text:'我刚刚看到主人的密码 password，非常有趣值得分享。',source_bvids:['BV1234567890'],evidence_claims:[{type:'selected_video',bvid:'BV1234567890'}]},videos),/安全/)
  assert.equal(validateDailyDraft({should_post:false,reason:'没什么新鲜事'},videos).skip,true)
 })
 test('自主动态默认不发布，草稿与公开发布必须分离且每日限额生效',async()=>{
  const dir=mkdtempSync(join(tmpdir(),'daily-v2485-'));let posts=0
  const cfg={masterEnabled:true,dailyDynamicEnabled:false,dailyDynamicDraftOnly:true,dailyDynamicDailyLimit:1}
  const text='今天又看到一个认真做饭的视频，看着食材慢慢变成一顿饭，我真的很想试试这种感觉。'
- const service=createDailyDynamic({dataDir:dir,getConfig:()=>cfg,getPublicVideos:()=>videos,invokeModel:async()=>JSON.stringify({should_post:true,text,source_bvids:['BV1234567890']}),publish:async()=>{posts++;return{status:'api_accepted_unverified'}}})
+ const service=createDailyDynamic({dataDir:dir,getConfig:()=>cfg,getPublicVideos:()=>videos,invokeModel:async()=>JSON.stringify({should_post:true,text,source_bvids:['BV1234567890'],evidence_claims:[{type:'selected_video',bvid:'BV1234567890'}]}),publish:async()=>{posts++;return{status:'api_accepted_unverified'}}})
  try{
   const d=await service.createDraft();assert.equal(d.ok,true);assert.equal(posts,0)
   assert.equal((await service.sendDraft(d.draft.id,{manual:true})).ok,false)
@@ -85,7 +85,7 @@ test('新增动态开关与每日上限可通过管理中心接口保存，默�
    let code=0,data;const res={writeHead(n){code=n},end(x){data=JSON.parse(x)}}
    await handler(req,res);assert.equal(code,200);return data.config
   }
-  const before=await call('GET');assert.equal(before.dailyDynamicEnabled,false);assert.equal(before.dailyDynamicDraftOnly,true)
+  const before=await call('GET');assert.equal(before.dailyDynamicEnabled,true);assert.equal(before.dailyDynamicDraftOnly,true)
   const after=await call('POST',{autoVideoLikeDailyLimit:17,dailyDynamicEnabled:true,dailyDynamicDraftOnly:false,dailyDynamicDailyLimit:3})
   assert.equal(after.autoVideoLikeDailyLimit,17);assert.equal(after.dailyDynamicEnabled,true)
   assert.equal(after.dailyDynamicDraftOnly,false);assert.equal(after.dailyDynamicDailyLimit,3)

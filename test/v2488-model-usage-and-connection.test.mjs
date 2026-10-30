@@ -43,7 +43,7 @@ test('拒绝将统计写入符号链接，业务备份包含统计账本但不�
   try {
     const target=mkdtempSync(join(tmpdir(),'dafeiyu-v2488-target-'))
     try {
-      symlinkSync(target,join(dir,'model-usage'),'dir')
+      symlinkSync(target,join(dir,'model-usage'),process.platform==='win32'?'junction':'dir')
       assert.equal(recordModelTask(dir,'video'),false)
       assert.equal(existsSync(join(target,'2026-10.jsonl')),false)
     } finally {rmSync(target,{recursive:true,force:true})}
@@ -87,7 +87,7 @@ test('页面每个模型都有调用统计和独立测试按钮，测试请求�
 
 test('视频、互动、反思、记忆检索和表情包规则优化均在调用链路记录；Python 子进程也记录',()=>{
   const server=read('index.js'),mcp=read('vendor/bilibili-mcp/mcp_server.py'),vision=read('lib/vision_dsh.py')
-  for(const expr of ["recordModelTask(stateDir,'video')","recordModelTask(stateDir,'memory')","recordModelTask(stateDir,reflectionRoute?'reflection':'interaction')"])assert.ok(server.includes(expr))
+  for(const expr of ["recordModelTask(stateDir,'video')","recordModelTask(stateDir,'memory')","recordModelTask(stateDir,reflectionRoute?'reflection':dynamicRoute?'dailyDynamic':ownerAgentRoute?'ownerDmAgent':'interaction')"])assert.ok(server.includes(expr))
   assert.match(mcp,/_record_model_launch\(home, 'memory'\)/)
   assert.match(vision,/_record_model_launch\(home, 'vision'\)/)
   assert.match(server,/readModelTaskUsage\(stateDir\)/)

@@ -40,8 +40,8 @@ test('坏掉的规则 JSON 在写入/恢复前就被拒绝，不破坏已有有�
     const before=readFileSync(join(home,'comment-meme-rules.json'),'utf8')
     const backup=createBackup({root:home,config:{masterEnabled:true},sqlite:{}})
     backup.files['comment-meme-rules.json']='{invalid_json'
-    assert.throws(()=>validateBackup(backup),/表情包检索规则备份无效/)
-    assert.throws(()=>restoreBackupFiles(home,backup),/表情包检索规则备份无效/)
+    assert.throws(()=>validateBackup(backup),/备份完整性校验失败|表情包检索规则备份无效/)
+    assert.throws(()=>restoreBackupFiles(home,backup),/备份完整性校验失败|表情包检索规则备份无效/)
     assert.equal(readFileSync(join(home,'comment-meme-rules.json'),'utf8'),before)
   } finally {rmSync(home,{recursive:true,force:true})}
 })

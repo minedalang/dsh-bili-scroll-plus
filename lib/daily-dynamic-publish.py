@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """v2.4.85: Fixed-path, quota-checked Bilibili text dynamic publisher. Never callable by model tools."""
 import sys,json,re,sqlite3,datetime,urllib.request,urllib.parse
+from contextlib import closing
 from pathlib import Path
 
 def publish(home,cred_path,text,limit,enabled):
@@ -17,7 +18,7 @@ def publish(home,cred_path,text,limit,enabled):
     db=folder/'publish-quota.sqlite3'
     if db.is_symlink():return {'status':'unsafe_ledger'}
     today=datetime.date.today().isoformat()
-    with sqlite3.connect(db,timeout=8) as conn:
+    with closing(sqlite3.connect(db,timeout=8)) as conn, conn:
         conn.execute('CREATE TABLE IF NOT EXISTS attempts(day TEXT NOT NULL, id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL)')
         conn.execute('BEGIN IMMEDIATE')
         n=conn.execute('SELECT COUNT(*) FROM attempts WHERE day=?',(today,)).fetchone()[0]

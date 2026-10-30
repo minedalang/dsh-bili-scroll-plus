@@ -49,7 +49,7 @@ test('收到主人消息本身不再直接写记忆；同一次模型回复通�
 test('切换主 Session 后读取同一份身份记忆；召回问题不能反向污染记忆',async()=>{
   const dir=temp(),a=fakeAgent('room-a'),b=fakeAgent('room-b');let room='room-a'
   try{
-    const mem=createLongTermMemory({dataDir:dir,dshHome:dir,agents:{get:id=>id.replace(/^session-/,'')==='room-a'?a.agent:b.agent,list:()=>[a.agent,b.agent]},getConfig:()=>config(room),defineTool})
+    const mem=createLongTermMemory({dataDir:dir,dshHome:dir,agents:{get:id=>id.replace(/^session-/,'')==='room-a'?a.agent:b.agent,list:()=>[a.agent,b.agent]},getConfig:()=>config(room),defineTool,getRetriever:()=>({localContext:()=>mem.activeMemories().map(x=>x.text).join("\n")})})
     mem.start();a.handlers['agent/inbox/inserted']({message:{content:[{type:'text',text:'我现在最喜欢喝可乐。'}]}})
     let r=await a.tools[0].execute({text:'主人目前最喜欢喝「可乐」。',importance:.98,tags:['主人','饮料'],fact_key:'主人.偏好.饮料'});assert.equal(r.ok,true)
     room='room-b';await sleep(900);assert.equal(typeof b.handlers['agent/inbox/inserted'],'function')
@@ -74,11 +74,11 @@ test('v2.4.78 的多个 Session 记忆文件首次升级自动合并，旧文件
   }finally{rmSync(dir,{recursive:true,force:true})}
 })
 
-test('README 与管理中心明确展示三层人生记忆、表情包 AI 更新流程和路线图',()=>{
+test('README 与管理中心展示特色功能和双层人生记忆，不再堆积版本路线图',()=>{
   const html=readFileSync(new URL('../lib/management-console.html',import.meta.url),'utf8'),js=readFileSync(new URL('../lib/management-console.js',import.meta.url),'utf8'),readme=readFileSync(new URL('../README.md',import.meta.url),'utf8'),pkg=readFileSync(new URL('../package.json',import.meta.url),'utf8')
-  assert.match(html,/大肥鱼的家 · 配置与连接/);assert.doesNotMatch(html,/把一个长期 DSH 会话当作“大肥鱼本人”/);assert.match(html,/人生记忆 · 长期保留/);assert.match(html,/经历记录 · 原始事实/);assert.match(html,/待反思经历 · 等待 AI 分析/);assert.match(html,/人生记忆 · 长期保留/)
+  assert.match(html,/大肥鱼的家 · 生活总览/);assert.doesNotMatch(html,/把一个长期 DSH 会话当作“大肥鱼本人”/);assert.match(html,/一段经历，怎样变成鱼鱼的记忆/);assert.match(html,/id="memory-flow-recorded"/);assert.match(html,/id="memory-flow-remembered"/);assert.match(html,/id="memory-flow-learned"/);assert.match(html,/鱼鱼现在记得什么/);assert.match(html,/这些经历给她留下了什么/);assert.match(html,/原始记录独立封存/);assert.match(html,/<details class="memory-reflection-details"/)
   assert.match(html,/导出最新表情包名称 TXT/);assert.match(html,/导出当前规则 JSON/);assert.match(html,/一起交给 AI/)
   assert.match(js,/sticker-workflow-export-names/);assert.match(js,/sticker-workflow-export-rules/);assert.match(js,/renderLifeReflection/);assert.match(js,/main-session\/memory\/import-fish/)
-  assert.match(readme,/三层人生记忆/);assert.match(readme,/dafeiyu\.json/);assert.match(readme,/当前全部表情包名称 TXT \+ 当前规则 JSON/);assert.match(readme,/未来路线图/);assert.match(readme,/QQ 是优先讨论的平台方向之一/)
-  assert.match(pkg,/"version": "2\.4\.99"/)
+  assert.match(readme,/双层人生记忆/);assert.match(readme,/dafeiyu\.json/);assert.match(readme,/当前全部表情包名称 TXT \+ 当前规则 JSON/);assert.match(readme,/双域意愿/);assert.match(readme,/社交互动/);assert.doesNotMatch(readme,/2\.5\.0-dev\.|版本流水账|未来路线图/)
+  assert.match(pkg,/"version": "2\.\d+\.\d+(?:-dev\.\d+)?"/)
 })

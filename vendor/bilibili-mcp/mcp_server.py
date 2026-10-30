@@ -2156,8 +2156,7 @@ async def bili_reply(bvid: str, text: str, rpid: int = 0, root: int = 0, aid: in
                      sync_dynamic_ai_decision: bool = False, sync_dynamic_reason: str = "",
                      dynamic_daily_limit: int = 3, no_mention_reason: str = "",
                      meme_image_name: str = "", meme_image_reason: str = "",
-                     no_meme_image_reason: str = "",
-                     temporary_wish_id: str = "") -> str:
+                     no_meme_image_reason: str = "") -> str:
     """
     在B站视频下发表评论或回复某条评论
 
@@ -2179,7 +2178,6 @@ async def bili_reply(bvid: str, text: str, rpid: int = 0, root: int = 0, aid: in
         meme_image_name: bili_comment_meme_list 中存在的分类/梗图名（无扩展名），不可自行拼路径
         meme_image_reason: AI 选择梗图的简短情境理由，只供用户 Debug，不公开发送
         no_meme_image_reason: AI 不附图时用一句话说明原因，只保存在本地
-        temporary_wish_id: 仅限私信获批用户的有效临时视频心愿 ID；必须确实匹配视频且 should_mention=True
     
     Returns:
         发表结果
@@ -2192,17 +2190,7 @@ async def bili_reply(bvid: str, text: str, rpid: int = 0, root: int = 0, aid: in
                            "error": "刷视频任务只能发布顶层评论；回复评论请使用后台互动"}, ensure_ascii=False)
     _deny = _guard("bili_reply")
     if _deny: return _deny
-    wish_claim = None
     def _result(payload, posted_bvid, reply_to_rpid, mention_diag=None):
-        if wish_claim is not None:
-            try:
-                from video_wishes import finish_claim
-                # 必须有 B 站确认的评论 ID 才计作一次有效的 @ 尝试；回执不完整则标记待核实且不重发。
-                receipt_id=payload.get('rpid_str') or payload.get('rpid') or ''
-                finish_claim(wish_claim,accepted=payload.get('success') is True and bool(str(receipt_id).strip()),
-                             rpid=receipt_id)
-            except Exception as exc:
-                print('临时@计数保存失败：'+str(exc)[:100],file=sys.stderr)
         _record_meme_event(payload, posted_bvid, reply_to_rpid, meme_image_name,
                            meme_image_reason, no_meme_image_reason, text)
         return _comment_result(payload, posted_bvid, reply_to_rpid, mention_diag, text, root, sync_dynamic_ai_decision, sync_to_dynamic, sync_dynamic_reason)
@@ -2235,27 +2223,6 @@ async def bili_reply(bvid: str, text: str, rpid: int = 0, root: int = 0, aid: in
         if mode == "ai_select":
             wanted = {str(x).strip().lstrip("@") for x in (mention_names or []) if isinstance(x, str)}
             selected = [x for x in targets if x["name"] in wanted or x.get("configuredName") in wanted]
-        # 临时心愿与固定好友名单相互独立：必须有有效的、获批后的心愿 ID，
-        # 并且 B站实际视频元数据命中主题才能尝试 @。只做接口回执计数，不声称通知已送达。
-        temporary_target = None
-        wish_candidate = None
-        if (rpid == 0 and mode != 'off' and should_mention is True and
-                os.environ.get('BILI_DUTY_TOP_LEVEL_ONLY') == '1' and temporary_wish_id):
-            try:
-                from video_wishes import get_approved_wish, verified_topic
-                wish_candidate = get_approved_wish(_DUTY_HOME,temporary_wish_id)
-                if wish_candidate and str(wish_candidate['uid']) != str(getattr(cred,'dedeuserid','')):
-                    if 'info' not in locals() or not isinstance(info,dict):
-                        info = await video.Video(bvid=bvid,credential=cred).get_info()
-                    if verified_topic(wish_candidate['topic'],info.get('title',''),info.get('desc','')):
-                        uinfo = await user.User(uid=int(wish_candidate['uid']),credential=cred).get_user_info()
-                        uname = str(uinfo.get('name','')).strip()
-                        if uname and len(uname)<=40 and not re.search(r'[<>\r\n@]',uname):
-                            temporary_target={'name':uname,'uid':wish_candidate['uid']}
-            except Exception as exc:
-                print('临时@信息核对失败（本轮不临时@）：'+type(exc).__name__,file=sys.stderr)
-        if temporary_target and not any(x['uid']==temporary_target['uid'] for x in selected):
-            selected=[*selected,temporary_target]
         use_mentions = (rpid == 0 and selected and
                         (mode == "always" or (mode in ("ai", "ai_select") and should_mention is True)))
         # @ 原因将由本地日志和设置页记录，不把整份诊断返回给 AI。
@@ -2279,7 +2246,7 @@ async def bili_reply(bvid: str, text: str, rpid: int = 0, root: int = 0, aid: in
                               "selected_count": len(selected) if use_mentions else 0,
                               "ai_reason": no_mention_reason if mention_reason == "ai_declined" else ""}
         # 即使不@也必须移除模型偷加的名单昵称。
-        clean_text, _ = _decorate_comment(text, [*targets, *([temporary_target] if temporary_target else [])], False, mention_position)
+        clean_text, _ = _decorate_comment(text, targets, False, mention_position)
         text, mentioned = _decorate_comment(clean_text, selected, use_mentions, mention_position)
         if not text:
             return _result({"success": False, "error": "评论内容不能为空"}, bvid, rpid, mention_diagnostic)
@@ -2292,16 +2259,6 @@ async def bili_reply(bvid: str, text: str, rpid: int = 0, root: int = 0, aid: in
             return _result({"success": False, "blocked": True, "error": quota_error}, bvid, rpid, mention_diagnostic)
         # 全局公开评论额度在每条真实发布 API 调用前原子占位。
         # 不在本地图片/配置校验之前占位，避免“根本没发起发布”也消耗名额。
-        if temporary_target and wish_candidate and use_mentions:
-            try:
-                from video_wishes import claim_wish
-                wish_claim = claim_wish(_DUTY_HOME,wish_candidate['id'],bvid)
-            except Exception: wish_claim = None
-            if wish_claim is None:
-                # 已用尽/已失效/其他发送进程占位；撤掉本次临时 @，普通评论照常进行。
-                selected=[x for x in selected if x.get('uid')!=temporary_target['uid']]
-                text,mentioned=_decorate_comment(clean_text,selected,bool(selected) and use_mentions,mention_position)
-                mention_diagnostic['selected_count']=len(mentioned)
         # 图片上传必须是用户启用、AI 指名、顶层评论三者同时满足。
         # 不支持的配置、已达额度、错误文件均明确返回，不默默按“已附图”计数。
         meme_name = str(meme_image_name or '').strip()

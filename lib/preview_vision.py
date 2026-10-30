@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import re
 import sqlite3
+from contextlib import closing
 import subprocess
 import struct
 import sys
@@ -261,7 +262,7 @@ def _claim_vision_quota(home, daily_limit=None):
     day=datetime.now().strftime('%Y-%m-%d')
     db=Path(home)/'vision-usage.sqlite3'
     db.parent.mkdir(parents=True,exist_ok=True)
-    with sqlite3.connect(db,timeout=4) as con:
+    with closing(sqlite3.connect(db,timeout=4)) as con, con:
         con.execute('CREATE TABLE IF NOT EXISTS usage (day TEXT PRIMARY KEY, used INTEGER NOT NULL)')
         con.execute('BEGIN IMMEDIATE')
         used=con.execute('SELECT used FROM usage WHERE day=?',(day,)).fetchone()

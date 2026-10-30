@@ -5,7 +5,7 @@
  *   ① `config` 的值是对象 ⇒ 定时器里 TypeError ⇒ **把整个 dsh 带走**；
  *   ② `parameters.patch` 是 `{ type:'object' }` ⇒ `defineTool` 抛 JsonSchemaError ⇒ **插件整条不激活**。
  *
- * 用法：`node --import ./tools/register.mjs selfcheck.mjs`（解析钩子见 tools/host-resolver.mjs）
+ * 用法：`node selfcheck.mjs`（不再需要旧版解析钩子）
  * 退出码：0 = 两个半端都正常；1 = 有问题（宿主里就会 "entry did not activate" / 设置页空白）
  */
 import { mkdirSync, readFileSync, rmSync } from 'node:fs'
@@ -27,7 +27,7 @@ let mod
 try {
   mod = await import('./index.js')
 } catch (e) {
-  fail('连 import index.js 都失败（依赖没解析？检查 tools/host-resolver.mjs）', e)
+  fail('连 import index.js 都失败（检查宿主依赖或模块导入）', e)
 }
 
 const registered = []

@@ -10,7 +10,7 @@ const h=read('lib/management-console.html'),j=read('lib/management-console.js')
 const index=read('index.js'),client=read('client.js'),pkg=JSON.parse(read('package.json'))
 
 test('v2.4.99 使用新版版本号，原有数据目录保持不变',()=>{
- assert.equal(pkg.version,'2.4.99')
+ assert.match(pkg.version,/^2\.(?:[5-9]|[1-9]\d+)\.\d+(?:-dev\.\d+)?$/)
  assert.match(index,/mainSessionMemoryReasoningEffort/)
  assert.match(read('lib/data-backup.mjs'),/main-session-memory\.json/)
 })
@@ -59,7 +59,7 @@ test('关于页作者姓名直接可点，不显示冗余访问字样',()=>{
 })
 test('全局 UI 与人生记忆独立导航兼顾窄屏及暗色',()=>{
  assert.match(h,/\.life-jump/)
- assert.match(h,/href="#life-interest-section"/)
+ assert.match(h,/href="#life-others"/)
  assert.match(h,/href="#life-recall-section"/)
  assert.match(h,/\.interest-meter-fill/)
  assert.match(h,/@media\(prefers-color-scheme:dark\)/)

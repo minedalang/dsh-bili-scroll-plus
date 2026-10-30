@@ -6,7 +6,7 @@ const read=(p)=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
 test('v2.4.77+ 使用新的产品名、包名和 Cordis id',()=>{
   const pkg=JSON.parse(read('package.json')), index=read('index.js'), client=read('client.js'), patch=read('cordis.patch.yml')
   assert.equal(pkg.name,'dsh-dafeiyu-life')
-  const parts=String(pkg.version).split('.').map(Number);assert.equal(parts[0],2);assert.equal(parts[1],4);assert.ok(parts[2]>=77)
+  const parts=String(pkg.version).split('.').map(Number);assert.equal(parts[0],2);assert.ok(parts[1]>=4);if(parts[1]===4)assert.ok(parts[2]>=77)
   assert.match(index,/export const name = 'dafeiyu-life'/)
   assert.match(client,/id: 'dsh-dafeiyu-life'/)
   assert.match(client,/label: '大肥鱼'/)
@@ -35,9 +35,9 @@ test('DSH 设置页直接展示开源来源和关系类型',()=>{
   assert.match(client,/架构思路给了重要启发/)
 })
 
-test('新备份格式写新品牌，同时接受旧备份格式用于迁移',async()=>{
+test('新备份格式写新品牌，无老用户时拒绝旧版无校验备份',async()=>{
   const mod=await import('../lib/data-backup.mjs')
   assert.equal(mod.FORMAT,'dsh-dafeiyu-life-backup')
   const bad={format:'dsh-bili-scroll-plus-backup',schema:1,config:{a:1},files:{'../../x':'bad'},sqlite:{}}
-  assert.throws(()=>mod.validateBackup(bad),/不允许恢复的路径/)
+  assert.throws(()=>mod.validateBackup(bad),/格式版本不支持/)
 })
