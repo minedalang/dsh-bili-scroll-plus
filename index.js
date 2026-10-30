@@ -4530,7 +4530,13 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     if (req.method === 'GET' && path === '/api/bili-duty/main-session/history') {
       const q=String(url.searchParams.get('q')||'').trim().slice(0,120)
       const limit=Math.max(1,Math.min(50,Number(url.searchParams.get('limit'))||20))
-      return sendJson(res,200,{ok:true,rows:lifeMemory?.recall({query:q,domain:'main-session',maxItems:limit,maxChars:3000})||[]})
+      // Recent-life panel is not a search-results ranking: give real selected
+      // videos their own slice so repeated comments cannot crowd them out.
+      // Both categories come ONLY from fading episodes, never the archive.
+      const video=lifeMemory?.recall({query:q,domain:'main-session',kinds:['watch'],maxItems:Math.min(12,limit),maxChars:3000})||[]
+      const interactions=lifeMemory?.recall({query:q,domain:'main-session',kinds:['comment','social'],maxItems:Math.min(12,Math.max(1,limit-video.length)),maxChars:3000})||[]
+      const rows=[...video,...interactions].sort((a,b)=>Date.parse(b.at||'')-Date.parse(a.at||'')||0).slice(0,limit)
+      return sendJson(res,200,{ok:true,rows,counts:{video:video.length,interactions:interactions.length},note:'仅展示目前还记得的入选视频与互动经历；不检索永久档案。'})
     }
     if (req.method === 'POST' && path === '/api/bili-duty/main-session/test') {
       try { return sendJson(res,200,await mainSessionBridge.test()) }

@@ -424,7 +424,8 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div id="life-sync-section" class="settings-section life-section"><h4>告诉主 Session：大肥鱼最近做了什么</h4><div class="toolbar"><button id="main-session-sync" class="life-action life-green">现在把新经历告诉主 Session</button><button id="main-session-backfill" class="life-action life-sky">把过去 7 天遗漏的经历加入待汇报</button></div>
 <p class="muted">“过去 7 天”是<strong>从现在往回数 7 天</strong>，不是再等待 7 天。点击补充后只将尚未汇报的已选视频和已发评论放进本地待汇报队列，操作本身不会发送消息。启用主 Session 桥接和自动同步后，下一次符合间隔与每日额度的定时检查会尝试发送；否则可点击“现在把新经历告诉主 Session”手动发送。目标会话不在线时仍留在本地。此操作只汇报上下文，不直接写入人生记忆；人生反思会独立读取待反思经历。</p>
 <p id="main-session-queue-status" class="muted" role="status">正在读取…</p>
-<div class="toolbar"><input id="main-session-history-query" maxlength="120" placeholder="查本地经历，如 Claude / BV号 / 某句话"><button id="main-session-history-search" class="life-action life-sky">搜索经历档案</button></div>
+<div class="toolbar"><input id="main-session-history-query" maxlength="120" placeholder="留空看最近经历；输入视频标题或聊天关键词可搜索"><button id="main-session-history-search" class="life-action life-sky">查看当前记忆</button></div>
+<p id="main-session-history-status" class="muted" role="status">最近经历会兼顾入选视频和评论互动，且只使用可衰减记忆。</p>
 <div id="main-session-history" class="records records-scroll tall"></div></div>
 
 <div id="life-recall-section" class="settings-section life-section"><h4>长期回忆 · 检索、反思和手动管理</h4>
