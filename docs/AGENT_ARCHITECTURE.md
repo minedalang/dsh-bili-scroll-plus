@@ -1,3 +1,28 @@
+# dev.13 当前架构入口（以下 dev.4 图仅供历史参考）
+
+> 本文下面的 `dev.4` 流程图与开发状态记录是**历史快照**，不再作为当前记忆数据路径的实现依据。当前架构以 [dev.13 双层人生记忆](./DEV13_DUAL_LIFE_MEMORY.md) 与实际代码为准；请勿用下文 `Evidence → Reflection` 的旧箭头绕开遗忘副本。
+
+```mermaid
+flowchart TB
+  Events[真实 B站生活事件] --> Archive[永久事实档案：仅备份与审计]
+  Events --> Episode[可衰减经历副本]
+  Episode --> Filter[阶段 / UID / 隐私筛选]
+  Filter --> Local[本地检索：准确 BV / 关键词 / 同 UID]
+  Filter --> Reflect[证据约束的人生反思]
+  Reflect --> Insight[长期认识]
+  Local --> Main[主 Session 当前回忆]
+  Insight --> Main
+  Local --> Social[B站社交 / 双域意愿：纯本地召回]
+  Insight --> Social
+  Local -.启用且有预算时.-> Semantic[可选低成本 AI：只选择合法候选 ID]
+  Insight -.启用且有预算时.-> Semantic
+  Semantic --> Main
+```
+
+关键限制：**永久事实档案不能直接接入回忆或反思模型**。B站普通社交不额外调用 AI 记忆检索；明确允许的社交共同经历只匹配平台真实 UID。所有外部动作仍由硬权限、额度、去重和真实回执控制。默认 AI 辅助回忆关闭。
+
+---
+
 # 大肥鱼 Plus · 多 Agent 与主 Session 架构（2.5.0-dev.4）
 
 > 开发快照文档。主分支 `v2.4.99` 仍是正式版。图中的受限主人私信 Agent 与主 Session 可见上下文桥是 dev.4 能力，**默认全部关闭**。此处「Agent」是职责与权限边界，不等于每个模块都是能随意调用工具的 DSH 主 Agent。

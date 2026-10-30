@@ -313,7 +313,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label class="checkline"><input id="models-vision-debug" type="checkbox">开启视觉识图调试日志（排障用）</label></div></div>
 </div>
 <div class="settings-section"><h4>表情包检索规则优化</h4><div class="model-activity"><span id="models-memeRules-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-memeRules-test" class="model-test-button">测试连接</button><span id="models-memeRules-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">仅在「表情包管理」点击 AI 更新时调用；不参与每次评论。留空时继承 DSH 当前默认模型。建议使用低成本模型与 low 思考深度；提示词只包含真实表情包名称/分类与现有规则；不会读取或发送大肥鱼的当前兴趣、评论、私信、好友画像或图片。兴趣由本地检索在每次查询时动态读取。</p><div class="fields" id="models-memeRules"></div></div>
-<div class="settings-section"><h4>低成本人生记忆检索</h4><div class="model-activity"><span id="models-memory-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-memory-test" class="model-test-button">测试连接</button><span id="models-memory-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">仅挑选真实记忆 ID，不能发送 B站消息或修改记忆。是否启用及检索额度仍在「大肥鱼的家」设置。</p><div class="fields" id="models-memory"></div></div>
+<div class="settings-section"><h4>低成本人生记忆检索</h4><div class="model-activity"><span id="models-memory-usage" class="muted">今日调用次数：读取中… · 上次调用时间：读取中…</span><button type="button" id="models-memory-test" class="model-test-button">测试连接</button><span id="models-memory-test-result" class="muted" role="status" aria-live="polite"></span></div><p class="muted">从当前可用的经历与长期认识候选中只选择真实 ID，不会读取封存档案，也不能发送 B站消息或修改记忆。是否启用和额度仍在「大肥鱼的家」设置。</p><div class="fields" id="models-memory"></div></div>
 <div class="toolbar"><button id="models-save" class="primary">保存全部模型配置</button><button id="models-refresh">重新读取</button></div>
 </div></section>
 <section id="panel-bili" hidden>
@@ -392,7 +392,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label for="main-session-daily">每天最多给主 Session 汇报几次（1–24 次）</label><input id="main-session-daily" type="number" min="1" max="24" value="4"></div>
 <div><label for="main-session-batch">每次最多汇报多少条经历（1–20 条）</label><input id="main-session-batch" type="number" min="1" max="20" value="8"></div>
 <div><label for="main-session-comments">汇报时也告诉主 Session 我发过的评论/回复</label><input id="main-session-comments" type="checkbox" checked></div></div>
-<p class="muted">同步本身不额外调用“总结 AI”：视频经历和评论正文直接从插件现有账本整理。但投递到主 Session 后，那个 Session 会产生一次很短的模型回复，所以默认最多每天 4 批，避免浪费调用。所有跳过的视频仍留在插件精确档案里，不会塞进人格记忆。</p></div>
+<p class="muted">同步本身不额外调用“总结 AI”：视频经历和评论正文直接从插件现有账本整理。但投递到主 Session 后，那个 Session 会产生一次很短的模型回复，所以默认最多每天 4 批，避免浪费调用。跳过的视频仍保存在任务日志/视频归档供管理员核对；它们不会仅凭被记录就自动变成大肥鱼的可用记忆。</p></div>
 
 <div class="settings-section"><h4>3. 人生记忆与检索设置</h4>
 <p class="muted">这里只放记忆开关和用量设置；所有模型统一在「AI 模型配置」页设置。兴趣变化、真实回忆、人物关系、待反思经历和检索测试，请切换到独立的「人生记忆」页。</p>
@@ -403,12 +403,12 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label for="main-reflection-batch">每批最多反思候选（4–30）</label><input id="main-reflection-batch" type="number" min="4" max="30" value="16"><small class="setting-note">每轮交给反思模型的候选上限；越大一次看得越多，通常消耗更多 Token。</small></div>
 <div><label for="main-reflection-hours">两次自动反思至少间隔（1–48 小时）</label><input id="main-reflection-hours" type="number" min="1" max="48" step="0.5" value="6"><small class="setting-note">两轮自动反思间的最短时间；调小可能增加模型调用和记忆更新频率。</small></div>
 <div><label for="main-reflection-daily">每天最多自动反思（1–8 批）</label><input id="main-reflection-daily" type="number" min="1" max="8" value="2"><small class="setting-note">限制每天自动反思批数；调大可能更勤快，也可能增加模型费用。</small></div>
-<div><label for="main-memory-semantic">启用独立低成本模型进行语义检索（默认关闭）</label><input id="main-memory-semantic" type="checkbox"><small class="setting-note">打开后模型从真实候选中挑选更相关的记忆；可能额外产生模型调用。</small></div>
+<div><label for="main-memory-semantic">启用独立低成本模型进行语义检索（默认关闭）</label><input id="main-memory-semantic" type="checkbox"><small class="setting-note">打开后含糊的主动回忆可由现有低成本模型同时检索仍可使用的经历与长期认识；普通 B站评论仍走本地 UID 记忆，不额外请求模型。</small></div>
 <div><label for="main-memory-model-provider">检索模型 Provider（必填，例如 DSH 已配置的提供方 ID）</label><input id="main-memory-model-provider" type="text" maxlength="160" placeholder="对应 DSH Provider ID"><small class="setting-note">指定用于记忆检索的 DSH 模型服务提供方；填错会导致模型检索失败并回退本地。</small></div>
 <div><label for="main-memory-model-id">检索模型 ID（必填）</label><input id="main-memory-model-id" type="text" maxlength="160" placeholder="模型 ID"><small class="setting-note">指定检索使用的模型；建议选便宜、稳定的模型，填错会回退本地检索。</small></div>
    <div><label for="main-memory-model-effort">检索模型思考深度（可留空）</label><input id="main-memory-model-effort" type="text" maxlength="160" placeholder="如 low / medium / high，或该模型支持的 JSON"><small class="setting-note">控制检索模型的推理预算；留空用默认，值越高通常更慢也可能更贵。</small></div>
 <div><label for="main-memory-candidates">低成本模型最多看到的候选记忆（12–80）</label><input id="main-memory-candidates" type="number" min="12" max="80" value="48"><small class="setting-note">让检索模型最多从多少段真实记忆中挑选；越大覆盖越广、提示词越长。</small></div>
-<div><label for="main-memory-search-daily">每日每个检索通道调用上限（0–500，0=禁止）</label><input id="main-memory-search-daily" type="number" min="0" max="500" value="80"><small class="setting-note">每个检索通道的模型调用上限；设为 0 就不请求语义检索模型。</small></div>
+<div><label for="main-memory-search-daily">每日低成本检索调用上限（0–500，0=禁止）</label><input id="main-memory-search-daily" type="number" min="0" max="500" value="80"><small class="setting-note">语义检索的每日模型任务启动上限；优先沿用本地持久化统计，重启不会正常清零。统计文件丢失或不可写时不保证跨重启硬限额；设为 0 禁止调用。</small></div>
 <div><label for="main-memory-half-life">普通记忆半衰期（15–120 天）</label><input id="main-memory-half-life" type="number" min="15" max="120" value="30"><small class="setting-note">影响普通旧记忆的排序衰减速度；天数越大，旧经历越不容易被新内容挤下去。</small></div>
 <div><label for="main-memory-threshold">召回证据门槛（0.10–0.80）</label><input id="main-memory-threshold" type="number" min="0.1" max="0.8" step="0.05" value="0.35"><small class="setting-note">控制记忆与当前话题必须有多相关才会被召回；越高越严格、误召回更少。</small></div>
 <div><label for="main-memory-max-items">每轮最多召回（1–12 条）</label><input id="main-memory-max-items" type="number" min="1" max="12" value="6"><small class="setting-note">一次聊天最多注入几条检索记忆；调大覆盖更广，但可能占用上下文。</small></div>
@@ -459,7 +459,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 
 <div class="settings-stack">
 <div id="life-recall-section" class="settings-section life-section memory-home">
-<h4>🧠 鱼鱼现在记得什么？</h4><p class="muted">搜视频标题、BV 号或聊天关键词；留空就看最近的经历。这里不会借用封存的完整历史补回已经忘记的细节。</p>
+<h4>🧠 鱼鱼现在记得什么？</h4><p class="muted">搜视频标题、BV 号或聊天关键词；留空看最近。开启已有的「低成本人生记忆检索」后，含糊的查询也能由 AI 从当前还记得的经历与认识中选择真实记录；否则使用本地搜索。不会访问封存档案。</p>
 <div class="toolbar memory-search-bar"><input id="main-session-history-query" maxlength="120" aria-label="搜索鱼鱼现在记得的经历" placeholder="输入视频标题 / BV号 / 聊天关键词，或留空看最近"><button id="main-session-history-search" class="life-action life-sky">搜索当前记忆</button></div>
 <p id="main-session-history-status" class="muted" role="status">等待读取最近经历…</p><div id="main-session-history" class="records records-scroll tall" aria-live="polite"></div>
 <div id="life-lessons" class="memory-lessons"><h4>✨ 这些经历给她留下了什么？</h4><p class="muted">有些经历会被忘掉具体细节，但值得保留的兴趣、约定或体会，可能继续影响鱼鱼的选择。并非每条经历都要产生感悟。</p>

@@ -3434,6 +3434,8 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     getMemories:()=>[...longTermMemory.activeMemories(),...listLegacyLifeFacts(stateDir),...interestMemoryRows(stateDir)],getConfig:()=>cfg,
     invokeModel:(prompt,maxChars)=>invokeMemoryPrompt(prompt,maxChars),
     getEpisodes:(query,options)=>lifeMemory?.recall({query,domain:options?.domain||'main-session',role:options?.role||'owner',actorUid:options?.actorUid||'',maxItems:options?.maxItems||6,maxChars:options?.maxChars||800})||[],
+    getEpisodeCandidates:(options)=>lifeMemory?.semanticCandidates(options)||[],
+    getDailyUsage:()=>{const usage=readModelTaskUsage(stateDir);return {day:usage.day,used:usage.tasks.memory.today}},
     logger:{warn:m=>log('⚠️ '+m)},
   })
   longTermMemory.start()

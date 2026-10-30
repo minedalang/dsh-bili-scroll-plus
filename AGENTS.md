@@ -11,7 +11,7 @@
    · ⚠️ 若用户机器上的**杀软拦了这次下载**：让他把 `%USERPROFILE%\.dsh\bili-duty\bin\` 加白，或干脆自己装 uv / Python 3.10+ ✓
    · ⭐ **万一下载链路都不通**（有用户反馈"桌面版上这条链路经常不通"）：**手动放一份 `uv.exe` 到 `<家目录>\bin\` 就行**
      —— 插件会**用那一份、跳过下载** ✓（他 `PATH` 里本来就有 `uv` 的话，直接用那个 ✓）
-  2. `dsh plugin --profile web add github:minedalang/dsh-dafeiyu-life`（当前唯一推荐安装源；新 npm `dsh-dafeiyu-life` 未独立发布前不可使用，严禁退回原版包）。
+  2. `dsh plugin --profile web add github:minedalang/dsh-dafeiyu-life`（如果已在插件市场上架，请优先依照市场页面提供的安装来源；此处是 GitHub 安装示例）。
    · 备选：`dsh plugin --profile web add github:c1overzz/dsh-bili-scroll`
    · ⚠️ **升级旧版**：如果用户在设置页看到的按钮叫「**重装依赖**」（不是「**重装主依赖**」），
      说明装的还是 **0.1.0** —— 那一版建 Python 环境时缺一个参数，**依赖装不上、二维码也画不出来**。
@@ -42,7 +42,7 @@
 
 ## 仓库结构（改代码时看这里）
 
-- `index.js` —— host 半端：12 个工具 + 自定义多时段定时器 + HTTP 接口 + 配置（`config.json` 与 DSH 原生设置页**逐字段对账**：见 `loadCfg` / `saveCfgHost`）+ 值班轮的工具白名单（`mcpWhitelist` → `BILI_MCP_TOOLS`）
+- `index.js` —— host 半端：36 个工具 + 自定义多时段定时器 + HTTP 接口 + 配置（`config.json` 与 DSH 原生设置页**逐字段对账**：见 `loadCfg` / `saveCfgHost`）+ 值班轮的工具白名单（`mcpWhitelist` → `BILI_MCP_TOOLS`）
 - `client.js` —— 浏览器半端：唯一「日常」控制台（注册在 `settings.section`），详细设置集中在 `lib/management-console.html/js`
 - `lib/` —— 状态目录与家目录 / 极小的 MCP stdio 客户端 / 扫码登录 / **`hostdeps.mjs`（从宿主树取 `@deepseek-ai/*`，拿不到就退到自己依赖 / 本地等价实现）** / **`verify.mjs`（评论发出后复核）**
 - `prompts/duty.md` —— 一轮要做的事（判定口径 + 红线，**用户可以改**）；升级规矩见 `lib/state.mjs` 的 `ensureCharter`（用户改过 ⇒ 保留他那份、新版落 `duty.md.new`）
@@ -58,5 +58,13 @@
 
 - 当前独立维护版：https://github.com/minedalang/dsh-dafeiyu-life，npm 包名 `dsh-dafeiyu-life`；宿主挂载清单中的 `name` 必须同包名一致。
 - 原作者 / 原仓库：https://github.com/c1overzz/dsh-bili-scroll。保留原项目 MIT 版权、第三方署名，不将本衍生项目说成官方版本。
-- GitHub Releases 发布 `dsh-dafeiyu-life-<version>.tgz`，插件自动升级必须查询本项目 Releases；未发布 npm 前，不引导用户安装 npm 包。
+- GitHub Releases 的 `dsh-dafeiyu-life-<version>.tgz`、npm 和插件市场是不同发布渠道：**逐一核对实际配置和版本**，不能凭 GitHub 发布自动推定 npm/市场同步。未确认发布前，不引导安装未经验证的渠道。
 - Cordis 插件 id 已统一为 `dafeiyu-life`；`bili-duty` 用户数据目录和 `/api/bili-duty` 内部前缀暂时保留，避免无意义的数据搬迁。不要在同一 profile 同时启用旧包和新包。
+
+
+## dev.13 人生记忆检索 / 提示词准则
+
+- 当前可使用的经历仅来自 `life-memory/episodic.json` 的衰减副本；`life-memory/archive/` 只用于备份、审计、合规删除，不授权模型直接检索。`digest/`、日报是任务核对文件，不是绕过遗忘的自动回忆来源。
+- `lib/memory-retriever.mjs` 的低成本模型只是**可选 ID 选择器**：先由本地实现隐私、衰减、UID 过滤并选候选，再交给模型，最终重新读取当前副本并验证 ID。不能根据模型自写叙述建记忆。
+- B站陌生人按平台真实 UID 召回自己的清晰公开共同经历，不能访问其他人或主 Session 的私有记录。普通社交仍本地召回；不要引入每次聊天自动多一次 AI 的回归。
+- 在「大肥鱼的家」开启身份记忆及语义检索，在「AI 模型配置」选择低成本记忆模型。默认两个功能都关闭；发布时不得把这些隐私/费用开关偷偷打开。用户修改过的值班章程不应被新版覆盖。
