@@ -3568,11 +3568,13 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
   ownerTodoReviewTimer.unref?.()
   ctx.effect(()=>()=>clearInterval(ownerTodoReviewTimer),'bili-duty: 可选自主待办择机检查')
 
-  // v2.4.86: 生活动态是独立内容，不从评论自动复制；只使用公开已选视频的真实证据。
+  // 生活动态仅使用可衰减的公开经历证据：视频和鱼鱼本人已确认发表的公开文字。
   // 公开发布与模型生成严格分离：生成模型不挂 B站发送工具，实际发布由受限 Python 路径执行。
   dailyDynamic=createDailyDynamic({
     dataDir:stateDir,getConfig:()=>{refreshCfg();return cfg},
     getPublicVideos:()=>lifeMemory?.publicVideoEvidence(20)||[],
+    getPublicSocial:()=>lifeMemory?.publicSocialEvidence(16)||[],
+    getEmotion:()=>emotionalState.snapshot(),
     getInterests:()=>lifeReflection?.interests?.()||[],
     invokeModel:(prompt,maxChars)=>invokeInteractionPrompt(prompt,maxChars,{modelRoute:'dailyDynamic'}),
     publish:(text,limit)=>new Promise((resolve,reject)=>{
