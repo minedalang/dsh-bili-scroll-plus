@@ -2854,6 +2854,10 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     getThread:(bvid,root,targetRpid)=>call('bili_comment_thread',{bvid,root:Number(root),target_rpid:Number(targetRpid)||0,num:20}),
     logger:{warn:(msg)=>log('评论上下文：'+msg)},
   })
+  const safeSocialMemoryContext=(query)=>{
+    try{return memoryRetriever?.socialContext(String(query||'').slice(0,1100),{maxItems:5,maxChars:720})||''}
+    catch(e){log('B站社交记忆只读召回失败（本轮仍正常对话）：'+String(e?.message||e).slice(0,100));return ''}
+  }
   const ownerCommentAgent=createOwnerCommentAgent({
     dataDir:stateDir,getConfig:()=>{refreshCfg();return cfg},
     decideAgency:({uid,messageId,text,intent,bvid,thread})=>dualContextAgency.decide({source:'bili-comment',uid,messageId,text,intent,target:bvid,thread}),
@@ -2871,6 +2875,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       }catch(e){log('可信评论上下文读取失败：'+String(e?.message||e).slice(0,100))}
       return interpretTrustedSocial({
       row:enriched,role:row.role,emotion:emotionalState.snapshot(),style:emotionalState.styleHint(),
+      memoryContext:safeSocialMemoryContext([row.text,enriched.context,enriched.threadPreview].filter(Boolean).join(' ')),
       relationship:(()=>{try{return listFriendRelationships(stateDir,cfg.friendDirectory).find(x=>String(x.uid)===String(row.uid))?.stage||''}catch{return ''}})(),
       history:dualContextAgency.context({uid:row.uid,thread:row.thread,target:row.bvid}),
       invoke:p=>invokeInteractionPrompt(p,2000,{modelRoute:'interaction'}),
@@ -2940,6 +2945,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
           info:evidence.video,bvid:action.bvid,context:evidence.context,invitation:action.invitation||'',
           style:emotionalState.styleHint(),willingness:action.willingness||{},commentRequested:action.commentRequested===true,
           priorCommentOutcomes:action.priorCommentOutcomes||[],
+          memoryContext:safeSocialMemoryContext([action.invitation,evidence.video?.title,evidence.video?.description,evidence.context].filter(Boolean).join(' ')),
           canPublish:actorTier==='owner',requireReply:action.aiSocial===true,maxAttempts:action.aiSocial===true?1:2,
           invoke:p=>invokeInteractionPrompt(p,2200,{modelRoute:'interaction'}),
         })
