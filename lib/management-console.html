@@ -515,8 +515,9 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <p class="muted">情绪驱动的自主回忆与主动分享权限请到「社交互动」开启：当近期真实视频再次触及过去有证据的人生记忆时，大肥鱼可以决定保持沉默、在主 Session 主动开口或给主人发送 B站私信。原始经历始终是证据；整理回忆、反思或产生念头均不能自行改写原始事实。 这是大肥鱼的角色模拟状态，不是生理测量或真实意识证明。它只保存情绪类别、强度和粗粒度来源，不保存触发心情的私信正文、UID 或具体聊天原因。情绪会随时间衰减，不能成为泄露隐私、迁怒或强行社交的理由。</p>
 <label class="checkline"><input id="emotion-enabled" type="checkbox" checked>持续记录心情</label>
 <div id="emotion-current" class="grid emotion-grid" aria-live="polite"></div>
+<div id="emotion-agency-activity" class="emotion-trend" aria-live="polite"><strong>🐟 社交意愿与最近决策</strong><p class="muted">正在读取最近 7 天的意愿评估…</p></div>
 <div class="toolbar"><button id="emotion-save" class="life-action life-green">保存情绪设置</button><button id="emotion-reset" class="life-action life-amber">重置为平稳</button></div>
-<h4 style="margin-top:15px">近几次心情变化</h4><div id="emotion-trend" class="emotion-trend" role="img" aria-label="近期情绪变化趋势"></div><details class="life-subdetails"><summary>查看完整情绪记录</summary><div id="emotion-history" class="records records-scroll"></div></details>
+<h4 style="margin-top:15px">真实状态变化</h4><label for="emotion-trend-metric">查看指标</label><select id="emotion-trend-metric"><option value="sociality">社交意愿</option><option value="intensity">情绪强度</option><option value="energy">活力</option><option value="curiosity">好奇心</option><option value="valence">情绪正向度（原始 -100～100）</option></select><div id="emotion-trend" class="emotion-trend" role="img" aria-label="近期情绪变化趋势"></div><details class="life-subdetails"><summary>查看完整情绪记录</summary><div id="emotion-history" class="records records-scroll"></div></details>
 </div>
 
 <div class="settings-stack">

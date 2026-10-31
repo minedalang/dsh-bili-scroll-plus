@@ -4692,7 +4692,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
 
     // Sensitively scoped administrative data: never serve it to cross-site
     // requests. UI uses same-origin fetch with credentials.
-    if (['/api/bili-duty/friend-learning','/api/bili-duty/social-intentions','/api/bili-duty/emotion-state','/api/bili-duty/friend-relationships','/api/bili-duty/life-timeline','/api/bili-duty/dev5-social','/api/bili-duty/friend-relationships/clear'].includes(path)) {
+    if (['/api/bili-duty/friend-learning','/api/bili-duty/social-intentions','/api/bili-duty/emotion-state','/api/bili-duty/emotion-agency-activity','/api/bili-duty/friend-relationships','/api/bili-duty/life-timeline','/api/bili-duty/dev5-social','/api/bili-duty/friend-relationships/clear'].includes(path)) {
       const origin=String(req.headers.origin||''),host=String(req.headers.host||'')
       if(origin&&(!host||![`http://${host}`,`https://${host}`].includes(origin)))return sendJson(res,403,{ok:false,error:'私密社交数据仅限同源管理中心'})
       if(String(req.headers['sec-fetch-site']||'').toLowerCase()==='cross-site')return sendJson(res,403,{ok:false,error:'拒绝跨站访问私密社交数据'})
@@ -4734,6 +4734,10 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       const body=await readBody(req)
       if(body?.action!=='preview')return sendJson(res,400,{ok:false,error:'只允许预览，发送由后台授权规则控制'})
       return sendJson(res,200,await emotionRecall.tick({dryRun:true}))
+    }
+    if (req.method === 'GET' && path === '/api/bili-duty/emotion-agency-activity') {
+      try{return sendJson(res,200,dualContextAgency.activity())}
+      catch(e){return sendJson(res,500,{ok:false,error:'意愿活动读取失败：'+String(e?.message||e).slice(0,120)})}
     }
     if (req.method === 'GET' && path === '/api/bili-duty/emotion-state') {
       try{return sendJson(res,200,{ok:true,state:emotionalState.snapshot()})}
