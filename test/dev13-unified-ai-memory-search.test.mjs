@@ -80,9 +80,10 @@ test('语义候选严格限制已衰减细节、平台 UID 及陌生人隐私',(
   gate.recordEvents([event(),{kind:'social',key:'social:101:one',bvid:BV,actorUid:'101',text:'我的秘密暗号是灯笼',at:T},{kind:'social',key:'social:202:two',bvid:BV,actorUid:'202',text:'我喜欢看鸭子',at:T}])
   assert.equal(gate.semanticCandidates({domain:'bili-life',role:'stranger',actorUid:''}).length,0)
   const own=gate.semanticCandidates({domain:'bili-life',role:'stranger',actorUid:'101'})
-  assert.equal(own.length,1)
-  assert.match(own[0].summary,/灯笼/)
-  assert.doesNotMatch(JSON.stringify(own),/鸭子|可爱的声音/)
+  assert.equal(own.length,2)
+  assert.ok(own.some(x=>x.kind==='social'&&/灯笼/.test(x.summary)))
+  assert.ok(own.some(x=>x.kind==='watch'&&/可爱的声音/.test(x.summary)))
+  assert.doesNotMatch(JSON.stringify(own),/鸭子/)
   clock.value+=85*DAY
   const aged=gate.semanticCandidates({query:'配音',domain:'main-session'})
   assert.doesNotMatch(JSON.stringify(aged),/BV1234567890|可爱的声音|灯笼/)

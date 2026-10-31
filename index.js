@@ -50,6 +50,7 @@ import { createOwnerDmAgent } from './lib/owner-dm-agent.mjs'
 import { validateOwnerRosterUpdate } from './lib/owner-identity.mjs'
 import { formatLocalLogTimestamp } from './lib/log-time.mjs'
 import { collectLocalLifeEvents } from './lib/local-life-source.mjs'
+import {buildVideoExplorationEvent} from './lib/video-experience.mjs'
 import { observeFriendInterest, learnedFriendContext, listFriendLearning, clearFriendLearning, isFriendRecommendationFeedback, friendRecommendationGuard } from './lib/friend-learning.mjs'
 import {socialTier,hasExplicitVideoRecommendation} from './lib/social-tier.mjs'
 import { observeAuthenticatedOwnerDmPreferences } from './lib/owner-dm-preferences.mjs'
@@ -1072,6 +1073,18 @@ function reportMeta() {
     if(args.include_danmaku!==false)tasks.push((async()=>{try{danmaku=await call('bili_danmaku',{bvid,num:25})}catch(e){danmaku={error:String(e?.message||e).slice(0,140)}}})())
     if(cfg.visionEnabled===true&&cfg.visionMode==='independent_dsh')tasks.push((async()=>{try{vision=await call('bili_preview_vision',{bvid})}catch(e){vision={error:String(e?.message||e).slice(0,140)}}})())
     await Promise.all(tasks)
+    // A successful, verifiable exploration is a B站 life experience even when
+    // record_session=false. This is NOT a main-Session watch receipt.
+    // No raw third-party comments, private text or model guesses are saved.
+    try{
+      const normalized=x=>{if(typeof x!=='string')return x;try{return JSON.parse(x)}catch{return {text:x}}}
+      const event=buildVideoExplorationEvent({bvid,info:normalized(info),
+        subtitle:normalized(subtitle),comments:normalized(comments),
+        danmaku:normalized(danmaku),visual:normalized(vision),
+        source:args.record_session===false?'bili-life':'main-session',operationId:randomUUID()})
+      if(event){lifeMemory?.recordEvents([event]);lifeReflection?.addEvents([event])}
+      else log('视频探索没有可验证的标题/资料，不生成生活观看经历：'+bvid)
+    }catch(e){log('视频探索经历写入失败（不影响只读查看）：'+String(e?.message||e).slice(0,120))}
     // Only explicit main-Session watches may create main-Session history.
     // B站生活域邀请和自主待办的只读查看不冒充工作域观看。
     if(args.record_session!==false){
@@ -2797,7 +2810,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       if(!['comment','dm'].includes(item.kind)||!/^[1-9]\d{0,19}$/.test(String(item.uid||'')))return ''
       return safeSocialMemoryContext([item.text,item.context].filter(Boolean).join(' '),item.uid,
         socialTier(item.uid,cfg.dmOwnerUid,cfg.friendDirectory),
-        item.incomingRpid&&item.bvid?`social:${item.uid}:${item.bvid}:${item.incomingRpid}`:'')
+        item.incomingRpid&&item.bvid?`social:${item.uid}:${item.bvid}:${item.incomingRpid}`:'',item.bvid)
     }),
     prepareMemeContexts: (batch) => interactionMemeLookup.forBatch(batch),
     onEmotion: ({mood,intensity,source})=>{try{emotionalState.update({mood,intensity,source})}catch(e){log('情绪状态更新失败：'+String(e?.message||e).slice(0,100))}},
@@ -2814,7 +2827,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       const persona = effectivePersonaPrompt(cfg.personaPrompt).slice(0,scene==='comment'?1350:1600)
       const lore = (normalizeCharacterLore(cfg.characterLore) || DEFAULT_CHARACTER_LORE).slice(0,scene==='comment'?260:420)
       return [conciseStyle,growth,emotionalState.styleHint(),persona,lore].filter(Boolean).join('\n')
-    }, 
+    },
     logger: {warn: (msg) => log('互动 AI：' + msg)},
   })
 
@@ -2877,8 +2890,8 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     getThread:(bvid,root,targetRpid)=>call('bili_comment_thread',{bvid,root:Number(root),target_rpid:Number(targetRpid)||0,num:20}),
     logger:{warn:(msg)=>log('评论上下文：'+msg)},
   })
-  const safeSocialMemoryContext=(query,actorUid,role,excludeEventKey='')=>{
-    try{return memoryRetriever?.socialContext(String(query||'').slice(0,1100),{maxItems:5,maxChars:720,actorUid,role,excludeEventKey})||''}
+  const safeSocialMemoryContext=(query,actorUid,role,excludeEventKey='',currentBvid='')=>{
+    try{return memoryRetriever?.socialContext(String(query||'').slice(0,1100),{maxItems:5,maxChars:850,actorUid,role,excludeEventKey,currentBvid})||''}
     catch(e){log('B站社交记忆只读召回失败（本轮仍正常对话）：'+String(e?.message||e).slice(0,100));return ''}
   }
   const ownerCommentAgent=createOwnerCommentAgent({
@@ -2899,7 +2912,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       return interpretTrustedSocial({
       row:enriched,role:row.role,emotion:emotionalState.snapshot(),style:emotionalState.styleHint(),
       memoryContext:safeSocialMemoryContext([row.text,enriched.context,enriched.threadPreview].filter(Boolean).join(' '),row.uid,row.role,
-        row.rpid?`social:${row.uid}:${row.bvid}:${row.rpid}`:''),
+        row.rpid?`social:${row.uid}:${row.bvid}:${row.rpid}`:'',row.bvid),
       relationship:(()=>{try{return listFriendRelationships(stateDir,cfg.friendDirectory).find(x=>String(x.uid)===String(row.uid))?.stage||''}catch{return ''}})(),
       history:dualContextAgency.context({uid:row.uid,thread:row.thread,target:row.bvid}),
       invoke:p=>invokeInteractionPrompt(p,2000,{modelRoute:'interaction'}),
@@ -2969,7 +2982,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
           info:evidence.video,bvid:action.bvid,context:evidence.context,invitation:action.invitation||'',
           style:emotionalState.styleHint(),willingness:action.willingness||{},commentRequested:action.commentRequested===true,
           priorCommentOutcomes:action.priorCommentOutcomes||[],
-          memoryContext:safeSocialMemoryContext([action.invitation,evidence.video?.title,evidence.video?.description,evidence.context].filter(Boolean).join(' '),action.actorUid,actorTier),
+          memoryContext:safeSocialMemoryContext([action.invitation,evidence.video?.title,evidence.video?.description,evidence.context].filter(Boolean).join(' '),action.actorUid,actorTier,'',action.bvid),
           canPublish:actorTier==='owner',requireReply:action.aiSocial===true,maxAttempts:action.aiSocial===true?1:2,
           invoke:p=>invokeInteractionPrompt(p,2200,{modelRoute:'interaction'}),
         })

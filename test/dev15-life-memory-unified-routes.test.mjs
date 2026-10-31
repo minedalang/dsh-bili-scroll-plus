@@ -42,7 +42,7 @@ test('视频探索只使用自己的公开视频经历，不会拿到某个陌�
   const watches=f.gateway.recall({query:'系列影片',domain:'bili-explore',maxItems:4})
   assert.equal(watches.length,1);assert.equal(watches[0].kind,'watch')
   assert.equal(f.gateway.recall({query:'私密',domain:'bili-life',role:'stranger',actorUid:'456'}).length,0)
-  assert.ok(f.gateway.recall({query:'系列影片',domain:'bili-life',role:'friend',actorUid:'123'}).every(e=>e.kind==='social'))
+  assert.ok(f.gateway.recall({query:'系列影片',domain:'bili-life',role:'friend',actorUid:'123'}).some(e=>e.kind==='watch'))
   const retriever=createMemoryRetriever({getMemories:()=>[{id:'private',category:'stable_profile',text:'主人的私人住址',事实键:'主人.地址'}],getConfig:()=>({...f.cfg,mainSessionMemoryMaxItems:3}),
     getEpisodes:(q,o)=>f.gateway.recall({query:q,...o}),getEpisodeCandidates:()=>[]})
   const context=retriever.localContext('系列影片','video')
