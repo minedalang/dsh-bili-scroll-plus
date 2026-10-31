@@ -34,7 +34,8 @@ test('未发布草稿可删除、可重新生成；已发布记录不可删除�
 
 test('管理中心包含真正的删除路由、明确信息反馈、按钮忙碌态和刷新保留页面',()=>{
  const h=src('lib/management-console.html'),ui=src('lib/management-console.js'),host=src('index.js')
- for(const id of ['daily-dynamic-action-status','action-confirm-dialog','request-indicator','action-toast','legacy-growth-details'])assert.ok(h.includes(`id="${id}"`),id)
+ for(const id of ['daily-dynamic-action-status','action-confirm-dialog','request-indicator','action-toast','friend-relationships-list'])assert.ok(h.includes(`id="${id}"`),id)
+  assert.doesNotMatch(h,/历史兼容资料（旧版人物关系与成长记录）|id="legacy-growth-details"/)
  assert.match(ui,/request\('\/daily-dynamic\/delete'/)
  assert.match(host,/path === '\/api\/bili-duty\/daily-dynamic\/delete'/)
  assert.match(ui,/url\.searchParams\.set\('tab',tab\)/)
@@ -43,5 +44,4 @@ test('管理中心包含真正的删除路由、明确信息反馈、按钮忙�
  assert.match(ui,/confirmAction\(\{title:full\?/)
  assert.match(h,/\.action-confirm-dialog::backdrop/)
  assert.match(h,/\.action-feedback\[data-tone=error\]/)
- assert.match(h,/\.legacy-archive/)
 })

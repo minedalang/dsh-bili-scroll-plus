@@ -74,8 +74,9 @@ test('Bug 03: 意愿只统计真实决策、不给 AI 伪造实际发送；不�
 test('管理页能展示状态快照和意愿决策；明确区别事件、回复、外发完成',()=>{
  const js=readFileSync(new URL('../lib/management-console.js',import.meta.url),'utf8')
  const html=readFileSync(new URL('../lib/management-console.html',import.meta.url),'utf8')
- assert.match(html,/emotion-agency-activity/);assert.match(html,/emotion-trend-metric/)
+ assert.match(html,/emotion-agency-activity/);assert.match(html,/emotion-trend/);assert.doesNotMatch(html,/emotion-trend-metric/)
  assert.match(js,/activity\.replaceChildren/);assert.match(js,/允许 ≠ 已执行/)
- assert.match(js,/x\.state&&Number\.isFinite/)
+ assert.match(js,/五项指标 · 真实事件快照/);assert.match(js,/trend-legend/);assert.match(js,/x\.state&&Number\.isFinite/)
+ for(const metric of ['sociality','intensity','energy','curiosity','valence'])assert.ok(js.includes(`key:'${metric}'`),metric)
  assert.match(js,/归档事件与可衰减记忆不是一一对应/)
 })

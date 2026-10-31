@@ -60,5 +60,7 @@ test('记忆流向简明呈现，反思和汇报各自独立且不干扰可用�
   assert.match(html, /id="main-reflection-status"/)
   assert.match(html, /待汇报队列/)
   assert.match(html, /不直接写入人生记忆；人生反思会独立读取待反思经历/)
-  assert.match(js, /待反思经历 .* 已反思并关联长期记忆/)
+  assert.match(js, /待反思 .* 已关联长期记忆/)
+  assert.match(js, /累计评估后未沉淀/)
+  assert.match(js, /因经历已遗忘跳过/)
 })

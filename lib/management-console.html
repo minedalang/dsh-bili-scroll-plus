@@ -148,8 +148,6 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 #action-confirm-description{font-size:14px;color:var(--ink);white-space:pre-wrap;margin:18px 0 24px}
 .confirm-footer{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
 .action-confirm-dialog.danger #action-confirm-accept{background:linear-gradient(115deg,#b64b68,#cc7855);border-color:transparent;color:white}
-.legacy-archive{margin-top:19px;border:1px dashed color-mix(in srgb,var(--ui-indigo) 42%,var(--stroke));border-radius:13px;padding:12px 16px;background:color-mix(in srgb,var(--panel) 90%,var(--tint))}
-.legacy-archive summary{cursor:pointer;font-weight:650;color:var(--muted)}.legacy-archive[open] summary{margin-bottom:9px;color:var(--action)}
 @media(prefers-color-scheme:dark){.top h1{background:linear-gradient(110deg,#afc6ff,#8bdbc1);color:transparent;background-clip:text;-webkit-background-clip:text}.tabs button[aria-selected=true]{background:linear-gradient(110deg,#355c9a,#376f83)}}
 @media(prefers-reduced-motion:reduce){.spinner,button.is-busy:after{animation:none}}
 
@@ -178,10 +176,16 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 #panel-life .emotion-trend{margin:12px 0;padding:12px 15px;border:1px solid var(--stroke);background:linear-gradient(120deg,color-mix(in srgb,var(--ui-indigo) 6%,var(--panel)),var(--panel));border-radius:14px}
 #panel-life .emotion-trend .trend-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;font-size:12px}
 #panel-life .emotion-trend svg{display:block;width:100%;height:104px;overflow:visible}
-#panel-life .emotion-trend .trend-line{fill:none;stroke:var(--ui-indigo);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:420;animation:trend-draw 1.3s ease forwards}
-#panel-life .emotion-trend .trend-area{fill:color-mix(in srgb,var(--ui-indigo) 10%,transparent)}
-#panel-life .emotion-trend .trend-dot{fill:var(--panel);stroke:var(--ui-indigo);stroke-width:2}
-@keyframes trend-draw{from{stroke-dashoffset:420}to{stroke-dashoffset:0}}
+#panel-life .emotion-trend .trend-legend{display:flex;flex-wrap:wrap;gap:7px 14px;margin:7px 0 9px;font-size:12px}
+#panel-life .emotion-trend .trend-legend-item{display:inline-flex;align-items:center;gap:6px;color:var(--text-secondary)}
+#panel-life .emotion-trend .trend-legend-swatch{width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:var(--trend-color)}
+#panel-life .emotion-trend svg{display:block;width:100%;height:142px;overflow:visible}
+#panel-life .emotion-trend .trend-line{fill:none;stroke:var(--trend-color,var(--ui-indigo));stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1200;animation:trend-draw 1.3s ease forwards}
+#panel-life .emotion-trend .trend-dot{fill:var(--panel);stroke:var(--trend-color,var(--ui-indigo));stroke-width:2}
+#panel-life .emotion-trend .trend-grid{stroke:var(--stroke);stroke-width:1;stroke-dasharray:3 4;opacity:.85}
+#panel-life .emotion-trend .trend-axis-label{fill:var(--text-secondary);font-size:10px}
+#panel-life .emotion-trend .trend-date-label{fill:var(--text-secondary);font-size:10px}
+@keyframes trend-draw{from{stroke-dashoffset:1200}to{stroke-dashoffset:0}}
 #panel-social .recall-overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px;margin:12px 0}
 #panel-social .recall-summary{padding:11px 13px;border:1px solid var(--stroke);border-radius:12px;background:var(--panel);border-top:3px solid var(--ui-indigo)}
 #panel-social .recall-summary[data-tone=quiet]{border-top-color:var(--ui-amber)}
@@ -522,7 +526,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div id="emotion-current" class="grid emotion-grid" aria-live="polite"></div>
 <div id="emotion-agency-activity" class="emotion-trend" aria-live="polite"><strong>🐟 社交意愿与最近决策</strong><p class="muted">正在读取最近 7 天的意愿评估…</p></div>
 <div class="toolbar"><button id="emotion-save" class="life-action life-green">保存情绪设置</button><button id="emotion-reset" class="life-action life-amber">重置为平稳</button></div>
-<h4 style="margin-top:15px">真实状态变化</h4><label for="emotion-trend-metric">查看指标</label><select id="emotion-trend-metric"><option value="sociality">社交意愿</option><option value="intensity">情绪强度</option><option value="energy">活力</option><option value="curiosity">好奇心</option><option value="valence">情绪正向度（原始 -100～100）</option></select><div id="emotion-trend" class="emotion-trend" role="img" aria-label="近期情绪变化趋势"></div><details class="life-subdetails"><summary>查看完整情绪记录</summary><div id="emotion-history" class="records records-scroll"></div></details>
+<h4 style="margin-top:15px">真实状态变化</h4><p class="muted">同一张折线图同时展示社交意愿、情绪强度、活力、好奇心和情绪正向度；按真实事件时间绘制，末端显示当前自然衰减后的状态。</p><div id="emotion-trend" class="emotion-trend" role="img" aria-label="近期五项情绪与社交状态变化趋势"></div><details class="life-subdetails"><summary>查看完整情绪记录</summary><div id="emotion-history" class="records records-scroll"></div></details>
 </div>
 
 <div class="settings-stack">
@@ -534,7 +538,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="toolbar"><select id="main-memory-kind" aria-label="筛选留下的认识"><option value="">全部认识</option><option value="experience">经历带来的体会</option><option value="relationship">人物关系</option><option value="interest">兴趣变化</option><option value="fact">事实和约定</option></select><span id="memory-lessons-summary" class="muted" role="status">正在读取…</span></div>
 <input id="main-memory-query" maxlength="120" hidden aria-label="同步搜索认识的关键词"><button id="main-memory-search" hidden>搜索认识</button>
 <div id="main-memory-list" class="records records-scroll tall"></div>
-<details class="memory-reflection-details" id="life-reflection-details"><summary>✨ 鱼鱼怎样整理这些经历？<span id="reflection-learning-status" class="live-badge">● 正在读取</span> <span id="memory-reflection-short" class="muted">自动整理</span></summary><p class="muted">反思只使用鱼鱼<strong>目前还记得的经历</strong>，从中提炼有依据的体会；不强制每次都留下新认识。这里的候选是等待分析的材料，不是另一套“反思记忆”。</p>
+<details class="memory-reflection-details" id="life-reflection-details"><summary>✨ 鱼鱼怎样整理这些经历？<span id="reflection-learning-status" class="live-badge">● 正在读取</span> <span id="memory-reflection-short" class="muted">自动整理</span></summary><p class="muted">反思只使用鱼鱼<strong>目前还记得的经历</strong>，从中提炼有依据的体会；不强制每次都留下新认识。这里的候选是等待分析的材料，不是另一套“反思记忆”。</p><p class="muted">统计说明：「评估后未沉淀」表示经历已成功评估，但没有形成可关联的长期认识；「因经历已遗忘跳过」表示当前可衰减记忆中已无证据，系统不会从永久档案恢复。两类都不会删除原始归档。</p>
 <p id="main-reflection-status" class="muted" role="status">正在读取整理状态…</p>
 <div id="main-reflection-list" class="records records-scroll"></div>
 <div class="toolbar"><button id="main-reflection-refresh" class="life-action life-sky">刷新待整理经历</button><button id="main-reflection-run" class="life-action life-green">手动整理一次（调用 AI）</button></div></details>
@@ -572,7 +576,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div id="life-relationship-section" class="settings-section life-section"><h4>👥 逐渐熟悉的人</h4>
 <p class="muted">只展示已登记好友的互动熟悉度，不显示聊天正文。关系阶段只是互动频率的估计，不代表真实亲密程度。</p>
 <div class="toolbar"><button id="friend-relationships-refresh" class="life-action life-sky">刷新关系成长</button><span id="friend-relationships-status" class="muted">尚未读取</span></div><div id="friend-relationships-list" class="records"></div>
-<details id="legacy-growth-details" class="legacy-archive"><summary>历史兼容资料（旧版人物关系与成长记录）</summary><p class="muted">此处是旧版存档，仅为已有用户提供核对和人物索引修正。已批准记录仍用于统一记忆检索；隐藏或不打开本区不会删除历史数据。</p><div id="main-legacy-growth-list" class="records"></div></details></div>
+</div>
 <details class="life-subdetails life-sync-more" id="life-others"><summary>⚙️ 其他生活操作 · 主 Session 生活汇报</summary><div id="life-sync-section" class="settings-section life-section"><h4>将最近生活告诉主 Session</h4><div class="toolbar"><button id="main-session-sync" class="life-action life-green">现在把新经历告诉主 Session</button><button id="main-session-backfill" class="life-action life-sky">把过去 7 天遗漏的经历加入待汇报</button></div>
 <p class="muted">“过去 7 天”是<strong>从现在往回数 7 天</strong>，不是再等待 7 天。点击补充后只将尚未汇报的已选视频和已发评论放进本地待汇报队列，操作本身不会发送消息。启用主 Session 桥接和自动同步后，符合间隔与额度的定时检查会尝试非唤醒注入，不会自动触发模型回复；如宿主不支持则继续留在待汇报队列。需要立即让鱼鱼回应时，可点击“现在把新经历告诉主 Session”手动发送。目标会话不在线时仍留在本地。此操作只汇报上下文，不直接写入人生记忆；人生反思会独立读取待反思经历。</p>
 <p id="main-session-queue-status" class="muted" role="status">正在读取…</p>

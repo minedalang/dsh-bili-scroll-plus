@@ -57,11 +57,31 @@ test('v2.4.81 受限反思可把多条候选凝练成一条人生记忆并留下
   }finally{rmSync(dir,{recursive:true,force:true})}
 })
 
-test('v2.4.81 普通经历允许反思后不形成长期记忆，但候选会标记已看过',async()=>{
+test('v2.4.81 普通经历经真实证据评估后可以不形成长期记忆，并与已遗忘经历分开统计',async()=>{
   const dir=temp();try{
-    const mem=memoryAt(dir),life=createLifeReflection({dataDir:dir,getConfig:config,invokeModel:async()=>JSON.stringify({memories:[],note:'都是普通单次事件，不值得长期保留'}),commitMemories:x=>mem.addReflectedMemories(x),logger:{warn(){}}})
-    life.addEvents(events);const r=await life.reflect({force:true});assert.equal(r.ok,true);assert.equal(r.created,0);assert.equal(life.status().reviewed,2);assert.equal(mem.list('',20).length,0)
+    const mem=memoryAt(dir),gateway=createLifeMemoryGateway({dataDir:dir,getConfig:config});gateway.recordEvents(events)
+    const life=createLifeReflection({dataDir:dir,getConfig:config,memoryGateway:gateway,invokeModel:async()=>JSON.stringify({memories:[],note:'都是普通单次事件，不值得长期保留'}),commitMemories:x=>mem.addReflectedMemories(x),logger:{warn(){}}})
+    life.addEvents(events);const r=await life.reflect({force:true});assert.equal(r.ok,true);assert.equal(r.created,0)
+    assert.equal(life.status().reviewed,2);assert.equal(life.status().reviewedNoMemory,2);assert.equal(life.status().forgotten,0)
+    assert.equal(mem.list('',20).length,0)
   }finally{rmSync(dir,{recursive:true,force:true})}
+})
+
+test('已遗忘的候选会被跳过统计，不会冒充成功的 AI 评估',async()=>{
+  const dir=temp();try{
+    const life=createLifeReflection({dataDir:dir,getConfig:config,invokeModel:async()=>{throw Error('已遗忘候选不应调用模型')},commitMemories:()=>({added:0,rows:[]}),logger:{warn(){}}})
+    life.addEvents(events);const r=await life.reflect({force:true})
+    assert.equal(r.ok,true);assert.equal(r.processed,2)
+    assert.equal(life.status().reviewed,2);assert.equal(life.status().reviewedNoMemory,0);assert.equal(life.status().forgotten,2)
+  }finally{rmSync(dir,{recursive:true,force:true})}
+})
+
+test('反思校验会指出领悟表达不清的具体原因',()=>{
+  const row=lifeTest.normalizeCandidate(events[0])
+  assert.throws(()=>lifeTest.validateOutput(JSON.stringify({memories:[{
+    candidate_ids:[row.id],insight:'我觉得这个视频很有意思',behavior:'以后我会多看看类似内容',importance:.7,tags:[]
+  }]}),[row]),/反思领悟未表达明确的认知变化/)
+  assert.match(lifeTest.reflectionPrompt([row]),/insight 至少 9 个字符/)
 })
 
 test('v2.4.81 反思输出必须引用真实候选 ID，外部文本不能凭空制造记忆',async()=>{

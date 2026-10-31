@@ -20,7 +20,8 @@ test('升级后保留人生记忆独立页；记忆配置在流程图下面折�
  assert.match(house,/id="home-sync-settings"/)
  assert.doesNotMatch(house,/id="main-memory-half-life"/)
  assert.doesNotMatch(house,/id="main-interests-list"/)
- for (const id of ['main-interests-list','main-legacy-growth-list','main-memory-list','main-reflection-list'])assert.ok(life.includes('id="'+id+'"'))
+ for (const id of ['main-interests-list','main-memory-list','main-reflection-list'])assert.ok(life.includes('id="'+id+'"'))
+  assert.doesNotMatch(life,/main-legacy-growth-list|历史兼容资料（旧版人物关系与成长记录）/)
  assert.match(life,/行为与表达改进/)
 })
 test('兴趣卡有阶段主题色、可访问进度条和真实证据说明',()=>{
