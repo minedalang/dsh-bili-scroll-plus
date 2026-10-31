@@ -1,4 +1,6 @@
 import { judgeVideoHeat } from './lib/video-heat.mjs'
+import { createPersonalityEvolution } from './lib/personality-evolution.mjs'
+import { normalizeFictionalTurn, runFictionalAiDebug, MAX_FICTIONAL_TURNS } from './lib/personality-ai-debug.mjs'
 import { buildGrowthContext, syncReportsToGrowth, listGrowth, proposeGrowth, updateGrowthSuggestion, markGrowthDirectReview, reviewGrowth, deleteGrowth, updateGrowthPerson, undoGrowth, listLegacyLifeFacts } from './lib/persona-growth.mjs'
 /**
  * dsh-dafeiyu-life —— host 半端
@@ -26,6 +28,7 @@ const hostDeps = await loadHostDeps()
 const z = hostDeps.z
 const defineTool = hostDeps.defineTool
 import { spawn } from 'node:child_process'
+import { makeSafeDshLaunch } from './lib/dsh-launcher.mjs'
 import { randomUUID } from 'node:crypto'
 import { createBackup, validateBackup, restoreBackupFiles, createLifeMemoryBackup, inspectLifeMemoryBackup, restoreLifeMemoryBackup } from './lib/data-backup.mjs'
 import { requireBackupDirectory, saveBackupJson } from './lib/backup-directory.mjs'
@@ -777,6 +780,15 @@ function reportMeta() {
   let memoryRetriever = null
   let lifeReflection = null
   let lifeMemory = null
+  let personalityEvolution = null
+  const personalityContext=(scene,maxChars)=>{
+    try{
+      const value=personalityEvolution?.context({scene,maxChars})||''
+      // Counts prompt inclusion, NOT successful public actions or behavior proof.
+      if(value)personalityEvolution.noteContextUsed(scene)
+      return value
+    }catch(e){log('成长人格读取失败，本轮沿用初始人设：'+String(e?.message||e).slice(0,110));return ''}
+  }
   let socialIntentEngine = null
   let dailyDynamic = null
   let memeLearning = null
@@ -1572,7 +1584,7 @@ function reportMeta() {
         let args = [...(dsh.args || []), 'plugin', '--profile', 'web', 'add', spec]
         if (dsh.shell) { args = ['/c', cmd, ...args]; cmd = 'cmd.exe' }
         appendInstall('$ ' + cmd + ' ' + args.join(' ') + '\n')
-        const code = await spawnTo(cmd, args, { sink: appendInstall })
+        const code = await spawnTo(cmd, args, { sink: appendInstall, env: dsh.env || {} })
         if (code === 0) appendInstall('=== 升级完成 —— 重启一次 dsh 才生效 ===\n')
         else appendInstall('=== 升级没成功（exit ' + code + '）。可以自己手动跑一次：dsh plugin --profile web add github:minedalang/dsh-dafeiyu-life ===\n')
       } catch (e) { appendInstall('升级崩了：' + (e?.stack ?? e) + '\n') } finally { upgrading = false }
@@ -1685,23 +1697,26 @@ function reportMeta() {
         autoDshLogged = cli
         log(`自动找到 dsh：${cli}（不用手填 dshBin 了）`)
       }
-      return { command: process.execPath, args: [cli], shell: false }
+      return makeSafeDshLaunch(cli)
     }
-    // ⚠️ 走到这儿就是真找不到 —— 一定要出声（静默失败比报错更坏）
-    // ⭐ 2026-10-19（一位桌面版用户的 duty.log）：以前这里**照样返回 `dsh`** ⇒ 那一轮必然 spawn 失败、
-    //    只留一句 exit 1 和 `'dsh' 不是内部或外部命令` 的乱码 ⇒ 用户完全不知道该怎么办 ✗
-    // ⭐ 但也不能一味"判死"：有些人的 PATH 里确实有 dsh（例如手动配过 PATH 的 npm 全局）
-    //    ⇒ 保留**最后一招**：用 PATH 里那个试一次（日志说明白），失败时报告里也会写清原因 ✓
-    const hint = '已经把常见位置和应用目录都翻过一遍了。可以手动把「dsh 路径」填成 <应用目录>/…/@deepseek-ai/dsh/lib/bin.js，或改用 npm 装的 dsh'
+    const hint = '常见位置和应用目录内未找到原生 DSH CLI；可以在设置里填写可执行文件或 JS 入口路径'
     if (!hasDshOnPath()) {
       log('⚠️ 找不到 dsh（常见位置、应用目录、PATH 里都没有）⇒ ' + hint)
       return { missing: true, hint }
     }
-    // ⭐ 安全加固：在 PATH 里解析成绝对路径再用（shell:false）—— 绝不 shell:true 拼字符串 ✗
-    const onPath = findOnPath(process.platform === 'win32' ? ['dsh.cmd', 'dsh.exe', 'dsh.bat', 'dsh'] : ['dsh'])
+    const onPath = findOnPath(process.platform === 'win32'
+      ? ['dsh.exe', 'dsh.cmd', 'dsh.bat', 'dsh'] : ['dsh'])
     if (onPath) {
-      log('⚠️ 没在常见位置找到 dsh，改用 PATH 里那份（绝对路径、不经 shell）：' + onPath)
-      return { command: onPath, args: [], shell: false, fallback: true, hint }
+      const result = makeSafeDshLaunch(onPath)
+      if (result.missing) {
+        log('⚠️ 检测到无法安全直接启动的 DSH：' + onPath + '：' + result.hint)
+        return result
+      }
+      if (autoDshLogged !== onPath) {
+        autoDshLogged = onPath
+        log('✅ 从 PATH 找到 DSH 并解析为安全启动入口：' + onPath + ' → ' + result.command)
+      }
+      return { ...result, fallback: true }
     }
     log('⚠️ 找不到 dsh（常见位置、应用目录、PATH 里都没有）⇒ ' + hint)
     return { missing: true, hint }
@@ -1753,7 +1768,7 @@ function reportMeta() {
     const growthDoc = (() => {
       try {
         syncReportsToGrowth(stateDir, { limit: 5 })
-        return buildGrowthContext(stateDir, { scene:'duty', maxChars: 1300 })
+        return [buildGrowthContext(stateDir, { scene:'duty', maxChars: 1300 }),personalityContext('duty',450)].filter(Boolean).join('\n')
       } catch (e) {
         try { log('成长记忆读取失败，继续按原人设运行：' + String(e?.message || e).slice(0, 100)) } catch {}
         return ''
@@ -2258,7 +2273,7 @@ function reportMeta() {
       //    中文 / emoji 打进管道会炸（用户反馈过 UnicodeDecodeError），一律按 UTF-8 来
       // ⭐ ELECTRON_RUN_AS_NODE：**桌面版（Electron）里 spawn 出去的 node 必须带这个**，
       //    否则它当成"再开一个 Electron 应用"、什么都不干就以 0 退出（issue #5：0.17 秒、code 0、什么都没做）
-      env: uvEnv({ BILI_DUTY_HOME: stateDir, ...(process.versions.electron ? { ELECTRON_RUN_AS_NODE: '1' } : {}) }),
+      env: uvEnv({ BILI_DUTY_HOME: stateDir, ...(process.versions.electron ? { ELECTRON_RUN_AS_NODE: '1' } : {}), ...(dsh.env || {}) }),
     })
     // ⚠️ 2026-10-16 issue #1（用户 `miaoxingyunduo` 贴了崩溃日志）：`duty.log` 被别的进程占着时
     //    (`EBUSY`) `appendFileSync` 会抛异常 —— 而这里是 **stream 的 data 回调**，没人接
@@ -2612,7 +2627,7 @@ function reportMeta() {
 
   function dmChatPrompt({ uid, text, messages, history }) {
     // 聊天只使用用户在本插件设置里手动填写的人设，不能隐式读取工作区文件。
-    const persona = effectivePersonaPrompt(cfg.personaPrompt).slice(0, 3000) + '\n角色语境：' + (normalizeCharacterLore(cfg.characterLore) || DEFAULT_CHARACTER_LORE).slice(0,600) + buildGrowthContext(stateDir,{scene:'dm',query:text,maxChars:650})
+    const persona = effectivePersonaPrompt(cfg.personaPrompt).slice(0, 3000) + '\n角色语境：' + (normalizeCharacterLore(cfg.characterLore) || DEFAULT_CHARACTER_LORE).slice(0,600) + buildGrowthContext(stateDir,{scene:'dm',query:text,maxChars:650}) + (personalityContext('dm',420)||'')
     const historyText = history.slice(-16).map((m) => (m.role === 'assistant' ? '助手' : '用户') + '：' + String(m.text).slice(0, 500)).join('\n')
     const recentText = messages.slice(-8).map((m) => String(m).slice(0, 500)).join('\n')
     return `你是 B站 账号的私信聊天助手。仅为用户 UID=${uid} 草拟一条自然、简短、友好的中文回复。
@@ -2661,7 +2676,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     assertSafeHeadlessLaunch(args,overlay,{kind:'model-test',stateDir})
     recordModelTask(stateDir,'memeRules')
     return new Promise((resolve,reject)=>{
-      const child=spawn(dsh.command,args,{cwd:stateDir,shell:dsh.shell,windowsHide:true,stdio:['ignore','pipe','pipe'],env:uvEnv({BILI_DUTY_HOME:stateDir,...(process.versions.electron?{ELECTRON_RUN_AS_NODE:'1'}:{})})})
+      const child=spawn(dsh.command,args,{cwd:stateDir,shell:dsh.shell,windowsHide:true,stdio:['ignore','pipe','pipe'],env:uvEnv({BILI_DUTY_HOME:stateDir,...(process.versions.electron?{ELECTRON_RUN_AS_NODE:'1'}:{}),...(dsh.env||{})})})
       let out='',err='',done=false
       const finish=(error,value)=>{if(done)return;done=true;clearTimeout(timer);if(error)reject(error);else resolve(value)}
       const timer=setTimeout(()=>{try{child.kill()}catch{};finish(Error('AI 规则更新超过 90 秒；本地旧规则未修改'))},90_000);timer.unref?.()
@@ -2707,7 +2722,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       const args=[...dsh.args,'--profile','headless','--patch',overlay,prompt]
       assertSafeHeadlessLaunch(args,overlay,{kind:'model-test',stateDir})
       const answer=await new Promise((resolve,reject)=>{
-        const child=spawn(dsh.command,args,{cwd:stateDir,shell:dsh.shell,windowsHide:true,stdio:['ignore','pipe','pipe'],env:uvEnv({BILI_DUTY_HOME:stateDir,...(process.versions.electron?{ELECTRON_RUN_AS_NODE:'1'}:{})})})
+        const child=spawn(dsh.command,args,{cwd:stateDir,shell:dsh.shell,windowsHide:true,stdio:['ignore','pipe','pipe'],env:uvEnv({BILI_DUTY_HOME:stateDir,...(process.versions.electron?{ELECTRON_RUN_AS_NODE:'1'}:{}),...(dsh.env||{})})})
         let out='',err='',done=false
         const finish=(error,value)=>{if(done)return;done=true;clearTimeout(timer);if(error)reject(error);else resolve(value)}
         const timer=setTimeout(()=>{try{child.kill()}catch{}finish(Error('模型连接测试超过 45 秒'))},45_000);timer.unref?.()
@@ -2732,7 +2747,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     assertSafeHeadlessLaunch(args,overlay,{kind:'memory',stateDir})
     recordModelTask(stateDir,'memory')
     return new Promise((resolve,reject)=>{
-      const child=spawn(dsh.command,args,{cwd:stateDir,shell:dsh.shell,windowsHide:true,stdio:['ignore','pipe','pipe'],env:uvEnv({BILI_DUTY_HOME:stateDir,...(process.versions.electron?{ELECTRON_RUN_AS_NODE:'1'}:{})})})
+      const child=spawn(dsh.command,args,{cwd:stateDir,shell:dsh.shell,windowsHide:true,stdio:['ignore','pipe','pipe'],env:uvEnv({BILI_DUTY_HOME:stateDir,...(process.versions.electron?{ELECTRON_RUN_AS_NODE:'1'}:{}),...(dsh.env||{})})})
       let out='',err='',done=false
       const finish=(error,value)=>{if(done)return;done=true;clearTimeout(timeout);if(error)reject(error);else resolve(value)}
       const timeout=setTimeout(()=>{try{child.kill()}catch{}finish(Error('检索模型超时（35秒）'))},35_000);timeout.unref?.()
@@ -2760,7 +2775,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     return new Promise((resolve, reject) => {
       const child = spawn(dsh.command, args, {
         cwd: stateDir, shell: dsh.shell, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
-        env: uvEnv({ BILI_DUTY_HOME: stateDir, ...(process.versions.electron ? { ELECTRON_RUN_AS_NODE: '1' } : {}) }),
+        env: uvEnv({ BILI_DUTY_HOME: stateDir, ...(process.versions.electron ? { ELECTRON_RUN_AS_NODE: '1' } : {}), ...(dsh.env || {}) }),
       })
       let out = '', err = '', done = false
       const finish = (error, value) => {
@@ -2826,7 +2841,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
         ? '【公开评论强制风格】不要先复述视频/别人的话再点评；不要追加抽象总结或解释笑点；禁止为展示人设强塞白饭、Token、Claude 等设定；不用“这个笑死”等通用填充词。具体内容不够时优先 SKIP，允许一句短反应。' : ''
       const persona = effectivePersonaPrompt(cfg.personaPrompt).slice(0,scene==='comment'?1350:1600)
       const lore = (normalizeCharacterLore(cfg.characterLore) || DEFAULT_CHARACTER_LORE).slice(0,scene==='comment'?260:420)
-      return [conciseStyle,growth,emotionalState.styleHint(),persona,lore].filter(Boolean).join('\n')
+      return [conciseStyle,growth,personalityContext(scene,430),emotionalState.styleHint(),persona,lore].filter(Boolean).join('\n')
     },
     logger: {warn: (msg) => log('互动 AI：' + msg)},
   })
@@ -2922,6 +2937,11 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       source:'bili-comment',uid,messageId,text,intent,action,target:bvid,thread,decision,
     }),
     generateChat:async(row)=>interactionBatcher.generate({kind:'comment',mode:row.scope||'self-nested',uid:row.uid,bvid:row.bvid,incomingRpid:row.rpid,text:row.text,context:[row.context,row.threadPreview].filter(Boolean).join('\n').slice(0,1500),canSkip:true,identityContext:replyIdentityContext(row.uid)}),
+    onDeliberateSilence:async({uid,bvid,rpid,text})=>{
+      const reason=/(?:别来|别找|不要.*(?:联系|回复)|不想.*(?:聊天|说话)|别.*(?:联系|回复))/.test(String(text||''))?'respect-request':'general'
+      const result=lifeMemory?.recordSocialDecline({actorUid:uid,bvid,incomingRpid:rpid,reason})
+      if(result?.ok&&!result.duplicate)lifeReflection?.addEvents([{kind:'social',key:`social:${uid}:${bvid}:${rpid}`,bvid,at:Date.now()}])
+    },
     deferWatch:async({bvid,row})=>ownerTodos.add({type:'watch_video',bvid,sourceKey:'owner-comment-deferred:'+String(row.rpid),title:'大肥鱼想稍后看看 '+bvid,note:'B站生活域的即时邀请：大肥鱼自主选择推迟。',origin:{kind:'owner',uid:row.uid,messageId:row.id,quotedText:row.text,at:row.timestampMs}},{source:'owner'}),
     perform:async(action)=>{
       refreshCfg();if(cfg.masterEnabled!==true||!hasCredential())return {ok:false,error:'总开关已暂停或B站未登录'}
@@ -3022,8 +3042,10 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       }else if(!(channel==='notice'?cfg.commentWatchReplies===true:cfg.commentAtEnabled===true))return {ok:false}
       const r=parseMaybeJson(await call('bili_reply_manual',{bvid,rpid:Number(rpid),root:Number(root)||0,text,confirm:true}))
       const receipt=confirmedOwnerCommentReceipt(r,'reply')
-      if(receipt?.ok===true)try{lifeMemory?.recordSocialReply({actorUid,bvid,incomingRpid:rpid,text})}
-      catch(e){log('可信社交回复经历写入失败：'+String(e?.message||e).slice(0,100))}
+      if(receipt?.ok===true)try{
+        const recorded=lifeMemory?.recordSocialReply({actorUid,bvid,incomingRpid:rpid,text})
+        if(recorded?.ok)lifeReflection?.addEvents([{kind:'social',key:`social:${actorUid}:${bvid}:${rpid}`,bvid,at:Date.now()}])
+      }catch(e){log('可信社交回复经历写入失败：'+String(e?.message||e).slice(0,100))}
       return receipt
     },logger:{warn:m=>log('主人评论 Agent：'+m)}
   })
@@ -3048,6 +3070,12 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
         allowGeneralTop: cfg.commentAllowGeneralTop === true,
       }
     },
+    onDeliberateSilence:async(req)=>{
+      const uid=req.uid,bvid=req.bvid,rpid=req.rpid,text=req.text
+      const reason=/(?:别来|别找|不要.*(?:联系|回复)|不想.*(?:聊天|说话)|别.*(?:联系|回复))/.test(String(text||''))?'respect-request':'general'
+      const result=lifeMemory?.recordSocialDecline({actorUid:uid,bvid,incomingRpid:rpid,reason})
+      if(result?.ok&&!result.duplicate)lifeReflection?.addEvents([{kind:'social',key:`social:${uid}:${bvid}:${rpid}`,bvid,at:Date.now()}])
+    },
     getNotifications: () => call('bili_received_replies', {}),
     getAtNotifications: () => call('bili_received_at_and_likes', {}),
     getVideoContext: (bvid,details) => videoContext.forReply(bvid,details),
@@ -3055,12 +3083,13 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     onIncoming: async (req) => {
       // Verified public comment interaction is a new experience. It is not an
       // instruction, and can only be recalled back to the SAME verified UID.
+      const tier=socialTier(req.uid,cfg.dmOwnerUid,cfg.friendDirectory)
       try{if(lifeMemory&&/^BV[0-9A-Za-z]{10}$/.test(String(req?.bvid||''))&&/^\d{1,20}$/.test(String(req?.uid||''))){
-        lifeMemory.recordEvents([{kind:'social',key:'social:'+String(req.uid)+':'+String(req.bvid)+':'+String(req.rpid||req.id||req.timestampMs),bvid:req.bvid,actorUid:String(req.uid),text:String(req.text||'').slice(0,230),at:req.timestampMs||Date.now()}])
+        const socialEvent={kind:'social',key:'social:'+String(req.uid)+':'+String(req.bvid)+':'+String(req.rpid||req.id||req.timestampMs),bvid:req.bvid,actorUid:String(req.uid),text:String(req.text||'').slice(0,230),socialTier:tier,at:req.timestampMs||Date.now()}
+        lifeMemory.recordEvents([socialEvent]) // 反思只收成功往来：不让陌生人的单条消息批量推动人格
       }}catch(e){log('社交经历写入失败：'+String(e?.message||e).slice(0,100))}
 
       if(!req.uid||!req.text)return
-      const tier=socialTier(req.uid,cfg.dmOwnerUid,cfg.friendDirectory)
       // A reply to an owned comment is a real first-class social event, even
       // without @ or a previous invitation. Do not treat unverified notices
       // from unrelated comment threads as authenticated owner follow-ups.
@@ -3139,8 +3168,10 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
         rpid: Number(req.rpid), root: Number(req.root)||0, text:String(req.text).slice(0,130)})
       if(r?.success===true){
         if(req.uid)try{recordFriendInteraction(stateDir,{uid:req.uid,source:'comment',direction:'outgoing',eventId:'sent:'+String(req.bvid||'')+':'+Date.now()+':'+Math.random(),friendDirectory:cfg.friendDirectory})}catch{}
-        try{lifeMemory?.recordSocialReply({actorUid:req.uid,bvid:req.bvid,incomingRpid:req.rpid,text:req.text})}
-        catch(e){log('社交回复经历写入失败：'+String(e?.message||e).slice(0,100))}
+        try{
+          const recorded=lifeMemory?.recordSocialReply({actorUid:req.uid,bvid:req.bvid,incomingRpid:req.rpid,text:req.text})
+          if(recorded?.ok)lifeReflection?.addEvents([{kind:'social',key:`social:${req.uid}:${req.bvid}:${req.rpid}`,bvid:req.bvid,at:Date.now()}])
+        }catch(e){log('社交回复经历写入失败：'+String(e?.message||e).slice(0,100))}
         return {ok:true,rpid:String(r?.rpid_str||r?.rpid||'')}
       }
       return {ok:false,error:String(r?.error||r?.message||'评论未确认成功')}
@@ -3448,7 +3479,7 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
       const emotion = emotionalState.ownerContext()
       return `${emotion}\n\n【你是谁】\n你就是“大肥鱼”本人。这个会话是你和主人长期相处的“家”，不是通用 AI 助手、客服，也不是后台 B站值班 Agent。正常聊天时用第一人称“我”自然回应，有自己的情绪、偏好、熟人感和小脾气；不要用“有什么需要我帮忙的吗”“我可以处理文件/代码/B站”等通用助手开场，也不要主动罗列工具能力。\n\n【主人设置的大肥鱼核心人设】\n${persona}\n\n【角色背景】\n${lore}\n\n【主 Session 适用范围】\n上面关于公开评论、选片、@、附图、发送前检查等条目，只在对应 B站任务发生时作为行为边界；普通聊天主要吸收其中的人格、口吻、偏好、世界观和真实性要求。不要把后台值班章程搬进日常聊天，也不要声称做过没有真实记录的事情。`
     },
-    getGrowthPrompt: ({query=''}) => buildGrowthContext(stateDir,{scene:'chat',query,maxChars:1000}),
+    getGrowthPrompt: ({query=''}) => [buildGrowthContext(stateDir,{scene:'chat',query,maxChars:1000}),personalityContext('chat',500)].filter(Boolean).join('\n'),
     getRetriever: () => memoryRetriever,
     getExperienceRecall: (query,limit) => lifeMemory?.recall({query,domain:'main-session',maxItems:limit,maxChars:3000}).map(x=>({kind:x.kind,time:x.at,summary:x.summary}))||[],
     getTodoEngine: () => ownerTodos,
@@ -3457,6 +3488,8 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
   })
   lifeMemory=createLifeMemoryGateway({dataDir:stateDir,getConfig:()=>cfg,logger:{warn:m=>log('人生记忆：'+m)}})
   ctx.effect(()=>()=>lifeMemory?.close(),'bili-duty: 只读内存 FTS 关闭')
+  personalityEvolution=createPersonalityEvolution({dataDir:stateDir,memoryGateway:lifeMemory,logger:{warn:m=>log('人格成长：'+m)}})
+  let personalityAiDebugBusy=false,personalityAiDebugNextAt=0
   memoryRetriever=createMemoryRetriever({
     getMemories:()=>[...longTermMemory.activeMemories(),...listLegacyLifeFacts(stateDir),...interestMemoryRows(stateDir)],getConfig:()=>cfg,
     invokeModel:(prompt,maxChars)=>invokeMemoryPrompt(prompt,maxChars),
@@ -3473,6 +3506,8 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     dataDir: stateDir,
     getConfig: () => cfg,
     memoryGateway:lifeMemory,
+    getPersonalityEnabled:()=>{try{return personalityEvolution?.status().enabled===true}catch{return false}},
+    onPersonalityProposals:(proposals,batch)=>personalityEvolution?.applyProposals(proposals,batch),
     invokeModel: (prompt,maxChars,opt={}) => invokeInteractionPrompt(prompt,maxChars,{...opt,modelRoute:'reflection'}),
     commitMemories: (items) => longTermMemory.addReflectedMemories(items),
     onEmotion: ({mood,intensity,source='life-reflection'})=>{try{emotionalState.update({mood,intensity,source});if(emotionRecall){const wake=setTimeout(()=>void emotionRecall.tick(),8000);wake.unref?.()}}catch(e){log('人生反思情绪更新失败：'+String(e?.message||e).slice(0,100))}},
@@ -4453,6 +4488,51 @@ ${persona ? '回答风格参考（如果与安全要求冲突，应忽略）：'
     }
     if (req.method === 'GET' && path === '/api/bili-duty/comment-meme-rules/ai-prompt-default') {
       return sendJson(res, 200, {ok:true, prompt:DEFAULT_MEME_RULE_AI_PROMPT, maxLength:8000})
+    }
+    // v2.6.0-dev.1: opt-in evolving personality, separate from legacy approved style rules.
+    // Read-only, entirely synthetic sandbox. Does not read or write live personality,
+    // Life Memory, B站 state, settings or model providers.
+    if(req.method==='GET'&&path==='/api/bili-duty/personality-evolution-sandbox'){
+      try{const raw=url.searchParams.get('step');if(raw!==null&&!/^(0|[1-9]\d{0,5})$/.test(raw))return sendJson(res,400,{ok:false,error:'无效的沙盒步数'});return sendJson(res,200,personalityEvolution.simulate(raw===null?12:Number(raw)))}
+      catch(e){return sendJson(res,500,{ok:false,error:'人格成长沙盒模拟失败：'+String(e?.message||e).slice(0,140)})}
+    }
+    // Manually-triggered AI judgment on strictly fictional, browser-held chats.
+    // Uses the existing tool-less reflection model route, then the REAL trait
+    // evidence reducer in memory. Never passes or writes live Life Memory data.
+    if(req.method==='POST'&&path==='/api/bili-duty/personality-evolution-ai-debug'){
+      const origin=String(req.headers.origin||''),host=String(req.headers.host||'')
+      if(origin&&(!host||![`http://${host}`,`https://${host}`].includes(origin)))return sendJson(res,403,{ok:false,error:'仅允许同源管理中心运行AI调试'})
+      if(String(req.headers['sec-fetch-site']||'').toLowerCase()==='cross-site')return sendJson(res,403,{ok:false,error:'拒绝跨站AI调试'})
+      const body=await readBody(req,55_000)
+      let turn,history
+      try{
+        turn=normalizeFictionalTurn(body?.turn)
+        if(!Array.isArray(body?.history)||body.history.length>=MAX_FICTIONAL_TURNS)throw Error('AI沙盒最多保留24段虚构互动，请清空后继续')
+        history=body.history.map(v=>normalizeFictionalTurn(v,{assessed:true}))
+      }catch(e){return sendJson(res,400,{ok:false,error:String(e?.message||e).slice(0,140)})}
+      if(personalityAiDebugBusy)return sendJson(res,429,{ok:false,error:'AI沙盒已有评估在进行，请勿并发调用'})
+      if(Date.now()<personalityAiDebugNextAt)return sendJson(res,429,{ok:false,error:'两次AI沙盒评估至少间隔15秒，避免意外模型费用'})
+      personalityAiDebugBusy=true;personalityAiDebugNextAt=Date.now()+15_000
+      try{
+        const result=await runFictionalAiDebug({turn,history,invokeModel:prompt=>invokeInteractionPrompt(prompt,3600,{requireMasterEnabled:false,modelRoute:'reflection'})})
+        return sendJson(res,200,result)
+      }catch(e){return sendJson(res,502,{ok:false,error:'AI人格调试失败：'+String(e?.message||e).slice(0,160)})}
+      finally{personalityAiDebugBusy=false}
+    }
+    if(req.method==='GET'&&path==='/api/bili-duty/personality-evolution'){
+      try{return sendJson(res,200,personalityEvolution.status())}
+      catch(e){return sendJson(res,500,{ok:false,error:'读取人格成长状态失败：'+String(e?.message||e).slice(0,140)})}
+    }
+    if(req.method==='POST'&&path==='/api/bili-duty/personality-evolution'){
+      const origin=String(req.headers.origin||''),host=String(req.headers.host||'')
+      if(origin&&(!host||![`http://${host}`,`https://${host}`].includes(origin)))return sendJson(res,403,{ok:false,error:'人格成长设置只允许同源操作'})
+      if(String(req.headers['sec-fetch-site']||'').toLowerCase()==='cross-site')return sendJson(res,403,{ok:false,error:'拒绝跨站请求'})
+      const body=await readBody(req)
+      try{
+        if(body?.action==='set-enabled'&&typeof body.enabled==='boolean')return sendJson(res,200,personalityEvolution.setEnabled(body.enabled))
+        if(body?.action==='reset-trait'&&body.confirm===true)return sendJson(res,200,personalityEvolution.resetTrait(String(body.trait||'')))
+        return sendJson(res,400,{ok:false,error:'需要明确选择开关或确认重置某条人格倾向'})
+      }catch(e){return sendJson(res,400,{ok:false,error:'人格成长操作失败：'+String(e?.message||e).slice(0,150)})}
     }
     // 大肥鱼人格成长记忆：直接集成到 DSH 原生设置页，无需启动 127.0.0.1:18763 管理服务。
     // 同一条经验的模型提炼不并发；失效/断线只影响候选，不会自动批准。

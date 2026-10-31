@@ -84,6 +84,6 @@ test('默认值班提示词与正式文档不允许从任务审计档案绕过�
  assert.match(readme,/日常 AI 不可直接回读/)
  assert.match(readme,/AI 辅助回忆（可选，默认关闭）/)
  assert.match(source('docs/DEV13_DUAL_LIFE_MEMORY.md'),/Release 前必做验收/)
- assert.match(packageInfo.version,/^2\.5\.\d+(?:-dev\.\d+)?$/)
+ assert.match(packageInfo.version,/^(?:2\.5\.\d+|2\.6\.0)(?:-dev\.\d+)?$/)
  assert.ok(packageInfo.files.includes('RELEASE_NOTES_v2.5.0.md'))
 })

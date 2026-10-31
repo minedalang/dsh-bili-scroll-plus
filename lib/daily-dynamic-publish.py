@@ -8,7 +8,7 @@ def publish(home,cred_path,text,limit,enabled):
     home=Path(home).resolve();cred_path=Path(cred_path).resolve()
     if not enabled or (home/'.bili-duty-paused').exists():return {'status':'disabled'}
     if not cred_path.is_file() or cred_path.is_symlink():return {'status':'missing_credentials'}
-    if not (25<=len(text)<=230) or re.search(r'https?://|\b(?:cookie|token|password|secret|sessdata)\b',text,re.I):return {'status':'invalid_text'}
+    if not (15<=len(text)<=230) or re.search(r'https?://|\b(?:cookie|token|password|secret|sessdata)\b',text,re.I):return {'status':'invalid_text'}
     limit=max(0,min(10,int(limit)))
     if not limit:return {'status':'daily_limit'}
     cred=json.loads(cred_path.read_text('utf8'))

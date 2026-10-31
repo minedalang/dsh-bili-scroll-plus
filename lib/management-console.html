@@ -75,7 +75,7 @@ border-radius:999px;transition:width .28s ease}
 button{transition:filter .16s,transform .16s,border-color .16s}
 button:not(:disabled):hover{transform:translateY(-1px)}
 button.primary,.toolbar button.primary,.actions button.primary{background:#275cb9;border-color:#275cb9;color:#fff;font-weight:700}
-#panel-meme button.primary,#panel-growth button.primary,#panel-life button.life-green,#panel-backup button.primary{background:#157e60;border-color:#157e60;color:#fff}
+#panel-personality button.primary,#panel-meme button.primary,#panel-growth button.primary,#panel-life button.life-green,#panel-backup button.primary{background:#157e60;border-color:#157e60;color:#fff}
 #panel-dm button.primary,#panel-quotas button.primary,#panel-comments button.primary{background:#206da4;border-color:#206da4;color:#fff}
 input:not([type=checkbox]):focus,select:focus,textarea:focus{border-color:var(--action);box-shadow:0 0 0 3px color-mix(in srgb,var(--action) 18%,transparent)}
 input[type=checkbox]{accent-color:#16865f}
@@ -344,7 +344,8 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <nav class="tabs" aria-label="管理分类">
 <div class="tab-cluster"><span class="tab-cluster-label">🏠 生活与成长</span>
 <button data-tab="home" aria-selected="false">大肥鱼的家</button>
-<button data-tab="life" aria-selected="false">人生记忆</button></div>
+<button data-tab="life" aria-selected="false">人生记忆</button>
+<button data-tab="personality" aria-selected="false">🌱 人格成长</button></div>
 <div class="tab-cluster"><span class="tab-cluster-label">📺 B站生活</span>
 <button data-tab="bili" aria-selected="false">视频探索</button>
 <button data-tab="social" aria-selected="false">社交互动</button>
@@ -414,9 +415,13 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <details id="dynamic-publishing-settings" class="contextual-settings">
 <summary>⚙️ 动态构思与发布设置 <span class="contextual-hint">按需展开 · 自动公开需单独授权</span></summary>
 <p class="muted">在这里控制动态构思、草稿及评论同步，不用再回到视频探索页面。不会擅自开启公开发布。</p>
+<div class="settings-section"><h4>每日生活动态额度</h4>
+<label for="daily-dynamic-limit">每天最多发布生活动态（0–10 条）</label>
+<input id="daily-dynamic-limit" type="number" min="0" max="10" step="1" value="1">
+<p class="muted">默认 1 条；0 表示禁止发布。它是每日公开发布的硬上限，不要求鱼鱼凑满。额度增大后，自主构思有机会多次运行，但模型仍可选择沉默；自动发布需单独授权，发布前仍通过独立额度闸门。</p></div>
 <div class="settings-section"><h4>生活动态构思</h4>
 <label class="checkline"><input id="bili-daily-enabled" type="checkbox" checked>允许大肥鱼生成自己的生活动态</label>
-<p class="muted">新安装默认只生成可核验证据的草稿，每天最多尝试一次，不会自动公开发布；满足真实素材条件时可能产生一次 AI 调用。</p>
+<p class="muted">新安装默认只生成可核验证据的草稿，默认每日最多构思一次；提高每日额度后可在有真实素材时择机多次构思，不会自动公开发布；满足真实素材条件时可能产生一次 AI 调用。</p>
 <label class="checkline"><input id="bili-daily-draft" type="checkbox">仅生成草稿，不自动发布（默认开启；取消后只自动发布通过安全校验的草稿）</label>
 <p class="muted">仅根据公开、真实的已选视频经历创作。持续情绪状态可在「人生记忆 → 情绪与心情」查看；它只影响表达节奏，不会成为公开发布私人聊天的理由。</p></div>
 <div class="settings-section"><h4>评论同步为动态</h4>
@@ -480,7 +485,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label for="main-session-daily">每天最多给主 Session 汇报几次（1–24 次）</label><input id="main-session-daily" type="number" min="1" max="24" value="4"></div>
 <div><label for="main-session-batch">每次最多汇报多少条经历（1–20 条）</label><input id="main-session-batch" type="number" min="1" max="20" value="8"></div>
 <div><label for="main-session-comments">汇报时也告诉主 Session 我发过的评论/回复</label><input id="main-session-comments" type="checkbox" checked></div></div>
-<p class="muted">同步本身不额外调用“总结 AI”：视频经历和评论正文直接从插件现有账本整理。但投递到主 Session 后，那个 Session 会产生一次很短的模型回复，所以默认最多每天 4 批，避免浪费调用。跳过的视频仍保存在任务日志/视频归档供管理员核对；它们不会仅凭被记录就自动变成大肥鱼的可用记忆。</p></div>
+<p class="muted">自动汇报优先通过 DSH 非唤醒注入传递给主 Session，不会每小时触发 AI 回复“收到生活经历更新”。没有新经历时不投递；宿主不支持非唤醒注入时保留本地队列，不自动改用会唤醒模型的发送方式。只有主动点击“现在把新经历告诉主 Session”才会请求即时回复。跳过的视频仍保存在任务日志/视频归档供管理员核对；它们不会仅凭被记录就自动变成大肥鱼的可用记忆。</p></div>
 
 <div class="toolbar"><button id="main-session-sync-save" class="primary" type="button">保存主 Session 同步频率</button></div></div>
 </details>
@@ -569,7 +574,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="toolbar"><button id="friend-relationships-refresh" class="life-action life-sky">刷新关系成长</button><span id="friend-relationships-status" class="muted">尚未读取</span></div><div id="friend-relationships-list" class="records"></div>
 <details id="legacy-growth-details" class="legacy-archive"><summary>历史兼容资料（旧版人物关系与成长记录）</summary><p class="muted">此处是旧版存档，仅为已有用户提供核对和人物索引修正。已批准记录仍用于统一记忆检索；隐藏或不打开本区不会删除历史数据。</p><div id="main-legacy-growth-list" class="records"></div></details></div>
 <details class="life-subdetails life-sync-more" id="life-others"><summary>⚙️ 其他生活操作 · 主 Session 生活汇报</summary><div id="life-sync-section" class="settings-section life-section"><h4>将最近生活告诉主 Session</h4><div class="toolbar"><button id="main-session-sync" class="life-action life-green">现在把新经历告诉主 Session</button><button id="main-session-backfill" class="life-action life-sky">把过去 7 天遗漏的经历加入待汇报</button></div>
-<p class="muted">“过去 7 天”是<strong>从现在往回数 7 天</strong>，不是再等待 7 天。点击补充后只将尚未汇报的已选视频和已发评论放进本地待汇报队列，操作本身不会发送消息。启用主 Session 桥接和自动同步后，下一次符合间隔与每日额度的定时检查会尝试发送；否则可点击“现在把新经历告诉主 Session”手动发送。目标会话不在线时仍留在本地。此操作只汇报上下文，不直接写入人生记忆；人生反思会独立读取待反思经历。</p>
+<p class="muted">“过去 7 天”是<strong>从现在往回数 7 天</strong>，不是再等待 7 天。点击补充后只将尚未汇报的已选视频和已发评论放进本地待汇报队列，操作本身不会发送消息。启用主 Session 桥接和自动同步后，符合间隔与额度的定时检查会尝试非唤醒注入，不会自动触发模型回复；如宿主不支持则继续留在待汇报队列。需要立即让鱼鱼回应时，可点击“现在把新经历告诉主 Session”手动发送。目标会话不在线时仍留在本地。此操作只汇报上下文，不直接写入人生记忆；人生反思会独立读取待反思经历。</p>
 <p id="main-session-queue-status" class="muted" role="status">正在读取…</p>
 <p class="muted">这里仅控制是否把近期生活摘要主动发送给选定的主 Session；不影响上方“鱼鱼现在记得什么”的记忆搜索。</p></div></div></details>
 </div></section>
@@ -762,7 +767,7 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div class="feature-intro"><div><h2>💬 最近评论</h2><p>先看实际记录；自动回复授权与限额在下方单独分区。公开评论属于真实对外操作，设置不会自动开启。</p></div></div>
 <nav class="context-jump" aria-label="评论页分区"><a href="#comments-records">最近记录</a><a href="#comments-configuration">回复规则与授权</a></nav>
 <div id="comments-records" class="toolbar"><h2 style="margin:0">最近公开评论记录</h2><label for="comments-kind">评论分类</label><select id="comments-kind" aria-label="筛选主评论和回复别人评论"><option value="">全部评论</option><option value="top">主评论</option><option value="reply">回复别人评论</option></select><label for="comments-day">日期</label><input id="comments-day" type="date" title="留空显示全部日期"><button id="comments-day-clear">全部日期</button><select id="comments-limit"><option value="20">每页20条</option><option value="50" selected>每页50条</option><option value="100">每页100条</option><option value="200">每页200条</option></select><button id="comments-load">刷新记录</button></div>
-<p class="muted">评论记录只读取 seen.md 及月度归档；回复对象昵称/UID 仅从已确认发送成功的互动记录补充，缺失时不猜测。成功回执不代表 B站 当前公开可见；正文摘要只显示原本实际保存的内容。</p>
+<p class="muted">评论列表只读取主判重表 seen.md 及月度归档，不从诊断日志实时拼接；回复对象身份仅从已确认成功的互动状态补充，缺失时不猜测。成功回执不代表 B站 当前公开可见；正文摘要只显示原本实际保存的内容。</p>
 <p id="comments-summary" class="muted" role="status">读取中…</p><div id="recent-comments-list" class="records"></div>
 <div class="toolbar"><button id="comments-prev">上一页</button><span id="comments-page-info" class="muted"></span><button id="comments-next">下一页</button></div>
 
@@ -794,6 +799,48 @@ button.is-busy:after{content:"";position:absolute;right:12px;top:calc(50% - 7px)
 <div><label for="comment-own-nested-per-user">我的楼中楼回复下：同一人近24小时最多回复（1–1000）</label><input id="comment-own-nested-per-user" type="number" min="1" max="1000" value="3"></div>
 </div><p class="muted">同一 UID 在不同评论场景中的限额，已移至「次数与额度」。能确认属于大肥鱼本人评论的留言会优先处理；仍受每轮、近24小时总上限和公开评论全局自然日硬上限约束。广告、刷屏、恶意攻击等仍可跳过。</p></div>
 </div><div class="actions"><button id="comments-settings-save" class="primary">保存评论互动设置</button></div></div>
+</section>
+<section id="panel-personality" hidden>
+<div class="card" id="personality-evolution-card" style="margin-bottom:16px">
+<h3>🐟 人格成长路线图 · 2.6.0 开发预览</h3>
+<p class="muted">主人设置的初始人设仍是起点；随着真实经历的积累，鱼鱼可以逐渐形成不同的交流倾向。这里展示的是有依据的<strong>性格变化假设</strong>，不表示真实心理测量，也不能修改安全、权限与隐私约束。</p>
+<label class="checkline"><input type="checkbox" id="personality-evolution-enabled"> 开启成长性人格（开发版默认关闭；关闭不删除已有成长记录）</label>
+<div class="toolbar"><button id="personality-evolution-save" class="primary">保存人格成长开关</button><button id="personality-evolution-refresh">刷新真实成长轨迹</button><button id="personality-evolution-sandbox-run" type="button">🧪 播放模拟成长</button><button id="personality-evolution-sandbox-exit" type="button" hidden>退出沙盒，返回真实记录</button><span class="muted" id="personality-evolution-status" role="status">等待加载…</span></div>
+<div id="personality-evolution-sandbox-area" class="card" hidden style="border:1px dashed var(--border, #888);margin:10px 0"><strong>🧪 连续成长沙盒 · 纯虚构经历</strong>
+<div class="toolbar" style="margin-top:10px">
+  <button id="personality-evolution-sandbox-pause" type="button">⏸ 暂停</button>
+  <button id="personality-evolution-sandbox-next" type="button">下一段经历 →</button>
+  <button id="personality-evolution-sandbox-reset" type="button">↺ 从头模拟</button>
+  <label for="personality-evolution-sandbox-speed" style="margin:0">播放速度</label>
+  <select id="personality-evolution-sandbox-speed"><option value="2600">慢速</option><option value="1400" selected>正常</option><option value="600">快速</option></select>
+</div>
+<p id="personality-evolution-sandbox-progress" role="status" aria-live="polite">准备开始…</p>
+<p id="personality-evolution-sandbox-latest" class="muted">尚未出现模拟经历</p><p class="muted" id="personality-evolution-sandbox-note">不会保存数据、调用模型、影响真实鱼鱼或触发 B站操作。</p><details open><summary>当前模拟阶段可能进入提示词的成长倾向</summary><pre id="personality-evolution-sandbox-context"></pre></details></div>
+<details id="personality-ai-debug-panel" class="life-subdetails" style="margin:14px 0">
+<summary>🤖 AI 判读虚构聊天 · 调试沙盒（人工触发）</summary>
+<p class="muted">输入完全虚构的公开聊天，点一次按钮才调用一次反思专用 AI。结果会经<strong>真实人格证据校验和加权算法</strong>，推进独立的沙盒路线图。<strong>不会修改鱼鱼的记忆或人格，也不会向 B站发送内容</strong>；模型调用可能产生费用，不会随自动播放重复调用。请勿粘贴真实观众的私密聊天。每次完成后会自动把虚构日期与观众编号推进一格，可随时手动修改。</p>
+<div class="grid">
+<div><label for="personality-ai-debug-incoming">虚构观众原话</label><textarea id="personality-ai-debug-incoming" rows="3" maxlength="600">鱼鱼，上次推荐的视频真有意思，谢谢你！下次还想和你聊聊。</textarea></div>
+<div><label for="personality-ai-debug-outcome">鱼鱼实际选择</label><select id="personality-ai-debug-outcome"><option value="replied">已成功回复</option><option value="declined">主动决定不回复</option><option value="unprocessed">尚未处理</option><option value="failed">准备回复但发送失败</option></select></div>
+<div id="personality-ai-debug-decline-row" hidden><label for="personality-ai-debug-decline-reason">主动不回复的原因</label><select id="personality-ai-debug-decline-reason"><option value="respect-request">尊重对方停止交流的请求</option><option value="general">其他自主原因（不足以直接证明边界成长）</option></select></div>
+<div><label for="personality-ai-debug-reply">虚构鱼鱼已成功发出的回复（仅已回复时必填）</label><textarea id="personality-ai-debug-reply" rows="3" maxlength="600">哼，既然你这么喜欢，那鱼鱼下次再给你找点有趣的～</textarea></div>
+<div><label for="personality-ai-debug-day">虚构经历日期</label><input id="personality-ai-debug-day" type="date" value="2026-01-02"></div>
+<div><label for="personality-ai-debug-actor">虚构观众编号（1–99；同号代表同一人）</label><input id="personality-ai-debug-actor" type="number" min="1" max="99" value="1"></div>
+<div><label for="personality-ai-debug-tier">虚构观众身份</label><select id="personality-ai-debug-tier"><option value="stranger">陌生观众</option><option value="friend">好友</option><option value="owner">主人</option></select></div>
+</div>
+<div class="toolbar"><label for="personality-ai-debug-example">虚构样例</label><select id="personality-ai-debug-example"><option value="friendly">积极交流</option><option value="greeting">普通问候</option><option value="negative">拒绝与越界</option><option value="curiosity">主动探索话题</option><option value="assertiveness">表达不同看法</option><option value="patience">耐心解释</option></select><button type="button" id="personality-ai-debug-load-example">填入样例（不调用 AI）</button></div>
+<div class="toolbar"><button type="button" id="personality-ai-debug-evaluate" class="primary">🤖 调用 AI 评价并推进一次</button><button type="button" id="personality-ai-debug-clear">清空 AI 调试历史</button><span id="personality-ai-debug-count" class="muted">0 / 24 段</span></div>
+<div id="personality-ai-debug-output" hidden>
+<p id="personality-ai-debug-verdict" role="status"></p>
+<details open><summary>AI 观察与证据核验</summary><pre id="personality-ai-debug-explanation" style="white-space:pre-wrap"></pre></details>
+<details><summary>查看模型原始 JSON 响应</summary><pre id="personality-ai-debug-raw" style="white-space:pre-wrap"></pre></details>
+<details><summary>当前形成的人格提示词（仅沙盒）</summary><pre id="personality-ai-debug-context" style="white-space:pre-wrap"></pre></details>
+</div>
+</details>
+<p class="muted">当前只在原有离线人生反思中提出候选变化，不额外增加每次聊天的模型调用。至少多次、跨日期的经历才影响提示词；阶段“发展中”不等于已证实影响行为。具体经历仍受 Life Memory 2.0 遗忘规则保护。</p>
+<div class="grid" id="personality-evolution-traits" aria-live="polite"></div>
+<details id="personality-evolution-timeline-details" class="life-subdetails"><summary>查看人格变化时间线</summary><div class="records" id="personality-evolution-timeline"></div></details>
+</div>
 </section>
 <section id="panel-growth" hidden>
 <div class="card"><h3>行为与表达改进 · 直接附加到 AI 提示词</h3>
