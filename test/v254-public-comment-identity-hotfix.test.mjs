@@ -70,5 +70,5 @@ test('v2.5.4: date-only video timeline marks dateOnly instead of implying exact 
  assert.equal(items[0].dateOnly,true)
  assert.equal(items[0].day,'2026-10-30')
  const script=readFileSync(new URL('../lib/management-console.js',import.meta.url),'utf8')
- assert.match(script,/row\.dateOnly.*仅记录日期/)
+ assert.match(script,/row\.dateOnly.*具体时刻未记录/)
 })

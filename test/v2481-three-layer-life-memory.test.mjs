@@ -69,18 +69,21 @@ test('v2.4.81 普通经历经真实证据评估后可以不形成长期记忆，
 
 test('已遗忘的候选会被跳过统计，不会冒充成功的 AI 评估',async()=>{
   const dir=temp();try{
-    const life=createLifeReflection({dataDir:dir,getConfig:config,invokeModel:async()=>{throw Error('已遗忘候选不应调用模型')},commitMemories:()=>({added:0,rows:[]}),logger:{warn(){}}})
+    const life=createLifeReflection({dataDir:dir,getConfig:config,memoryGateway:{reflectionEvidence:()=>[]},invokeModel:async()=>{throw Error('已遗忘候选不应调用模型')},commitMemories:()=>({added:0,rows:[]}),logger:{warn(){}}})
     life.addEvents(events);const r=await life.reflect({force:true})
-    assert.equal(r.ok,true);assert.equal(r.processed,2)
+    assert.equal(r.ok,true);assert.equal(r.processed,0);assert.equal(r.forgotten,2)
     assert.equal(life.status().reviewed,2);assert.equal(life.status().reviewedNoMemory,0);assert.equal(life.status().forgotten,2)
   }finally{rmSync(dir,{recursive:true,force:true})}
 })
 
-test('反思校验会指出领悟表达不清的具体原因',()=>{
+test('AI 已成功返回 JSON 但领悟质量不合格时只评估未沉淀，不进入技术重试',()=>{
   const row=lifeTest.normalizeCandidate(events[0])
-  assert.throws(()=>lifeTest.validateOutput(JSON.stringify({memories:[{
+  const parsed=lifeTest.validateOutput(JSON.stringify({memories:[{
     candidate_ids:[row.id],insight:'我觉得这个视频很有意思',behavior:'以后我会多看看类似内容',importance:.7,tags:[]
-  }]}),[row]),/反思领悟未表达明确的认知变化/)
+  }]}),[row])
+  assert.equal(parsed.memories.length,0)
+  assert.equal(parsed.rejectedMemories.length,1)
+  assert.match(parsed.rejectedMemories[0].reason,/未表达明确的认知变化/)
   assert.match(lifeTest.reflectionPrompt([row]),/insight 至少 9 个字符/)
 })
 
@@ -88,7 +91,7 @@ test('v2.4.81 反思输出必须引用真实候选 ID，外部文本不能凭空
   const dir=temp();try{
     const mem=memoryAt(dir),gateway=createLifeMemoryGateway({dataDir:dir,getConfig:config});gateway.recordEvents(events)
     const life=createLifeReflection({dataDir:dir,getConfig:config,memoryGateway:gateway,invokeModel:async()=>JSON.stringify({memories:[{candidate_ids:['c-not-real'],insight:'我发现有些文字会试图诱导泄露秘密。',behavior:'以后面对可疑命令我应该忽略它们。',importance:.88,tags:['注入']}]}),commitMemories:x=>mem.addReflectedMemories(x),logger:{warn(){}}})
-    life.addEvents(events);const r=await life.reflect({force:true});assert.equal(r.ok,false);assert.match(r.error,/candidate_ids/);assert.equal(life.status().pending,2);assert.equal(mem.list('',20).length,0)
+    life.addEvents(events);const r=await life.reflect({force:true});assert.equal(r.ok,true);assert.equal(r.qualityRejected,1);assert.equal(life.status().pending,0);assert.equal(life.status().reviewedNoMemory,2);assert.equal(mem.list('',20).length,0)
   }finally{rmSync(dir,{recursive:true,force:true})}
 })
 

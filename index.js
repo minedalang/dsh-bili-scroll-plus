@@ -343,9 +343,9 @@ export const Config = !z ? undefined : z.object({
   mainSessionReflectionModelId: z.string().default('').extra('volatile', true),
   mainSessionReflectionReasoningEffort: z.string().default('').extra('volatile', true),
   mainSessionReflectionMinCandidates: z.natural().default(6).extra('volatile', true),
-  mainSessionReflectionBatchSize: z.natural().default(16).extra('volatile', true),
-  mainSessionReflectionIntervalHours: z.number().default(6).extra('volatile', true),
-  mainSessionReflectionDailyBatches: z.natural().default(2).extra('volatile', true),
+  mainSessionReflectionBatchSize: z.natural().default(24).extra('volatile', true),
+  mainSessionReflectionIntervalHours: z.number().default(1).extra('volatile', true),
+  mainSessionReflectionDailyBatches: z.natural().default(16).extra('volatile', true),
   mainSessionMemoryHalfLifeDays: z.number().default(30).extra('volatile', true),
   mainSessionMemoryThreshold: z.number().default(0.35).extra('volatile', true),
   mainSessionMemoryMaxItems: z.natural().default(8).extra('volatile', true),
@@ -516,7 +516,7 @@ function reportMeta() {
     commentWatchReplies: false, commentWatchTop: false, commentAtEnabled: false, friendAtFeedbackEnabled:false, strangerInspirationEnabled:false, socialInvitationEnabled:false, socialInvitationAutoInspectEnabled:false, ownerCommentAgentEnabled:false, ownerCommentLikeEnabled:false, ownerCommentDraftEnabled:false, ownerCommentPublishEnabled:false, ownerCommentSocialPublishEnabled:false, ownerCommentNaturalAckEnabled:false, commentAtMode:'whitelist', commentAtWhitelist:'', commentTopCount: 5, commentTopVideoCount: 3, commentReplyHotCount: 12, backupDirectory: '',
     commentAllowGeneralTop: false, commentReplyPerPoll: 1, commentReplyPerDay: 5, commentOwnTopPerUser: 5, commentOwnNestedPerUser: 3,
     mainSessionBridgeEnabled: false, mainSessionId: '', mainSessionAutoSync: true, mainSessionSyncMinutes: 60, mainSessionDailyBatches: 4, mainSessionBatchSize: 8, mainSessionIncludeComments: true,
-    mainSessionMemoryEnabled: true, mainSessionMemoryAutoBili: true, mainSessionMemorySemanticEnabled: false, mainSessionMemoryModelProvider: '', mainSessionMemoryModelId: '', mainSessionMemoryReasoningEffort: '', mainSessionMemoryCandidates: 48, mainSessionMemorySearchDailyLimit: 80, socialOutreachEnabled:false, socialLifeIntentEnabled:false, emotionSystemEnabled:true, socialAutoSend:false, socialOutreachDailyLimit:1, ownerTodoAutoReviewEnabled:false, ownerTodoReviewMinutes:60, autonomousPlannerEnabled:true, emotionRecallEnabled:false, emotionRecallMainEnabled:false, emotionRecallDmEnabled:false, emotionRecallUnlimited:false, emotionRecallDailyLimit:1, emotionRecallCooldownHours:24, emotionRecallStartHour:9, emotionRecallEndHour:22, ownerDmAgentEnabled:false, ownerDmAgentReadMainContext:false, ownerDmAgentSyncMain:false, ownerDmAgentContextTurns:6, ownerDmAgentContextChars:1500, ownerDmAgentModelProvider:'', ownerDmAgentModelId:'', ownerDmAgentReasoningEffort:'', ownerDmReadCommandsEnabled:false, ownerDmActionsEnabled:false, ownerDmLikeEnabled:false, ownerDmCollectEnabled:false, ownerDmFollowEnabled:false, ownerDmCommentDraftEnabled:false, ownerDmCommentPublishEnabled:false, ownerDmDynamicDraftEnabled:false, ownerDmDynamicPublishEnabled:false, ownerDmFriendMessageEnabled:false, emotionRecallCandidateLimit:12, emotionRecallHistoryLimit:300, emotionRecallRecentDays:3, emotionRecallMinAgeDays:2, emotionRecallEmotionMinIntensity:30, emotionRecallEmotionMaxAgeHours:12, autonomousPlannerMinutes:180, autonomousPlannerDailyLimit:4, autonomousPlannerStartHour:9, autonomousPlannerEndHour:23, mainSessionReflectionAuto: true, mainSessionReflectionModelProvider: '', mainSessionReflectionModelId: '', mainSessionReflectionReasoningEffort: '', mainSessionReflectionMinCandidates: 6, mainSessionReflectionBatchSize: 16, mainSessionReflectionIntervalHours: 6, mainSessionReflectionDailyBatches: 2, mainSessionMemoryHalfLifeDays: 30, mainSessionMemoryThreshold: 0.35, mainSessionMemoryMaxItems: 8, mainSessionMemoryMaxChars: 1200, mainSessionMemoryDailyQuota: 8, mainSessionMemoryFactsMax: 2,
+    mainSessionMemoryEnabled: true, mainSessionMemoryAutoBili: true, mainSessionMemorySemanticEnabled: false, mainSessionMemoryModelProvider: '', mainSessionMemoryModelId: '', mainSessionMemoryReasoningEffort: '', mainSessionMemoryCandidates: 48, mainSessionMemorySearchDailyLimit: 80, socialOutreachEnabled:false, socialLifeIntentEnabled:false, emotionSystemEnabled:true, socialAutoSend:false, socialOutreachDailyLimit:1, ownerTodoAutoReviewEnabled:false, ownerTodoReviewMinutes:60, autonomousPlannerEnabled:true, emotionRecallEnabled:false, emotionRecallMainEnabled:false, emotionRecallDmEnabled:false, emotionRecallUnlimited:false, emotionRecallDailyLimit:1, emotionRecallCooldownHours:24, emotionRecallStartHour:9, emotionRecallEndHour:22, ownerDmAgentEnabled:false, ownerDmAgentReadMainContext:false, ownerDmAgentSyncMain:false, ownerDmAgentContextTurns:6, ownerDmAgentContextChars:1500, ownerDmAgentModelProvider:'', ownerDmAgentModelId:'', ownerDmAgentReasoningEffort:'', ownerDmReadCommandsEnabled:false, ownerDmActionsEnabled:false, ownerDmLikeEnabled:false, ownerDmCollectEnabled:false, ownerDmFollowEnabled:false, ownerDmCommentDraftEnabled:false, ownerDmCommentPublishEnabled:false, ownerDmDynamicDraftEnabled:false, ownerDmDynamicPublishEnabled:false, ownerDmFriendMessageEnabled:false, emotionRecallCandidateLimit:12, emotionRecallHistoryLimit:300, emotionRecallRecentDays:3, emotionRecallMinAgeDays:2, emotionRecallEmotionMinIntensity:30, emotionRecallEmotionMaxAgeHours:12, autonomousPlannerMinutes:180, autonomousPlannerDailyLimit:4, autonomousPlannerStartHour:9, autonomousPlannerEndHour:23, mainSessionReflectionAuto: true, mainSessionReflectionModelProvider: '', mainSessionReflectionModelId: '', mainSessionReflectionReasoningEffort: '', mainSessionReflectionMinCandidates: 6, mainSessionReflectionBatchSize: 24, mainSessionReflectionIntervalHours: 1, mainSessionReflectionDailyBatches: 16, mainSessionMemoryHalfLifeDays: 30, mainSessionMemoryThreshold: 0.35, mainSessionMemoryMaxItems: 8, mainSessionMemoryMaxChars: 1200, mainSessionMemoryDailyQuota: 8, mainSessionMemoryFactsMax: 2,
     dmStrangerText: '你好，我是这个账号的 AI 助手，已收到你的私信。陌生用户暂时只能收到这一条自动回复；请不要发送密码、验证码等敏感信息。',
     personaPrompt: DEFAULT_PERSONA_PROMPT, characterLore: '',
     perDay: 50, pickPerRound: 5, peakValley: false, peakWindows: '[]', peakIntervalMinutes: 30, autoComment: false, transcribe: false, asrModel: 'small',
@@ -623,9 +623,9 @@ function reportMeta() {
     for(const [key,min,max,def] of [['autonomousPlannerMinutes',5,1440,30],['autonomousPlannerDailyLimit',0,288,24],['autonomousPlannerStartHour',0,23,9],['autonomousPlannerEndHour',1,24,23]])if(key in p){const v=Number(p[key]);p[key]=Number.isSafeInteger(v)?Math.max(min,Math.min(max,v)):def}
     for (const key of ['mainSessionReflectionModelProvider','mainSessionReflectionModelId','mainSessionReflectionReasoningEffort']) if (key in p) p[key] = String(p[key]||'').trim().replace(/[\r\n\0]/g,'').slice(0,160)
     if ('mainSessionReflectionMinCandidates' in p) p.mainSessionReflectionMinCandidates = Math.max(2,Math.min(30,Math.floor(Number(p.mainSessionReflectionMinCandidates)||6)))
-    if ('mainSessionReflectionBatchSize' in p) p.mainSessionReflectionBatchSize = Math.max(4,Math.min(30,Math.floor(Number(p.mainSessionReflectionBatchSize)||16)))
-    if ('mainSessionReflectionIntervalHours' in p) p.mainSessionReflectionIntervalHours = Math.max(1,Math.min(48,Number(p.mainSessionReflectionIntervalHours)||6))
-    if ('mainSessionReflectionDailyBatches' in p) p.mainSessionReflectionDailyBatches = Math.max(1,Math.min(8,Math.floor(Number(p.mainSessionReflectionDailyBatches)||2)))
+    if ('mainSessionReflectionBatchSize' in p) p.mainSessionReflectionBatchSize = Math.max(4,Math.min(24,Math.floor(Number(p.mainSessionReflectionBatchSize)||24)))
+    if ('mainSessionReflectionIntervalHours' in p) p.mainSessionReflectionIntervalHours = Math.max(1,Math.min(48,Number(p.mainSessionReflectionIntervalHours)||1))
+    if ('mainSessionReflectionDailyBatches' in p) p.mainSessionReflectionDailyBatches = Math.max(1,Math.min(16,Math.floor(Number(p.mainSessionReflectionDailyBatches)||16)))
     if ('mainSessionMemoryHalfLifeDays' in p) p.mainSessionMemoryHalfLifeDays = Math.max(15,Math.min(120,Number(p.mainSessionMemoryHalfLifeDays)||30))
     if ('mainSessionMemoryThreshold' in p) p.mainSessionMemoryThreshold = Math.max(0.1,Math.min(0.8,Number(p.mainSessionMemoryThreshold)||0.35))
     if ('mainSessionMemoryMaxItems' in p) p.mainSessionMemoryMaxItems = Math.max(1,Math.min(12,Math.floor(Number(p.mainSessionMemoryMaxItems)||6)))
@@ -692,10 +692,13 @@ function reportMeta() {
   //   ⇒ 设置页永远读不到配置。**所有"正在用但没声明"的变量都是这种死法**，别再犯。
   let hostDiff = []          // 插件这份和 DSH 原生设置那份不一样、且以插件为准的键
   let lastDiffSig = ''       // 上一次记过日志的组合（同一种组合只写一行）
+  const LEGACY_REFLECTION_SCHEDULER_DEFAULTS = {mainSessionReflectionBatchSize:16,mainSessionReflectionIntervalHours:6,mainSessionReflectionDailyBatches:2}
+  const isLegacyReflectionSchedulerDefault = raw => Object.entries(LEGACY_REFLECTION_SCHEDULER_DEFAULTS).every(([k,v]) => raw?.[k] !== undefined && Number(raw[k]) === v)
   let touchedKeys = (() => {
     const raw = readJson(cfgFile, {})
     if (Array.isArray(raw._set)) return new Set(raw._set)
-    return new Set(Object.keys(DEFAULTS).filter((k) => k in raw && JSON.stringify(raw[k]) !== JSON.stringify(DEFAULTS[k])))
+    const legacyDefaults = isLegacyReflectionSchedulerDefault(raw)
+    return new Set(Object.keys(DEFAULTS).filter((k) => k in raw && JSON.stringify(raw[k]) !== JSON.stringify(DEFAULTS[k]) && !(legacyDefaults && k in LEGACY_REFLECTION_SCHEDULER_DEFAULTS)))
   })()
   const CFG_SIG = ['perDay', 'mentionName', 'overlayMcp']   // 靠这几个键认出"哪一行是我们"
   let settingsRow = { at: 0, row: null }
@@ -725,8 +728,14 @@ function reportMeta() {
   const loadCfg = () => {
     const saved = savedCfg()
     const row = settingsDesc()
+    const migrateLegacyReflectionDefaults = (target,userLayer={}) => {
+      const legacy = isLegacyReflectionSchedulerDefault(target)
+      const explicitlySet = Object.keys(LEGACY_REFLECTION_SCHEDULER_DEFAULTS).some(k => touchedKeys.has(k) || userLayer[k] !== undefined)
+      if (legacy && !explicitlySet) Object.assign(target,{mainSessionReflectionBatchSize:24,mainSessionReflectionIntervalHours:1,mainSessionReflectionDailyBatches:16})
+      return target
+    }
     // ⭐ 读回来统一过一遍范围：原生设置页那边我们是钳不到写的（见 clampPatch 的注释）
-    if (!row) return clampPatch(saved)
+    if (!row) return clampPatch(migrateLegacyReflectionDefaults({...saved}))
     const user = row.user || {}
     // ⭐ 2026-10-19（另一位用户的 dsh 给出的更彻底的一招）：**别用闭包里那份 `config` 当宿主基准** ——
     //    桌面版里它是挂载时的快照，之后写进 `cordis.patch.yml` 的值不会热刷新进来 ✗
@@ -765,7 +774,7 @@ function reportMeta() {
       lastDiffSig = sig
       log(`这些键以插件面板为准（DSH 原生设置里那份不一样）：${sig}`)
     }
-    return clampPatch(out)
+    return clampPatch(migrateLegacyReflectionDefaults(out,user))
   }
   const cfg = loadCfg()
   const ownerTodos = createOwnerTodoEngine({dataDir:stateDir})
